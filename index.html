@@ -270,17 +270,6 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
     <button type="button" class="sos-btn" id="sosBtn" onclick="doSOS()">
       <span>🆘</span> <span id="sosLabel"></span>
     </button>
-    <div class="demo-panel" id="elderDemo">
-      <h3 id="demoTitle"></h3>
-      <div class="btn-row" style="margin-bottom:8px">
-        <button type="button" class="btn btn-secondary" onclick="simulateHours(12)">+12h</button>
-        <button type="button" class="btn btn-secondary" onclick="simulateHours(24)">+24h</button>
-        <button type="button" class="btn btn-secondary" onclick="simulateHours(48)">+48h</button>
-        <button type="button" class="btn btn-secondary" onclick="simulateHours(72)">+72h</button>
-      </div>
-      <button type="button" class="btn btn-danger btn-block" onclick="resetDemoTime()" id="resetTimeBtn"></button>
-      <p class="muted" style="margin-top:8px" id="simClock"></p>
-    </div>
   </section>
 
   <section id="familyView" class="hidden">
@@ -344,6 +333,19 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
           </select>
         </div>
         <p class="muted" id="thresholdHelp" style="margin-bottom:16px"></p>
+
+        <div class="demo-panel" id="familyDemo" style="margin:0 0 16px; background:#f8fafc; border:1px dashed #94a3b8; border-radius:12px; padding:14px">
+          <h3 id="demoTitle" style="margin:0 0 10px; font-size:0.95rem; color:#0f766e"></h3>
+          <div class="btn-row" style="margin-bottom:8px">
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(12)">+12h</button>
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(24)">+24h</button>
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(48)">+48h</button>
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(72)">+72h</button>
+          </div>
+          <button type="button" class="btn btn-danger btn-block" onclick="resetDemoTime()" id="resetTimeBtn"></button>
+          <p class="muted" style="margin-top:8px" id="simClock"></p>
+        </div>
+
         <div class="form-group">
           <label id="lblActiveElder"></label>
           <select id="activeElderSelect" onchange="setActiveElder()"></select>
@@ -358,17 +360,6 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
         </div>
         <p class="muted" id="languageHelp" style="margin-bottom:16px"></p>
         <button type="button" class="btn btn-danger btn-block" onclick="resetAllData()" id="btnResetAll"></button>
-      </div>
-      <div class="demo-panel">
-        <h3 id="demoTitle2"></h3>
-        <div class="btn-row" style="margin-bottom:8px">
-          <button type="button" class="btn btn-secondary" onclick="simulateHours(12)">+12h</button>
-          <button type="button" class="btn btn-secondary" onclick="simulateHours(24)">+24h</button>
-          <button type="button" class="btn btn-secondary" onclick="simulateHours(48)">+48h</button>
-          <button type="button" class="btn btn-secondary" onclick="simulateHours(72)">+72h</button>
-        </div>
-        <button type="button" class="btn btn-danger btn-block" onclick="resetDemoTime()" id="resetTimeBtn2"></button>
-        <p class="muted" style="margin-top:8px" id="simClock2"></p>
       </div>
       <div class="card" style="margin-top:16px">
         <h2 id="aboutTitle"></h2>
@@ -409,7 +400,7 @@ const i18n = {
     tabContacts: 'Contacts',
     tabAlerts: 'Alerts',
     tabSettings: 'Settings',
-    familyHint: 'Green = OK · Yellow = elder reminded · Red = family alerted. Use the demo buttons to simulate an overdue check-in.',
+    familyHint: 'Green = OK · Yellow = elder reminded · Red = family alerted. To simulate an overdue check-in, open Settings → Demo: simulate time passing.',
     addElderTitle: 'Add someone',
     lblElderName: 'Name',
     btnAddElder: 'Add',
@@ -486,7 +477,7 @@ const i18n = {
     tabContacts: '联系人',
     tabAlerts: '通知',
     tabSettings: '设置',
-    familyHint: '绿色=正常 · 黄色=已提醒老人 · 红色=已告警家属。用下方演示按钮可模拟超时。',
+    familyHint: '绿色=正常 · 黄色=已提醒老人 · 红色=已告警家属。模拟超时请到「设置」→「演示：模拟时间流逝」。',
     addElderTitle: '添加老人',
     lblElderName: '姓名',
     btnAddElder: '添加',
@@ -677,9 +668,7 @@ function applyI18n() {
   document.getElementById('checkinSub').textContent = t('checkinSub');
   document.getElementById('sosLabel').textContent = t('sosLabel');
   document.getElementById('demoTitle').textContent = t('demoTitle');
-  document.getElementById('demoTitle2').textContent = t('demoTitle');
   document.getElementById('resetTimeBtn').textContent = t('resetTime');
-  document.getElementById('resetTimeBtn2').textContent = t('resetTime');
   document.getElementById('familyHint').textContent = t('familyHint');
   document.getElementById('addElderTitle').textContent = t('addElderTitle');
   document.getElementById('lblElderName').textContent = t('lblElderName');
@@ -716,11 +705,11 @@ function applyI18n() {
 }
 
 function updateSimClock() {
-  const txt = state.timeOffsetMs
+  const el = document.getElementById('simClock');
+  if (!el) return;
+  el.textContent = state.timeOffsetMs
     ? t('simClock') + formatTime(now())
     : t('simClock') + t('realTime');
-  document.getElementById('simClock').textContent = txt;
-  document.getElementById('simClock2').textContent = txt;
 }
 
 function renderElder() {
