@@ -38,21 +38,34 @@ button { font-family: inherit; cursor: pointer; border: none; }
 input, select, textarea { font-family: inherit; font-size: 16px; }
 
 .topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; background: var(--primary); color: #fff;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 12px 10px; background: var(--primary); color: #fff;
   position: sticky; top: 0; z-index: 50;
 }
-.topbar h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em; }
-.topbar .actions { display: flex; gap: 8px; align-items: center; }
-.role-btn {
-  background: rgba(255,255,255,0.2); color: #fff;
-  padding: 6px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+.topbar h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em; text-align: center; }
+
+.role-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  background: rgba(0,0,0,0.18); padding: 5px; border-radius: 14px;
 }
-.role-btn:active { background: rgba(255,255,255,0.35); }
+.role-tab {
+  appearance: none; -webkit-appearance: none;
+  background: transparent; color: rgba(255,255,255,0.85);
+  padding: 14px 10px; border-radius: 11px;
+  font-size: 1rem; font-weight: 800; line-height: 1.2;
+  min-height: 52px; touch-action: manipulation;
+  border: 2px solid transparent;
+}
+.role-tab.active {
+  background: #fff; color: var(--primary);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  border-color: #fff;
+}
+.role-tab:not(.active):active { background: rgba(255,255,255,0.18); }
 
 .tabs {
   display: flex; background: #fff; border-bottom: 1px solid var(--border);
-  position: sticky; top: 48px; z-index: 40;
+  position: relative; z-index: 40;
 }
 .tab {
   flex: 1; padding: 14px 8px; text-align: center; font-weight: 600;
@@ -225,8 +238,11 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 <body>
 <header class="topbar">
   <h1 id="appTitle">DailyOK</h1>
-  <div class="actions">
-    <button type="button" class="role-btn" id="roleBtn" onclick="toggleRole()"></button>
+  <div class="role-switch" role="tablist" aria-label="Who is using this phone">
+    <button type="button" class="role-tab active" id="roleTabElder" role="tab"
+      aria-selected="true" onclick="setRole('elder')"></button>
+    <button type="button" class="role-tab" id="roleTabFamily" role="tab"
+      aria-selected="false" onclick="setRole('family')"></button>
   </div>
 </header>
 
@@ -370,8 +386,9 @@ const STORAGE_KEY = 'dailyok_v2';
 const i18n = {
   en: {
     appTitle: 'DailyOK',
-    roleElder: 'Elder view',
-    roleFamily: 'Family view',
+    roleElder: "I'm the senior",
+    roleFamily: 'Family & carers',
+    roleSwitchLabel: 'Who is using this phone',
     checkinLabel: "I'm OK",
     checkinSub: 'Tap to let family know',
     checkinDone: "You're checked in ✓",
@@ -446,8 +463,9 @@ const i18n = {
   },
   zh: {
     appTitle: 'DailyOK',
-    roleElder: '老人端',
-    roleFamily: '家属端',
+    roleElder: '我是长辈',
+    roleFamily: '家属 / 护工',
+    roleSwitchLabel: '谁在用这部手机',
     checkinLabel: '我很好',
     checkinSub: '点一下告诉家人',
     checkinDone: '今日已签到 ✓',
@@ -651,7 +669,10 @@ function toast(msg) {
 function applyI18n() {
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
   document.getElementById('appTitle').textContent = t('appTitle');
-  document.getElementById('roleBtn').textContent = role === 'elder' ? t('roleFamily') : t('roleElder');
+  document.getElementById('roleTabElder').textContent = t('roleElder');
+  document.getElementById('roleTabFamily').textContent = t('roleFamily');
+  const switcher = document.querySelector('.role-switch');
+  if (switcher) switcher.setAttribute('aria-label', t('roleSwitchLabel'));
   document.getElementById('checkinLabel').textContent = t('checkinLabel');
   document.getElementById('checkinSub').textContent = t('checkinSub');
   document.getElementById('sosLabel').textContent = t('sosLabel');
@@ -783,20 +804,51 @@ function renderFamily() {
   updateSimClock();
 }
 
+function syncRoleTabs() {
+  const elderTab = document.getElementById('roleTabElder');
+  const familyTabBtn = document.getElementById('roleTabFamily');
+  const isElder = role === 'elder';
+  elderTab.classList.toggle('active', isElder);
+  familyTabBtn.classList.toggle('active', !isElder);
+  elderTab.setAttribute('aria-selected', isElder ? 'true' : 'false');
+  familyTabBtn.setAttribute('aria-selected', isElder ? 'false' : 'true');
+}
+
+function syncViewUrl() {
+  try {
+    const url = new URL(location.href);
+    url.searchParams.set('view', role);
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  } catch (e) {}
+}
+
 function render() {
   applyI18n();
+  syncRoleTabs();
   document.getElementById('elderView').classList.toggle('hidden', role !== 'elder');
   document.getElementById('familyView').classList.toggle('hidden', role !== 'family');
   document.getElementById('familyTabs').classList.toggle('hidden', role !== 'family');
   if (role === 'elder') renderElder();
-  else { renderFamily(); switchTab(familyTab, true); }
+  else { renderFamily(); switchTab(familyTab); }
   saveState();
 }
 
-function toggleRole() {
-  role = role === 'elder' ? 'family' : 'elder';
+function setRole(next) {
+  if (next !== 'elder' && next !== 'family') return;
+  if (role === next) {
+    // Still re-render so a missed first paint cannot leave the wrong pane
+    render();
+    syncViewUrl();
+    return;
+  }
+  role = next;
   saveState();
   render();
+  syncViewUrl();
+}
+
+function toggleRole() {
+  setRole(role === 'elder' ? 'family' : 'elder');
 }
 
 function switchTab(name) {
@@ -930,7 +982,8 @@ function resetAllData() {
   try {
     const q = new URLSearchParams(location.search);
     if (q.get('lang') === 'en' || q.get('lang') === 'zh') { lang = q.get('lang'); state.lang = lang; }
-    if (q.get('view') === 'family' || q.get('view') === 'elder') { role = q.get('view'); state.role = role; }
+    const viewParam = (q.get('view') || '').toLowerCase();
+    if (viewParam === 'family' || viewParam === 'elder') { role = viewParam; state.role = role; }
     if (q.get('tab')) { familyTab = q.get('tab'); }
     if (q.get('fresh') === '1') {
       const e = state.elders[0];
