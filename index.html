@@ -530,6 +530,54 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 .in-call-bar { display: flex; gap: 16px; justify-content: center; align-items: center; padding: 8px 0 4px; }
 .call-countdown { font-size: 1.2rem; font-weight: 700; color: #99f6e4; margin-top: 16px; text-align: center; }
 
+.who-am-i {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 10px; padding: 8px 10px;
+  background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 12px;
+  font-size: 0.8rem; color: #475569;
+}
+.who-am-i label { font-weight: 700; white-space: nowrap; }
+.who-am-i select {
+  flex: 1; min-width: 140px; padding: 8px 10px; border-radius: 10px;
+  border: 2px solid var(--border); background: #fff; font-weight: 700; font-size: 0.9rem;
+}
+.elder-nick { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+.conv-list { display: flex; flex-direction: column; gap: 0; background: var(--card);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.conv-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 14px 14px; text-align: left; background: #fff;
+  border-bottom: 1px solid var(--border); color: inherit;
+}
+.conv-row:last-child { border-bottom: none; }
+.conv-row:active { background: #f0fdfa; }
+.conv-avatar {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: #ccfbf1; color: var(--primary); font-weight: 800; font-size: 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.conv-body { flex: 1; min-width: 0; }
+.conv-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.conv-name { font-weight: 800; font-size: 1.05rem; }
+.conv-time { font-size: 0.75rem; color: var(--muted); flex-shrink: 0; }
+.conv-preview { font-size: 0.88rem; color: var(--muted); margin-top: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-unread {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
+  background: #22c55e; color: #fff; font-size: 0.75rem; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.thread-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.thread-header .back {
+  padding: 10px 12px; border-radius: 12px; background: #e0f2f1; color: var(--primary);
+  font-weight: 800; font-size: 0.95rem; flex-shrink: 0;
+}
+.thread-header .th-title { font-weight: 800; font-size: 1.15rem; flex: 1; min-width: 0; }
+.thread-header .th-nick { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
 </style>
 </head>
 <body>
@@ -553,6 +601,10 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 
 <main>
   <section id="elderView">
+    <div class="who-am-i" id="whoAmIBar">
+      <label for="whoAmISelect" id="whoAmILabel">Who am I? (demo)</label>
+      <select id="whoAmISelect" onchange="setWhoAmI()"></select>
+    </div>
     <div id="elderReminder" class="reminder-banner hidden"></div>
     <div id="elderAlertBanner" class="alert-banner hidden"></div>
     <div class="elder-hero">
@@ -615,8 +667,18 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
     </div>
 
     <div id="tabMessages" class="hidden">
-      <div class="messages-pane">
+      <div id="messagesListView">
         <div class="setup-hint" id="messagesHint"></div>
+        <div class="conv-list" id="convList"></div>
+      </div>
+      <div id="messagesThreadView" class="messages-pane hidden">
+        <div class="thread-header">
+          <button type="button" class="back" id="threadBackBtn" onclick="closeFamilyThread()">←</button>
+          <div style="min-width:0;flex:1">
+            <div class="th-title" id="threadElderName"></div>
+            <div class="th-nick" id="threadElderNick"></div>
+          </div>
+        </div>
         <div class="messages-call-bar">
           <button type="button" class="btn-video btn-block" id="messagesVideoBtn" onclick="startVideoCall()"></button>
         </div>
@@ -711,6 +773,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
             <button type="button" class="btn btn-secondary" onclick="simulateHours(72)">+72h</button>
           </div>
           <button type="button" class="btn btn-danger btn-block" onclick="resetDemoTime()" id="resetTimeBtn"></button>
+          <button type="button" class="btn btn-secondary btn-block" onclick="resetDemoData()" id="btnResetDemo" style="margin-top:8px"></button>
           <p class="muted" style="margin-top:8px" id="simClock"></p>
         </div>
 
@@ -727,7 +790,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
           </select>
         </div>
         <p class="muted" id="languageHelp" style="margin-bottom:16px"></p>
-        <button type="button" class="btn btn-danger btn-block" onclick="resetAllData()" id="btnResetAll"></button>
+        <button type="button" class="btn btn-danger btn-block" onclick="resetDemoData()" id="btnResetAll"></button>
       </div>
       <div class="card" style="margin-top:16px">
         <h2 id="aboutTitle"></h2>
@@ -743,6 +806,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 
 <script>
 const STORAGE_KEY = 'dailyok_v2';
+const DATA_SCHEMA_VERSION = 3; // multi-senior Mum+Dad seed — bump to force re-seed on old phones
 const i18n = {
   en: {
     appTitle: 'DailyOK',
@@ -839,7 +903,15 @@ const i18n = {
     toastMicDenied: 'Microphone access denied. Allow the mic in Safari settings to send voice messages.',
     toastMicUnavailable: 'Microphone not available in this browser.',
     toastVoiceFailed: 'Could not record. Please try again.',
-    messagesHint: 'WeChat-style voice notes between family and the senior. Demo: everything stays on this phone — open Family & carers and I\'m the senior on the same device to chat.',
+    messagesHint: 'Each senior has their own chat — like WeChat. Tap a person to open their thread. Demo: everything stays on this phone.',
+    whoAmILabel: 'Who am I? (demo)',
+    whoAmIHelp: 'Switch which senior this phone is simulating.',
+    convEmpty: 'No conversations yet — add someone under People.',
+    convNoMessages: 'No messages yet',
+    convVoicePreview: 'Voice message',
+    threadBack: 'Chats',
+    nickMum: 'Mum',
+    nickDad: 'Dad',
     tabElders: 'People',
     tabContacts: 'Contacts',
     tabAlerts: 'Alerts',
@@ -867,7 +939,9 @@ const i18n = {
     activeElderHelp: 'When this phone is on Elder view, this is who checks in.',
     lblLanguage: 'Language',
     languageHelp: 'English is the default. Chinese is optional.',
-    btnResetAll: 'Clear all local data',
+    btnResetAll: 'Reset demo data',
+    btnResetDemo: 'Reset demo data',
+    resetDemoHelp: 'Reloads Margaret · Mum and John · Dad with sample messages. Clears voice clips on this phone.',
     aboutTitle: 'About DailyOK',
     aboutText: 'DailyOK is a prototype. Check-in data stays in this browser (localStorage). Voice notes are stored on this device (IndexedDB). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
     noElders: 'No one added yet',
@@ -877,7 +951,7 @@ const i18n = {
     toastAdded: 'Added',
     toastDeleted: 'Removed',
     toastSaved: 'Saved',
-    toastReset: 'All local data cleared',
+    toastReset: 'Demo data reset — Mum & Dad loaded',
     toastTimeReset: 'Back to real time',
     toastSim: 'Simulated +',
     hours: ' hours',
@@ -887,7 +961,7 @@ const i18n = {
     sosClose: 'Close',
     sosSent: 'Demo: contacts notified — dial 000 if this is real',
     confirmDelete: 'Remove this?',
-    confirmReset: 'Clear all local data? This cannot be undone.',
+    confirmReset: 'Reset demo data to Margaret · Mum and John · Dad? Voice messages on this phone will be cleared.',
     agoJust: 'just now',
     agoMin: ' min ago',
     agoHour: ' h ago',
@@ -991,7 +1065,15 @@ const i18n = {
     toastMicDenied: '无法使用麦克风。请在 Safari 设置中允许麦克风，才能发语音。',
     toastMicUnavailable: '此浏览器无法使用麦克风。',
     toastVoiceFailed: '录音失败，请再试一次。',
-    messagesHint: '像微信一样收发语音。演示：消息只存在这部手机上——在同一设备切换「家属」与「我是长辈」即可互发。',
+    messagesHint: '每位长辈有独立会话（像微信）。点开即可发语音或视频。演示：消息只在本机。',
+    whoAmILabel: '我是谁？（演示）',
+    whoAmIHelp: '切换这部手机正在模拟的长辈。',
+    convEmpty: '还没有会话 — 请先在「老人」里添加。',
+    convNoMessages: '还没有消息',
+    convVoicePreview: '语音消息',
+    threadBack: '会话列表',
+    nickMum: '妈妈',
+    nickDad: '爸爸',
     tabElders: '老人',
     tabContacts: '联系人',
     tabAlerts: '通知',
@@ -1019,7 +1101,9 @@ const i18n = {
     activeElderHelp: '打开「老人端」时，显示并操作这位的签到。',
     lblLanguage: '语言',
     languageHelp: '默认英文。中文为可选项。',
-    btnResetAll: '清除所有本地数据',
+    btnResetAll: '重置演示数据',
+    btnResetDemo: '重置演示数据',
+    resetDemoHelp: '重新载入「玛格丽特 · 妈妈」和「约翰 · 爸爸」及示例消息，并清除本机语音。',
     aboutTitle: '关于 DailyOK',
     aboutText: '这是原型。签到数据保存在本浏览器（localStorage），语音保存在本机（IndexedDB）。正式版需要后端、短信/推送、澳洲隐私合规与应用商店账号。澳洲紧急电话：000。',
     noElders: '还没有添加老人',
@@ -1029,7 +1113,7 @@ const i18n = {
     toastAdded: '已添加',
     toastDeleted: '已删除',
     toastSaved: '已保存',
-    toastReset: '已清除所有数据',
+    toastReset: '演示数据已重置 — 已载入妈妈与爸爸',
     toastTimeReset: '已恢复真实时间',
     toastSim: '已模拟前进 ',
     hours: ' 小时',
@@ -1039,7 +1123,7 @@ const i18n = {
     sosClose: '关闭',
     sosSent: '已模拟通知联系人，并提示拨打 000',
     confirmDelete: '确定删除？',
-    confirmReset: '确定清除所有本地数据？此操作不可撤销。',
+    confirmReset: '重置为演示数据（玛格丽特 · 妈妈、约翰 · 爸爸）？本机语音将被清除。',
     agoJust: '刚刚',
     agoMin: ' 分钟前',
     agoHour: ' 小时前',
@@ -1050,16 +1134,12 @@ const i18n = {
   }
 };
 
-let state = loadState();
-let role = state.role || 'elder';
-let lang = state.lang || 'en';
-let familyTab = 'elders';
-
-function t(key) { return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key; }
+let _schemaMigrated = false;
 
 function defaultState() {
   const now = Date.now();
   return {
+    schemaVersion: DATA_SCHEMA_VERSION,
     lang: 'en',
     role: 'elder',
     thresholdHours: 24,
@@ -1069,7 +1149,8 @@ function defaultState() {
     activeElderId: 'e1',
     activeCall: null,
     elders: [
-      { id: 'e1', name: 'Margaret', lastCheckIn: now - 2 * 3600 * 1000, remindedAt: null, alertedAt: null, stepNotified: 1 }
+      { id: 'e1', name: 'Margaret', nick: 'Mum', lastCheckIn: now - 2 * 3600 * 1000, remindedAt: null, alertedAt: null, stepNotified: 1 },
+      { id: 'e2', name: 'John', nick: 'Dad', lastCheckIn: now - 5 * 3600 * 1000, remindedAt: null, alertedAt: null, stepNotified: 1 }
     ],
     contacts: [
       { id: 'c1', name: 'James (son)', phone: '+61 400 000 001', role: 'family' },
@@ -1077,7 +1158,10 @@ function defaultState() {
       { id: 'c3', name: 'Emma (daughter)', phone: '+61 400 000 003', role: 'family' }
     ],
     notifications: [],
-    messages: []
+    messages: [
+      { id: 'm_seed_e1', elderId: 'e1', from: 'family', durationMs: 3200, at: now - 3600 * 1000, readByElder: true, readByFamily: true },
+      { id: 'm_seed_e2', elderId: 'e2', from: 'elder', durationMs: 2100, at: now - 1800 * 1000, readByElder: true, readByFamily: false }
+    ]
   };
 }
 
@@ -1085,25 +1169,58 @@ function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      // migrate away from old key silently
       localStorage.removeItem('elderCheckin_v1');
+      _schemaMigrated = true;
       return defaultState();
     }
     const s = JSON.parse(raw);
-    if (!s.elders || !s.elders.length) return defaultState();
+    // Old single-elder (or any pre-schema) saves → full re-seed Mum + Dad
+    if (!s || !s.schemaVersion || s.schemaVersion < DATA_SCHEMA_VERSION) {
+      try { localStorage.removeItem('elderCheckin_v1'); } catch (e) {}
+      _schemaMigrated = true;
+      return defaultState();
+    }
+    if (!s.elders || !s.elders.length) {
+      _schemaMigrated = true;
+      return defaultState();
+    }
     if (s.lang !== 'zh') s.lang = 'en';
     const merged = Object.assign(defaultState(), s);
+    merged.schemaVersion = DATA_SCHEMA_VERSION;
     if (!Array.isArray(merged.messages)) merged.messages = [];
-    // strip any legacy inline audio from localStorage payloads
+    if (!Array.isArray(merged.elders)) merged.elders = defaultState().elders;
+    merged.elders = merged.elders.map(e => {
+      if (!e.nick) {
+        if (/margaret/i.test(e.name)) e.nick = 'Mum';
+        else if (/^john$/i.test(e.name) || /dad/i.test(e.name)) e.nick = 'Dad';
+      }
+      return e;
+    });
     merged.messages = merged.messages.map(m => {
       const { dataUrl, ...rest } = m;
       return rest;
     });
     return merged;
   } catch (e) {
+    _schemaMigrated = true;
     return defaultState();
   }
 }
+
+let state = loadState();
+let role = state.role || 'elder';
+let lang = state.lang || 'en';
+let familyTab = 'elders';
+let familyMsgPane = 'list'; // list | thread
+if (_schemaMigrated) {
+  try {
+    state.schemaVersion = DATA_SCHEMA_VERSION;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.assign({}, state, { lang: lang, role: role })));
+  } catch (e) {}
+}
+
+function t(key) { return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key; }
+
 
 function saveState() {
   state.lang = lang;
@@ -1237,6 +1354,42 @@ function getActiveElder() {
   return state.elders.find(e => e.id === state.activeElderId) || state.elders[0];
 }
 
+function elderNick(elder) {
+  if (!elder) return '';
+  return elder.nick || '';
+}
+
+function elderTitle(elder) {
+  if (!elder) return '';
+  const nick = elderNick(elder);
+  return nick ? (elder.name + ' · ' + nick) : elder.name;
+}
+
+function elderInitial(elder) {
+  if (!elder) return '?';
+  const src = elder.nick || elder.name || '?';
+  return src.trim().charAt(0).toUpperCase();
+}
+
+function setWhoAmI() {
+  const sel = document.getElementById('whoAmISelect');
+  if (!sel) return;
+  state.activeElderId = sel.value;
+  saveState();
+  render();
+  toast(t('whoAmIHelp'));
+}
+
+function fillWhoAmISelect() {
+  const sel = document.getElementById('whoAmISelect');
+  if (!sel) return;
+  sel.innerHTML = state.elders.map(e =>
+    `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(elderTitle(e))}</option>`
+  ).join('');
+  const lbl = document.getElementById('whoAmILabel');
+  if (lbl) lbl.textContent = t('whoAmILabel');
+}
+
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -1290,6 +1443,8 @@ function applyI18n() {
   document.getElementById('lblLanguage').textContent = t('lblLanguage');
   document.getElementById('languageHelp').textContent = t('languageHelp');
   document.getElementById('btnResetAll').textContent = t('btnResetAll');
+  const brd = document.getElementById('btnResetDemo');
+  if (brd) brd.textContent = t('btnResetDemo');
   document.getElementById('aboutTitle').textContent = t('aboutTitle');
   document.getElementById('aboutText').textContent = t('aboutText');
   document.getElementById('newElderName').placeholder = t('elderPlaceholder');
@@ -1317,6 +1472,9 @@ function applyI18n() {
   if (ehh) ehh.textContent = t('holdHintElder');
   const mh = document.getElementById('messagesHint');
   if (mh) mh.textContent = t('messagesHint');
+  const wil = document.getElementById('whoAmILabel');
+  if (wil) wil.textContent = t('whoAmILabel');
+  fillWhoAmISelect();
   const fhl = document.getElementById('familyHoldLabel');
   if (fhl && !document.getElementById('familyHoldTalk').classList.contains('recording')) fhl.textContent = t('holdToTalk');
   const fhh = document.getElementById('familyHoldHint');
@@ -1351,9 +1509,10 @@ function updateSimClock() {
 function renderElder() {
   const elder = getActiveElder();
   if (!elder) return;
+  fillWhoAmISelect();
   const status = getStatus(elder);
   saveState();
-  document.getElementById('elderDisplayName').textContent = elder.name;
+  document.getElementById('elderDisplayName').textContent = elderTitle(elder);
   const pill = document.getElementById('elderStatusPill');
   pill.className = 'status-pill ' + status;
   pill.textContent = status === 'ok' ? t('statusOk') : status === 'warn' ? t('statusWarn') : t('statusAlert');
@@ -1372,9 +1531,9 @@ function renderElder() {
   document.getElementById('checkinSub').textContent = recent && status === 'ok' ? t('checkinDoneSub') : t('checkinSub');
   updateSimClock();
   renderElderVoice();
-  if (state.activeCall && state.activeCall.status === 'ringing') {
-    showIncomingCall(getActiveElder());
-  } else if (state.activeCall && state.activeCall.status === 'connected' && callUiMode !== 'incall') {
+  if (state.activeCall && state.activeCall.status === 'ringing' && state.activeCall.elderId === elder.id) {
+    showIncomingCall(elder);
+  } else if (state.activeCall && state.activeCall.status === 'connected' && state.activeCall.elderId === elder.id && callUiMode !== 'incall') {
     showInCall();
   }
 }
@@ -1401,7 +1560,7 @@ function renderFamily() {
         <div class="elder-card-top">
           <div class="avatar">${emoji}</div>
           <div class="info" style="flex:1;min-width:0">
-            <div class="name">${escapeHtml(elder.name)}</div>
+            <div class="name">${escapeHtml(elder.name)}${elder.nick ? ' <span class="elder-nick">· ' + escapeHtml(elder.nick) + '</span>' : ''}</div>
             <div class="meta">${meta}</div>
             <span class="care-step-pill s${step}">${pill}</span>
           </div>
@@ -1458,7 +1617,7 @@ function renderFamily() {
   const aac = document.getElementById('autoAnswerCheck');
   if (aac) aac.checked = !!state.autoAnswerCalls;
   document.getElementById('activeElderSelect').innerHTML = state.elders.map(e =>
-    `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
+    `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(elderTitle(e))}</option>`
   ).join('');
   updateSimClock();
   renderFamilyMessages();
@@ -1524,10 +1683,13 @@ function switchTab(name) {
     el.classList.toggle('active', el.dataset.tab === name);
   });
   if (name === 'messages') {
-    markMessagesRead('family');
+    if (familyMsgPane !== 'thread') familyMsgPane = 'list';
+    if (familyMsgPane === 'thread') markMessagesRead('family');
     renderFamilyMessages();
-    const thread = document.getElementById('chatThread');
-    if (thread) thread.scrollTop = thread.scrollHeight;
+    if (familyMsgPane === 'thread') {
+      const thread = document.getElementById('chatThread');
+      if (thread) thread.scrollTop = thread.scrollHeight;
+    }
   }
 }
 
@@ -1580,7 +1742,7 @@ function addElder() {
   const name = (input.value || '').trim();
   if (!name) return;
   const id = 'e' + Date.now();
-  state.elders.push({ id, name, lastCheckIn: now(), remindedAt: null, alertedAt: null });
+  state.elders.push({ id, name, nick: '', lastCheckIn: now(), remindedAt: null, alertedAt: null, stepNotified: 1 });
   if (!state.activeElderId) state.activeElderId = id;
   input.value = '';
   saveState(); toast(t('toastAdded')); render();
@@ -1642,10 +1804,8 @@ function saveAutoAnswer() {
 }
 
 function suggestSendVoice(elderId) {
-  if (elderId) state.activeElderId = elderId;
-  saveState();
-  setRole('family');
-  switchTab('messages');
+  if (elderId) openFamilyThread(elderId);
+  else { setRole('family'); familyMsgPane = 'list'; switchTab('messages'); }
   toast(t('btnSendVoice'));
 }
 
@@ -1689,19 +1849,22 @@ function resetDemoTime() {
   saveState(); toast(t('toastTimeReset')); render();
 }
 
-function resetAllData() {
+function resetDemoData() {
   if (!confirm(t('confirmReset'))) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem('elderCheckin_v1');
   clearAllVoiceAudio().finally(() => {
     state = defaultState();
-    lang = 'en';
-    role = 'elder';
+    lang = state.lang || 'en';
+    role = state.role || 'elder';
     familyTab = 'elders';
+    familyMsgPane = 'list';
+    saveState();
     toast(t('toastReset'));
     render();
   });
 }
+function resetAllData() { resetDemoData(); }
 
 (function applyQuery() {
   try {
@@ -1863,18 +2026,33 @@ function formatDuration(ms) {
   return sec + t('voiceSec');
 }
 
+function messagesForElderId(elderId) {
+  return (state.messages || []).filter(m => m.elderId === elderId);
+}
+
 function messagesForActiveElder() {
   const elder = getActiveElder();
   if (!elder) return [];
-  return (state.messages || []).filter(m => m.elderId === elder.id);
+  return messagesForElderId(elder.id);
 }
 
 function countUnreadForElder() {
   return messagesForActiveElder().filter(m => m.from === 'family' && !m.readByElder).length;
 }
 
+function countUnreadForFamilyElder(elderId) {
+  return messagesForElderId(elderId).filter(m => m.from === 'elder' && !m.readByFamily).length;
+}
+
 function countUnreadForFamily() {
-  return messagesForActiveElder().filter(m => m.from === 'elder' && !m.readByFamily).length;
+  // total across all seniors (Messages tab badge)
+  return (state.messages || []).filter(m => m.from === 'elder' && !m.readByFamily).length;
+}
+
+function lastMessageForElder(elderId) {
+  const msgs = messagesForElderId(elderId);
+  if (!msgs.length) return null;
+  return msgs.slice().sort((a, b) => (b.at || 0) - (a.at || 0))[0];
 }
 
 function markMessagesRead(viewer) {
@@ -1956,10 +2134,80 @@ function renderElderVoice() {
   }
 }
 
-function renderFamilyMessages() {
+function syncMessagesPane() {
+  const listV = document.getElementById('messagesListView');
+  const thrV = document.getElementById('messagesThreadView');
+  if (!listV || !thrV) return;
+  const showThread = familyMsgPane === 'thread';
+  listV.classList.toggle('hidden', showThread);
+  thrV.classList.toggle('hidden', !showThread);
+}
+
+function openFamilyThread(elderId) {
+  const elder = state.elders.find(e => e.id === elderId);
+  if (!elder) return;
+  state.activeElderId = elder.id;
+  familyMsgPane = 'thread';
+  familyTab = 'messages';
+  role = 'family';
+  saveState();
+  render();
+  markMessagesRead('family');
+  renderFamilyMessages();
+  const thread = document.getElementById('chatThread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+}
+
+function closeFamilyThread() {
+  familyMsgPane = 'list';
+  renderFamilyMessages();
+}
+
+function renderConvList() {
+  const list = document.getElementById('convList');
+  if (!list) return;
+  if (!state.elders.length) {
+    list.innerHTML = `<div class="empty"><div class="emoji">💬</div>${escapeHtml(t('convEmpty'))}</div>`;
+    return;
+  }
+  list.innerHTML = state.elders.map(elder => {
+    const last = lastMessageForElder(elder.id);
+    const unread = countUnreadForFamilyElder(elder.id);
+    let preview = t('convNoMessages');
+    let when = '';
+    if (last) {
+      const who = last.from === 'family' ? t('voiceFromFamily') : t('voiceFromElder');
+      preview = '🎤 ' + t('convVoicePreview') + ' · ' + formatDuration(last.durationMs) + ' · ' + who;
+      when = relativeTime(last.at);
+    }
+    const nick = elderNick(elder);
+    return `<button type="button" class="conv-row" onclick="openFamilyThread('${elder.id}')">
+      <div class="conv-avatar">${escapeHtml(elderInitial(elder))}</div>
+      <div class="conv-body">
+        <div class="conv-top">
+          <div class="conv-name">${escapeHtml(elder.name)}${nick ? ' <span class="elder-nick">· ' + escapeHtml(nick) + '</span>' : ''}</div>
+          <div class="conv-time">${escapeHtml(when)}</div>
+        </div>
+        <div class="conv-preview">${escapeHtml(preview)}</div>
+      </div>
+      ${unread ? `<span class="conv-unread">${unread}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+
+function renderFamilyThread() {
+  const elder = getActiveElder();
+  const nameEl = document.getElementById('threadElderName');
+  const nickEl = document.getElementById('threadElderNick');
+  if (nameEl) nameEl.textContent = elder ? elder.name : '';
+  if (nickEl) nickEl.textContent = elder && elder.nick ? elder.nick : '';
+  const back = document.getElementById('threadBackBtn');
+  if (back) back.textContent = '← ' + t('threadBack');
+  const mvb = document.getElementById('messagesVideoBtn');
+  if (mvb) mvb.textContent = '📹 ' + t('btnVideoCall') + (elder ? ' · ' + elder.name : '');
   const thread = document.getElementById('chatThread');
   if (!thread) return;
-  const msgs = messagesForActiveElder().slice().reverse(); // oldest first for chat
+  const msgs = messagesForActiveElder().slice().reverse();
   if (!msgs.length) {
     thread.innerHTML = `<div class="chat-empty"><div class="emoji" style="font-size:2.5rem">💬</div>${escapeHtml(t('voiceEmptyFamily'))}</div>`;
   } else {
@@ -1972,6 +2220,12 @@ function renderFamilyMessages() {
         </div>
       </div>`).join('');
   }
+}
+
+function renderFamilyMessages() {
+  syncMessagesPane();
+  if (familyMsgPane === 'thread') renderFamilyThread();
+  else renderConvList();
 }
 
 function setHoldUi(from, recording) {
@@ -2111,8 +2365,9 @@ async function saveVoiceMessage(from, dataUrl, durationMs) {
     toast(t('toastVoiceSent'));
   }
   saveState();
+  if (role === 'family' && familyTab === 'messages' && from === 'family') familyMsgPane = 'thread';
   render();
-  if (role === 'family' && familyTab === 'messages') {
+  if (role === 'family' && familyTab === 'messages' && familyMsgPane === 'thread') {
     const thread = document.getElementById('chatThread');
     if (thread) thread.scrollTop = thread.scrollHeight;
   }
@@ -2201,6 +2456,8 @@ function startVideoCall(elderId) {
   // Demo: after a moment, flip to senior incoming if still ringing
   setTimeout(() => {
     if (!state.activeCall || state.activeCall.status !== 'ringing') return;
+    state.activeElderId = state.activeCall.elderId;
+    saveState();
     if (role !== 'elder') setRole('elder');
     else showIncomingCall(elder);
   }, 1400);
@@ -2214,7 +2471,7 @@ function showOutgoingCall(elder) {
   ov.innerHTML = `
     <div>
       <div class="call-avatar">👵</div>
-      <div class="call-name">${escapeHtml(elder.name)}</div>
+      <div class="call-name">${escapeHtml(elderTitle(elder))}</div>
       <div class="call-status">${escapeHtml(t('callCalling'))}</div>
       <p class="muted" style="color:#94a3b8;text-align:center;margin-top:16px;font-size:0.85rem">${escapeHtml(t('callRemoteDemo'))}</p>
     </div>
@@ -2225,6 +2482,11 @@ function showOutgoingCall(elder) {
 
 function showIncomingCall(elder) {
   if (!state.activeCall || state.activeCall.status !== 'ringing') return;
+  // Route to the senior being called
+  const target = state.elders.find(e => e.id === state.activeCall.elderId) || elder || getActiveElder();
+  if (!target) return;
+  elder = target;
+  state.activeElderId = target.id;
   callUiMode = 'incoming';
   role = 'elder';
   saveState();
@@ -2232,6 +2494,7 @@ function showIncomingCall(elder) {
   document.getElementById('elderView').classList.remove('hidden');
   document.getElementById('familyView').classList.add('hidden');
   document.getElementById('familyTabs').classList.add('hidden');
+  fillWhoAmISelect();
 
   const ov = getCallOverlay();
   ov.classList.remove('hidden');
@@ -2241,7 +2504,7 @@ function showIncomingCall(elder) {
     <div>
       <div class="call-avatar">👨‍👩‍👧</div>
       <div class="call-name">${escapeHtml(t('callIncoming'))}</div>
-      <div class="call-status">${escapeHtml(t('callFromFamily'))}</div>
+      <div class="call-status">${escapeHtml(t('callFromFamily'))} → ${escapeHtml(elderTitle(elder))}</div>
       <div class="call-countdown" id="autoAnswerCountdown"></div>
     </div>
     <div class="call-actions">
