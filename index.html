@@ -233,6 +233,94 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px;
   padding: 12px; font-size: 0.9rem; margin-bottom: 16px; line-height: 1.45;
 }
+
+.voice-section { margin: 16px 0 8px; }
+.voice-section .voice-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; gap: 8px;
+}
+.voice-section .voice-head h2 {
+  font-size: 1.05rem; font-weight: 800; color: var(--text);
+}
+.unread-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 26px; padding: 0 8px;
+  border-radius: 999px; background: var(--alert); color: #fff;
+  font-size: 0.8rem; font-weight: 800;
+}
+.unread-badge.hidden { display: none !important; }
+.voice-device-note {
+  font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4;
+}
+.voice-inbox { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 220px; overflow-y: auto; }
+.voice-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--card); border-radius: 14px;
+  box-shadow: var(--shadow); border: 2px solid transparent;
+}
+.voice-row.unread { border-color: #f59e0b; background: #fffbeb; }
+.voice-play {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); color: #fff; font-size: 1.35rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(15,118,110,0.3);
+}
+.voice-play:active { background: var(--primary-dark); }
+.voice-play.playing { background: #ca8a04; }
+.voice-meta { flex: 1; min-width: 0; }
+.voice-meta .who { font-weight: 700; font-size: 0.95rem; }
+.voice-meta .dur { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+.hold-talk {
+  width: 100%; padding: 22px 16px; border-radius: 18px;
+  background: linear-gradient(145deg, #0d9488, #0f766e);
+  color: #fff; font-size: 1.35rem; font-weight: 800;
+  box-shadow: 0 8px 28px rgba(15,118,110,0.35);
+  user-select: none; -webkit-user-select: none;
+  touch-action: none; margin: 8px 0 12px;
+  border: 4px solid #5eead4;
+}
+.hold-talk:active, .hold-talk.recording {
+  background: linear-gradient(145deg, #dc2626, #b91c1c);
+  border-color: #fecaca;
+  transform: scale(0.98);
+}
+.hold-talk .hint { display: block; font-size: 0.85rem; font-weight: 600; opacity: 0.9; margin-top: 4px; }
+
+.messages-pane { display: flex; flex-direction: column; min-height: 60vh; }
+.chat-thread {
+  flex: 1; display: flex; flex-direction: column; gap: 10px;
+  padding: 8px 0 16px; max-height: calc(100dvh - 320px); overflow-y: auto;
+}
+.chat-bubble {
+  max-width: 85%; padding: 10px 12px; border-radius: 16px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow);
+}
+.chat-bubble.from-family {
+  align-self: flex-end; background: #ccfbf1; border-bottom-right-radius: 4px;
+}
+.chat-bubble.from-elder {
+  align-self: flex-start; background: #fff; border-bottom-left-radius: 4px;
+}
+.chat-bubble .play {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--primary); color: #fff; font-size: 1.1rem; font-weight: 800;
+  flex-shrink: 0;
+}
+.chat-bubble .play.playing { background: #ca8a04; }
+.chat-bubble .info { min-width: 0; }
+.chat-bubble .dur { font-weight: 800; font-size: 1.05rem; }
+.chat-bubble .when { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.chat-empty { text-align: center; padding: 32px 12px; color: var(--muted); }
+.tab-badge {
+  display: inline-block; min-width: 18px; height: 18px; line-height: 18px;
+  padding: 0 5px; margin-left: 4px; border-radius: 999px;
+  background: var(--alert); color: #fff; font-size: 0.7rem; font-weight: 800;
+  vertical-align: middle;
+}
+.tabs .tab { font-size: 0.78rem; padding: 12px 2px; }
+.checkin-btn { max-width: 240px; margin: 12px auto; }
 </style>
 </head>
 <body>
@@ -248,6 +336,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 
 <div id="familyTabs" class="tabs hidden">
   <button type="button" class="tab active" data-tab="elders" onclick="switchTab('elders')"></button>
+  <button type="button" class="tab" data-tab="messages" onclick="switchTab('messages')"></button>
   <button type="button" class="tab" data-tab="contacts" onclick="switchTab('contacts')"></button>
   <button type="button" class="tab" data-tab="alerts" onclick="switchTab('alerts')"></button>
   <button type="button" class="tab" data-tab="settings" onclick="switchTab('settings')"></button>
@@ -267,6 +356,18 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
       <span class="label" id="checkinLabel"></span>
       <span class="sub" id="checkinSub"></span>
     </button>
+    <div class="voice-section" id="elderVoiceSection">
+      <div class="voice-head">
+        <h2 id="elderVoiceTitle">Messages from family</h2>
+        <span class="unread-badge hidden" id="elderUnreadBadge">0</span>
+      </div>
+      <p class="voice-device-note" id="elderVoiceNote"></p>
+      <div class="voice-inbox" id="elderVoiceInbox"></div>
+      <button type="button" class="hold-talk" id="elderHoldTalk" aria-label="Hold to talk">
+        <span id="elderHoldLabel">Hold to talk</span>
+        <span class="hint" id="elderHoldHint">Release to send · also checks you in</span>
+      </button>
+    </div>
     <button type="button" class="sos-btn" id="sosBtn" onclick="doSOS()">
       <span>🆘</span> <span id="sosLabel"></span>
     </button>
@@ -283,6 +384,17 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
           <input type="text" id="newElderName" maxlength="40">
         </div>
         <button type="button" class="btn btn-primary btn-block" onclick="addElder()" id="btnAddElder"></button>
+      </div>
+    </div>
+
+    <div id="tabMessages" class="hidden">
+      <div class="messages-pane">
+        <div class="setup-hint" id="messagesHint"></div>
+        <div class="chat-thread" id="chatThread"></div>
+        <button type="button" class="hold-talk" id="familyHoldTalk" aria-label="Hold to talk">
+          <span id="familyHoldLabel">Hold to talk</span>
+          <span class="hint" id="familyHoldHint">Release to send to the senior</span>
+        </button>
       </div>
     </div>
 
@@ -396,6 +508,27 @@ const i18n = {
     resetTime: 'Back to real time',
     simClock: 'Simulated time: ',
     realTime: '(using real time)',
+    tabMessages: 'Messages',
+    elderVoiceTitle: 'Messages from family',
+    voiceDeviceNote: 'Demo: voice messages stay on this device only (not sent over the internet).',
+    holdToTalk: 'Hold to talk',
+    holdHintElder: 'Release to send · also checks you in',
+    holdHintFamily: 'Release to send to the senior',
+    holdRecording: 'Recording… release to send',
+    voiceEmptyElder: 'No voice messages yet. Family can send one from Messages.',
+    voiceEmptyFamily: 'No messages yet. Hold the button below to send a voice note.',
+    voiceFromFamily: 'Family',
+    voiceFromElder: 'Senior',
+    voicePlay: 'Play',
+    voicePlaying: '⏸',
+    voiceSec: 's',
+    toastVoiceSent: 'Voice message sent',
+    toastVoiceCheckin: 'Voice sent — checked in ✓',
+    toastVoiceTooShort: 'Hold a little longer to record',
+    toastMicDenied: 'Microphone access denied. Allow the mic in Safari settings to send voice messages.',
+    toastMicUnavailable: 'Microphone not available in this browser.',
+    toastVoiceFailed: 'Could not record. Please try again.',
+    messagesHint: 'WeChat-style voice notes between family and the senior. Demo: everything stays on this phone — open Family & carers and I\'m the senior on the same device to chat.',
     tabElders: 'People',
     tabContacts: 'Contacts',
     tabAlerts: 'Alerts',
@@ -425,7 +558,7 @@ const i18n = {
     languageHelp: 'English is the default. Chinese is optional.',
     btnResetAll: 'Clear all local data',
     aboutTitle: 'About DailyOK',
-    aboutText: 'DailyOK is a prototype. Data stays in this browser only (localStorage). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
+    aboutText: 'DailyOK is a prototype. Check-in data stays in this browser (localStorage). Voice notes are stored on this device (IndexedDB). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
     noElders: 'No one added yet',
     noContacts: 'No contacts yet',
     noNotifs: 'No alerts yet',
@@ -473,6 +606,27 @@ const i18n = {
     resetTime: '恢复真实时间',
     simClock: '当前模拟时间：',
     realTime: '（使用真实时间）',
+    tabMessages: '语音',
+    elderVoiceTitle: '家人的语音',
+    voiceDeviceNote: '演示：语音只保存在本机，不会联网发送。',
+    holdToTalk: '按住说话',
+    holdHintElder: '松手发送 · 同时算作签到',
+    holdHintFamily: '松手发送给长辈',
+    holdRecording: '正在录音…松手发送',
+    voiceEmptyElder: '还没有语音。家人可在「语音」页发送。',
+    voiceEmptyFamily: '还没有消息。按住下方按钮发送语音。',
+    voiceFromFamily: '家属',
+    voiceFromElder: '长辈',
+    voicePlay: '播放',
+    voicePlaying: '⏸',
+    voiceSec: '秒',
+    toastVoiceSent: '语音已发送',
+    toastVoiceCheckin: '语音已发送，并已签到 ✓',
+    toastVoiceTooShort: '请按久一点再松手',
+    toastMicDenied: '无法使用麦克风。请在 Safari 设置中允许麦克风，才能发语音。',
+    toastMicUnavailable: '此浏览器无法使用麦克风。',
+    toastVoiceFailed: '录音失败，请再试一次。',
+    messagesHint: '像微信一样收发语音。演示：消息只存在这部手机上——在同一设备切换「家属」与「我是长辈」即可互发。',
     tabElders: '老人',
     tabContacts: '联系人',
     tabAlerts: '通知',
@@ -502,7 +656,7 @@ const i18n = {
     languageHelp: '默认英文。中文为可选项。',
     btnResetAll: '清除所有本地数据',
     aboutTitle: '关于 DailyOK',
-    aboutText: '这是原型。数据仅保存在本浏览器（localStorage）。正式版需要后端、短信/推送、澳洲隐私合规与应用商店账号。澳洲紧急电话：000。',
+    aboutText: '这是原型。签到数据保存在本浏览器（localStorage），语音保存在本机（IndexedDB）。正式版需要后端、短信/推送、澳洲隐私合规与应用商店账号。澳洲紧急电话：000。',
     noElders: '还没有添加老人',
     noContacts: '还没有联系人',
     noNotifs: '暂无通知',
@@ -553,7 +707,8 @@ function defaultState() {
       { id: 'c1', name: 'James (son)', phone: '+61 400 000 001', role: 'family' },
       { id: 'c2', name: 'Sarah (carer)', phone: '+61 400 000 002', role: 'carer' }
     ],
-    notifications: []
+    notifications: [],
+    messages: []
   };
 }
 
@@ -568,7 +723,14 @@ function loadState() {
     const s = JSON.parse(raw);
     if (!s.elders || !s.elders.length) return defaultState();
     if (s.lang !== 'zh') s.lang = 'en';
-    return Object.assign(defaultState(), s);
+    const merged = Object.assign(defaultState(), s);
+    if (!Array.isArray(merged.messages)) merged.messages = [];
+    // strip any legacy inline audio from localStorage payloads
+    merged.messages = merged.messages.map(m => {
+      const { dataUrl, ...rest } = m;
+      return rest;
+    });
+    return merged;
   } catch (e) {
     return defaultState();
   }
@@ -698,10 +860,33 @@ function applyI18n() {
   document.getElementById('aboutText').textContent = t('aboutText');
   document.getElementById('newElderName').placeholder = t('elderPlaceholder');
   const tabs = document.querySelectorAll('#familyTabs .tab');
-  const tabKeys = ['tabElders', 'tabContacts', 'tabAlerts', 'tabSettings'];
-  tabs.forEach((el, i) => { el.textContent = t(tabKeys[i]); });
+  const tabKeys = ['tabElders', 'tabMessages', 'tabContacts', 'tabAlerts', 'tabSettings'];
+  tabs.forEach((el, i) => {
+    const key = tabKeys[i];
+    let label = t(key);
+    if (key === 'tabMessages') {
+      const unread = countUnreadForFamily();
+      if (unread > 0) label += ' · ' + unread;
+    }
+    el.textContent = label;
+  });
   const langSel = document.getElementById('languageSelect');
   if (langSel) langSel.value = lang;
+  // Voice UI labels
+  const evt = document.getElementById('elderVoiceTitle');
+  if (evt) evt.textContent = t('elderVoiceTitle');
+  const evn = document.getElementById('elderVoiceNote');
+  if (evn) evn.textContent = t('voiceDeviceNote');
+  const ehl = document.getElementById('elderHoldLabel');
+  if (ehl && !document.getElementById('elderHoldTalk').classList.contains('recording')) ehl.textContent = t('holdToTalk');
+  const ehh = document.getElementById('elderHoldHint');
+  if (ehh) ehh.textContent = t('holdHintElder');
+  const mh = document.getElementById('messagesHint');
+  if (mh) mh.textContent = t('messagesHint');
+  const fhl = document.getElementById('familyHoldLabel');
+  if (fhl && !document.getElementById('familyHoldTalk').classList.contains('recording')) fhl.textContent = t('holdToTalk');
+  const fhh = document.getElementById('familyHoldHint');
+  if (fhh) fhh.textContent = t('holdHintFamily');
 }
 
 function updateSimClock() {
@@ -735,6 +920,7 @@ function renderElder() {
   document.getElementById('checkinLabel').textContent = recent && status === 'ok' ? t('checkinDone') : t('checkinLabel');
   document.getElementById('checkinSub').textContent = recent && status === 'ok' ? t('checkinDoneSub') : t('checkinSub');
   updateSimClock();
+  renderElderVoice();
 }
 
 function escapeHtml(s) {
@@ -791,6 +977,7 @@ function renderFamily() {
     `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
   ).join('');
   updateSimClock();
+  renderFamilyMessages();
 }
 
 function syncRoleTabs() {
@@ -842,24 +1029,35 @@ function toggleRole() {
 
 function switchTab(name) {
   familyTab = name;
-  ['elders', 'contacts', 'alerts', 'settings'].forEach(tname => {
+  ['elders', 'messages', 'contacts', 'alerts', 'settings'].forEach(tname => {
     const pane = document.getElementById('tab' + tname.charAt(0).toUpperCase() + tname.slice(1));
     if (pane) pane.classList.toggle('hidden', tname !== name);
   });
   document.querySelectorAll('#familyTabs .tab').forEach(el => {
     el.classList.toggle('active', el.dataset.tab === name);
   });
+  if (name === 'messages') {
+    markMessagesRead('family');
+    renderFamilyMessages();
+    const thread = document.getElementById('chatThread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  }
 }
 
-function doCheckIn() {
+function applyCheckIn(silent) {
   const elder = getActiveElder();
-  if (!elder) return;
+  if (!elder) return null;
   elder.lastCheckIn = now();
   elder.remindedAt = null;
   elder.alertedAt = null;
   pushNotif('ok', elder, 'checkin');
   saveState();
-  toast(t('toastCheckin'));
+  if (!silent) toast(t('toastCheckin'));
+  return elder;
+}
+
+function doCheckIn() {
+  if (!applyCheckIn(false)) return;
   render();
 }
 
@@ -960,11 +1158,14 @@ function resetAllData() {
   if (!confirm(t('confirmReset'))) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem('elderCheckin_v1');
-  state = defaultState();
-  lang = 'en';
-  role = 'elder';
-  toast(t('toastReset'));
-  render();
+  clearAllVoiceAudio().finally(() => {
+    state = defaultState();
+    lang = 'en';
+    role = 'elder';
+    familyTab = 'elders';
+    toast(t('toastReset'));
+    render();
+  });
 }
 
 (function applyQuery() {
@@ -979,6 +1180,7 @@ function resetAllData() {
       if (e) { e.lastCheckIn = Date.now() - 2 * 3600000; e.remindedAt = null; e.alertedAt = null; }
       state.timeOffsetMs = 0;
       state.notifications = [];
+      state.messages = [];
     }
     const sim = parseInt(q.get('sim') || '', 10);
     if (sim > 0) {
@@ -989,10 +1191,428 @@ function resetAllData() {
   } catch (e) {}
 })();
 
+
+/* ===== Voice messaging (WeChat-style, on-device) ===== */
+const VOICE_IDB = 'dailyok_voice_v1';
+const VOICE_STORE = 'clips';
+const MAX_VOICE_MSGS = 40;
+const MIN_REC_MS = 450;
+const MAX_REC_MS = 60000;
+
+let voiceDbPromise = null;
+let mediaRecorder = null;
+let mediaStream = null;
+let recChunks = [];
+let recStartedAt = 0;
+let recFrom = null; // 'elder' | 'family'
+let recMaxTimer = null;
+let playingAudio = null;
+let playingId = null;
+let holdBound = false;
+let recArming = null; // Promise while getUserMedia / MediaRecorder starts
+let recCancelled = false;
+
+function openVoiceDb() {
+  if (voiceDbPromise) return voiceDbPromise;
+  voiceDbPromise = new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('no idb')); return; }
+    const req = indexedDB.open(VOICE_IDB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(VOICE_STORE)) db.createObjectStore(VOICE_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('idb open failed'));
+  });
+  return voiceDbPromise;
+}
+
+async function idbPutAudio(id, dataUrl) {
+  try {
+    const db = await openVoiceDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readwrite');
+      tx.objectStore(VOICE_STORE).put(dataUrl, id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    // Fallback: tiny stash in localStorage (may fail for large clips)
+    try {
+      const bag = JSON.parse(localStorage.getItem(STORAGE_KEY + '_voice') || '{}');
+      bag[id] = dataUrl;
+      localStorage.setItem(STORAGE_KEY + '_voice', JSON.stringify(bag));
+    } catch (e2) {
+      console.warn('voice store failed', e2);
+      throw e2;
+    }
+  }
+}
+
+async function idbGetAudio(id) {
+  try {
+    const db = await openVoiceDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readonly');
+      const req = tx.objectStore(VOICE_STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    try {
+      const bag = JSON.parse(localStorage.getItem(STORAGE_KEY + '_voice') || '{}');
+      return bag[id] || null;
+    } catch (e2) { return null; }
+  }
+}
+
+async function idbDelAudio(id) {
+  try {
+    const db = await openVoiceDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readwrite');
+      tx.objectStore(VOICE_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    try {
+      const bag = JSON.parse(localStorage.getItem(STORAGE_KEY + '_voice') || '{}');
+      delete bag[id];
+      localStorage.setItem(STORAGE_KEY + '_voice', JSON.stringify(bag));
+    } catch (e2) {}
+  }
+}
+
+async function clearAllVoiceAudio() {
+  try {
+    const db = await openVoiceDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readwrite');
+      tx.objectStore(VOICE_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {}
+  try { localStorage.removeItem(STORAGE_KEY + '_voice'); } catch (e) {}
+}
+
+function pickRecorderMime() {
+  const types = [
+    'audio/mp4',
+    'audio/aac',
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus'
+  ];
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  for (const type of types) {
+    try { if (MediaRecorder.isTypeSupported(type)) return type; } catch (e) {}
+  }
+  return '';
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result);
+    fr.onerror = () => reject(fr.error);
+    fr.readAsDataURL(blob);
+  });
+}
+
+function formatDuration(ms) {
+  const sec = Math.max(1, Math.round((ms || 0) / 1000));
+  return sec + t('voiceSec');
+}
+
+function messagesForActiveElder() {
+  const elder = getActiveElder();
+  if (!elder) return [];
+  return (state.messages || []).filter(m => m.elderId === elder.id);
+}
+
+function countUnreadForElder() {
+  return messagesForActiveElder().filter(m => m.from === 'family' && !m.readByElder).length;
+}
+
+function countUnreadForFamily() {
+  return messagesForActiveElder().filter(m => m.from === 'elder' && !m.readByFamily).length;
+}
+
+function markMessagesRead(viewer) {
+  const elder = getActiveElder();
+  if (!elder) return;
+  let changed = false;
+  (state.messages || []).forEach(m => {
+    if (m.elderId !== elder.id) return;
+    if (viewer === 'elder' && m.from === 'family' && !m.readByElder) { m.readByElder = true; changed = true; }
+    if (viewer === 'family' && m.from === 'elder' && !m.readByFamily) { m.readByFamily = true; changed = true; }
+  });
+  if (changed) saveState();
+}
+
+function trimMessages() {
+  while ((state.messages || []).length > MAX_VOICE_MSGS) {
+    const old = state.messages.pop();
+    if (old) idbDelAudio(old.id);
+  }
+}
+
+function stopPlaying() {
+  if (playingAudio) {
+    try { playingAudio.pause(); } catch (e) {}
+    playingAudio = null;
+  }
+  playingId = null;
+  document.querySelectorAll('.voice-play.playing, .chat-bubble .play.playing').forEach(el => {
+    el.classList.remove('playing');
+    if (el.dataset.icon) el.textContent = el.dataset.icon;
+  });
+}
+
+async function playVoice(id, btn) {
+  if (playingId === id) { stopPlaying(); return; }
+  stopPlaying();
+  const msg = (state.messages || []).find(m => m.id === id);
+  if (msg) {
+    if (role === 'elder' && !msg.readByElder) { msg.readByElder = true; saveState(); }
+    if (role === 'family' && !msg.readByFamily) { msg.readByFamily = true; saveState(); }
+  }
+  const dataUrl = await idbGetAudio(id);
+  if (!dataUrl) { toast(t('toastVoiceFailed')); return; }
+  const audio = new Audio(dataUrl);
+  playingAudio = audio;
+  playingId = id;
+  if (btn) {
+    btn.classList.add('playing');
+    btn.dataset.icon = btn.dataset.icon || btn.textContent;
+    btn.textContent = t('voicePlaying');
+  }
+  audio.onended = () => { stopPlaying(); if (role === 'elder') renderElderVoice(); };
+  audio.onerror = () => { stopPlaying(); toast(t('toastVoiceFailed')); };
+  try { await audio.play(); } catch (e) { stopPlaying(); toast(t('toastVoiceFailed')); }
+  if (role === 'elder') renderElderVoice();
+}
+
+function renderElderVoice() {
+  const inbox = document.getElementById('elderVoiceInbox');
+  const badge = document.getElementById('elderUnreadBadge');
+  if (!inbox) return;
+  const msgs = messagesForActiveElder().filter(m => m.from === 'family').slice(0, 8);
+  const unread = countUnreadForElder();
+  if (badge) {
+    badge.textContent = String(unread);
+    badge.classList.toggle('hidden', unread === 0);
+  }
+  if (!msgs.length) {
+    inbox.innerHTML = `<div class="empty" style="padding:16px"><div class="emoji">🎙️</div>${escapeHtml(t('voiceEmptyElder'))}</div>`;
+  } else {
+    inbox.innerHTML = msgs.map(m => `
+      <div class="voice-row ${m.readByElder ? '' : 'unread'}">
+        <button type="button" class="voice-play" data-icon="▶" onclick="playVoice('${m.id}', this)">▶</button>
+        <div class="voice-meta">
+          <div class="who">${escapeHtml(t('voiceFromFamily'))}</div>
+          <div class="dur">${formatDuration(m.durationMs)} · ${relativeTime(m.at)}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function renderFamilyMessages() {
+  const thread = document.getElementById('chatThread');
+  if (!thread) return;
+  const msgs = messagesForActiveElder().slice().reverse(); // oldest first for chat
+  if (!msgs.length) {
+    thread.innerHTML = `<div class="chat-empty"><div class="emoji" style="font-size:2.5rem">💬</div>${escapeHtml(t('voiceEmptyFamily'))}</div>`;
+  } else {
+    thread.innerHTML = msgs.map(m => `
+      <div class="chat-bubble from-${m.from}">
+        <button type="button" class="play" data-icon="▶" onclick="playVoice('${m.id}', this)">▶</button>
+        <div class="info">
+          <div class="dur">${formatDuration(m.durationMs)}</div>
+          <div class="when">${escapeHtml(m.from === 'family' ? t('voiceFromFamily') : t('voiceFromElder'))} · ${formatTime(m.at)}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function setHoldUi(from, recording) {
+  const btn = document.getElementById(from === 'elder' ? 'elderHoldTalk' : 'familyHoldTalk');
+  const label = document.getElementById(from === 'elder' ? 'elderHoldLabel' : 'familyHoldLabel');
+  if (!btn || !label) return;
+  btn.classList.toggle('recording', !!recording);
+  label.textContent = recording ? t('holdRecording') : t('holdToTalk');
+}
+
+async function startHoldRecord(from, ev) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  if (recArming) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast(t('toastMicUnavailable'));
+    return;
+  }
+  stopPlaying();
+  recCancelled = false;
+  recFrom = from;
+  recChunks = [];
+  setHoldUi(from, true);
+  recArming = (async () => {
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (recCancelled) { stopMediaTracks(); return; }
+      const mime = pickRecorderMime();
+      try {
+        mediaRecorder = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
+      } catch (err) {
+        stopMediaTracks();
+        setHoldUi(from, false);
+        toast(t('toastVoiceFailed'));
+        return;
+      }
+      mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
+      mediaRecorder.onerror = () => { toast(t('toastVoiceFailed')); };
+      recStartedAt = Date.now();
+      mediaRecorder.start(100);
+      clearTimeout(recMaxTimer);
+      recMaxTimer = setTimeout(() => stopHoldRecord(from, true), MAX_REC_MS);
+      if (recCancelled) { await stopHoldRecord(from, false); }
+    } catch (err) {
+      setHoldUi(from, false);
+      const name = (err && err.name) || '';
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') toast(t('toastMicDenied'));
+      else toast(t('toastMicUnavailable'));
+    } finally {
+      recArming = null;
+    }
+  })();
+  await recArming;
+}
+
+function stopMediaTracks() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(tr => { try { tr.stop(); } catch (e) {} });
+    mediaStream = null;
+  }
+}
+
+async function stopHoldRecord(from, auto) {
+  clearTimeout(recMaxTimer);
+  const btnFrom = from || recFrom;
+  // If still arming mic, mark cancel/finish after start resolves
+  if (recArming && !(mediaRecorder && mediaRecorder.state === 'recording')) {
+    recCancelled = true;
+    try { await recArming; } catch (e) {}
+  }
+  setHoldUi(btnFrom || 'elder', false);
+  const mr = mediaRecorder;
+  if (!mr || mr.state === 'inactive') {
+    stopMediaTracks();
+    mediaRecorder = null;
+    return;
+  }
+  const started = recStartedAt;
+  const who = recFrom;
+  const mime = mr.mimeType || pickRecorderMime() || 'audio/webm';
+  const blob = await new Promise(resolve => {
+    mr.onstop = () => {
+      resolve(new Blob(recChunks, { type: mime }));
+    };
+    try { mr.stop(); } catch (e) { resolve(new Blob()); }
+  });
+  stopMediaTracks();
+  mediaRecorder = null;
+  recChunks = [];
+  const dur = Date.now() - started;
+  if (dur < MIN_REC_MS || !blob || blob.size < 20) {
+    toast(t('toastVoiceTooShort'));
+    return;
+  }
+  try {
+    const dataUrl = await blobToDataUrl(blob);
+    await saveVoiceMessage(who, dataUrl, dur);
+  } catch (e) {
+    console.warn(e);
+    toast(t('toastVoiceFailed'));
+  }
+}
+
+function cancelHoldRecord(from) {
+  clearTimeout(recMaxTimer);
+  recCancelled = true;
+  setHoldUi(from || recFrom || 'elder', false);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.onstop = null; mediaRecorder.stop(); } catch (e) {}
+  }
+  mediaRecorder = null;
+  recChunks = [];
+  stopMediaTracks();
+}
+
+async function saveVoiceMessage(from, dataUrl, durationMs) {
+  const elder = getActiveElder();
+  if (!elder) return;
+  const id = 'v' + Date.now() + Math.random().toString(36).slice(2, 7);
+  await idbPutAudio(id, dataUrl);
+  const msg = {
+    id,
+    from,
+    elderId: elder.id,
+    durationMs,
+    at: now(),
+    readByElder: from === 'elder',
+    readByFamily: from === 'family'
+  };
+  if (!state.messages) state.messages = [];
+  state.messages.unshift(msg);
+  trimMessages();
+  if (from === 'elder') {
+    applyCheckIn(true);
+    toast(t('toastVoiceCheckin'));
+  } else {
+    toast(t('toastVoiceSent'));
+  }
+  saveState();
+  render();
+  if (role === 'family' && familyTab === 'messages') {
+    const thread = document.getElementById('chatThread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  }
+}
+
+function bindHoldButton(el, from) {
+  if (!el || el.dataset.bound === '1') return;
+  el.dataset.bound = '1';
+  const onStart = e => startHoldRecord(from, e);
+  const onEnd = e => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    stopHoldRecord(from, false);
+  };
+  el.addEventListener('touchstart', onStart, { passive: false });
+  el.addEventListener('touchend', onEnd, { passive: false });
+  el.addEventListener('touchcancel', e => { e.preventDefault(); cancelHoldRecord(from); }, { passive: false });
+  el.addEventListener('mousedown', onStart);
+  el.addEventListener('mouseup', onEnd);
+  el.addEventListener('mouseleave', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from) stopHoldRecord(from, false);
+  });
+  // Prevent context menu / long-press callout on iOS
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function bindVoiceControls() {
+  bindHoldButton(document.getElementById('elderHoldTalk'), 'elder');
+  bindHoldButton(document.getElementById('familyHoldTalk'), 'family');
+}
+
+bindVoiceControls();
+
+
 render();
 setInterval(() => {
   if (role === 'elder') renderElder();
-  else if (familyTab === 'elders' || familyTab === 'alerts') renderFamily();
+  else if (familyTab === 'elders' || familyTab === 'alerts' || familyTab === 'messages') renderFamily();
   updateSimClock();
 }, 30000);
 </script>
