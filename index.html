@@ -321,6 +321,101 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 }
 .tabs .tab { font-size: 0.78rem; padding: 12px 2px; }
 .checkin-btn { max-width: 240px; margin: 12px auto; }
+
+.elder-card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); border-left: 6px solid var(--ok);
+  padding: 14px; margin-bottom: 0;
+}
+.elder-card.warn { border-left-color: var(--warn); }
+.elder-card.alert { border-left-color: var(--alert); }
+.elder-card.step3 { border-left-color: #ea580c; }
+.elder-card.step4 { border-left-color: var(--alert); }
+.elder-card-top { display: flex; align-items: center; gap: 12px; }
+.elder-card .avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #ccfbf1; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; flex-shrink: 0;
+}
+.elder-card.warn .avatar, .elder-card.step2 .avatar { background: #fef9c3; }
+.elder-card.step3 .avatar { background: #ffedd5; }
+.elder-card.alert .avatar, .elder-card.step4 .avatar { background: #fee2e2; }
+.elder-card .name { font-size: 1.15rem; font-weight: 700; }
+.elder-card .meta { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.care-step-pill {
+  display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 800; background: #e0f2f1; color: var(--primary);
+}
+.care-step-pill.s2 { background: #fef9c3; color: #a16207; }
+.care-step-pill.s3 { background: #ffedd5; color: #c2410c; }
+.care-step-pill.s4 { background: #fee2e2; color: #b91c1c; }
+.care-action {
+  margin-top: 12px; padding: 12px; border-radius: 12px;
+  background: #f0fdfa; border: 1px solid #99f6e4;
+}
+.care-action.s2 { background: #fffbeb; border-color: #fcd34d; }
+.care-action.s3 { background: #fff7ed; border-color: #fdba74; }
+.care-action.s4 { background: #fef2f2; border-color: #fca5a5; }
+.care-action .ca-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 8px; }
+.elder-card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-video {
+  flex: 1; min-width: 120px; padding: 12px 14px; border-radius: 12px;
+  background: #0369a1; color: #fff; font-weight: 800; font-size: 0.95rem;
+}
+.btn-video:active { background: #075985; }
+.messages-call-bar { margin-bottom: 10px; }
+
+.care-ladder { margin: 0 0 16px; padding: 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; }
+.care-ladder h3 { font-size: 1rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+.care-ladder ol { padding-left: 1.2rem; margin: 8px 0; }
+.care-ladder li { margin: 6px 0; font-size: 0.88rem; line-height: 1.4; color: var(--text); }
+.care-ladder .muted { margin-top: 8px; }
+
+.call-overlay {
+  position: fixed; inset: 0; z-index: 400; background: #0f172a; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 48px 24px calc(32px + var(--safe-bottom));
+}
+.call-overlay.hidden { display: none !important; }
+.call-avatar {
+  width: 120px; height: 120px; border-radius: 50%; background: #134e4a;
+  display: flex; align-items: center; justify-content: center; font-size: 3.5rem;
+  margin: 24px auto 16px; border: 4px solid #2dd4bf;
+}
+.call-name { font-size: 1.8rem; font-weight: 800; text-align: center; }
+.call-status { font-size: 1.1rem; opacity: 0.85; text-align: center; margin-top: 8px; }
+.call-actions { display: flex; gap: 28px; align-items: center; justify-content: center; width: 100%; }
+.call-btn {
+  width: 88px; height: 88px; border-radius: 50%; font-weight: 800; font-size: 0.85rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  color: #fff; border: none;
+}
+.call-btn .ico { font-size: 1.8rem; line-height: 1; }
+.call-btn.answer { background: #16a34a; width: 110px; height: 110px; font-size: 1rem; }
+.call-btn.decline, .call-btn.hangup { background: #dc2626; }
+.call-btn.mute, .call-btn.cam { background: #334155; width: 72px; height: 72px; }
+.call-btn.active-off { background: #64748b; }
+
+.in-call { padding: 12px; justify-content: flex-start; }
+.in-call-stage {
+  position: relative; width: 100%; flex: 1; border-radius: 16px; overflow: hidden;
+  background: #1e293b; min-height: 55vh; margin: 12px 0;
+}
+.in-call-stage video.self {
+  position: absolute; right: 12px; top: 12px; width: 34%; max-width: 140px;
+  aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; border: 2px solid #fff;
+  background: #000; z-index: 2;
+}
+.in-call-stage .remote {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 24px; text-align: center;
+  background: linear-gradient(160deg, #0f766e, #134e4a 60%, #0f172a);
+}
+.in-call-stage .remote .big { font-size: 3rem; margin-bottom: 12px; }
+.in-call-stage .remote .label { font-size: 1.05rem; font-weight: 700; max-width: 280px; line-height: 1.4; }
+.in-call-bar { display: flex; gap: 16px; justify-content: center; align-items: center; padding: 8px 0 4px; }
+.call-countdown { font-size: 1.2rem; font-weight: 700; color: #99f6e4; margin-top: 16px; text-align: center; }
+
 </style>
 </head>
 <body>
@@ -390,6 +485,9 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
     <div id="tabMessages" class="hidden">
       <div class="messages-pane">
         <div class="setup-hint" id="messagesHint"></div>
+        <div class="messages-call-bar">
+          <button type="button" class="btn-video btn-block" id="messagesVideoBtn" onclick="startVideoCall()"></button>
+        </div>
         <div class="chat-thread" id="chatThread"></div>
         <button type="button" class="hold-talk" id="familyHoldTalk" aria-label="Hold to talk">
           <span id="familyHoldLabel">Hold to talk</span>
@@ -446,9 +544,34 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
         </div>
         <p class="muted" id="thresholdHelp" style="margin-bottom:16px"></p>
 
+        <div class="care-ladder" id="careLadder">
+          <h3 id="careLadderTitle">Care steps</h3>
+          <p class="muted" id="careLadderIntro"></p>
+          <ol id="careLadderList"></ol>
+          <div class="form-group" style="margin-top:12px;margin-bottom:8px">
+            <label id="lblCareReply"></label>
+            <select id="careReplySelect" onchange="saveCareReply()">
+              <option value="0.5">30 minutes</option>
+              <option value="1" selected>1 hour</option>
+              <option value="2">2 hours</option>
+              <option value="6">6 hours</option>
+            </select>
+          </div>
+          <p class="muted" id="careReplyHelp"></p>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:flex-start;gap:10px;font-weight:600">
+            <input type="checkbox" id="autoAnswerCheck" onchange="saveAutoAnswer()" style="width:22px;height:22px;margin-top:2px;flex-shrink:0">
+            <span id="lblAutoAnswer"></span>
+          </label>
+          <p class="muted" id="autoAnswerHelp" style="margin-top:6px;margin-bottom:16px"></p>
+        </div>
+
         <div class="demo-panel" id="familyDemo" style="margin:0 0 16px; background:#f8fafc; border:1px dashed #94a3b8; border-radius:12px; padding:14px">
           <h3 id="demoTitle" style="margin:0 0 10px; font-size:0.95rem; color:#0f766e"></h3>
           <div class="btn-row" style="margin-bottom:8px">
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(1)">+1h</button>
             <button type="button" class="btn btn-secondary" onclick="simulateHours(12)">+12h</button>
             <button type="button" class="btn btn-secondary" onclick="simulateHours(24)">+24h</button>
             <button type="button" class="btn btn-secondary" onclick="simulateHours(48)">+48h</button>
@@ -481,6 +604,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   </section>
 </main>
 
+<div id="callOverlay" class="call-overlay hidden" aria-live="assertive"></div>
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
 
@@ -508,6 +632,47 @@ const i18n = {
     resetTime: 'Back to real time',
     simClock: 'Simulated time: ',
     realTime: '(using real time)',
+    careLadderTitle: 'Care steps',
+    careLadderIntro: 'When a check-in is late, DailyOK walks family through clear next steps. Use the demo time buttons to try each step.',
+    careStep1: 'Step 1 — Daily check-in: senior taps I\'m OK (or sends a voice note).',
+    careStep2: 'Step 2 — Overdue: remind the senior, and family send a voice message.',
+    careStep3: 'Step 3 — No reply within the wait time: family start a video call.',
+    careStep4: 'Step 4 — Still no response: alert all contacts and consider visiting or calling 000.',
+    lblCareReply: 'Wait time before next care step',
+    careReplyHelp: 'Default 1 hour after becoming overdue (and again before the final alert). Driven by the demo clock.',
+    lblAutoAnswer: 'Auto-answer calls from family (demo)',
+    autoAnswerHelp: 'Requires the senior\'s consent in real life. In this demo, an incoming call answers itself after a 3-second countdown.',
+    stepPill1: 'Step 1 · On track',
+    stepPill2: 'Step 2 · Send a voice note',
+    stepPill3: 'Step 3 · Video call',
+    stepPill4: 'Step 4 · Alert contacts',
+    careAction1: 'All good — optional video hello',
+    careAction2: 'Suggested: send a voice message now',
+    careAction3: 'Suggested: start a video call',
+    careAction4: 'Suggested: alert contacts / call 000',
+    btnSendVoice: 'Send voice message',
+    btnVideoCall: 'Video call',
+    btnAlertContacts: 'Alert contacts guidance',
+    callCalling: 'Calling…',
+    callIncoming: 'Incoming video call',
+    callFromFamily: 'Family is calling',
+    callAnswer: 'Answer',
+    callDecline: 'Decline',
+    callHangup: 'Hang up',
+    callMute: 'Mute',
+    callUnmute: 'Unmute',
+    callCamOff: 'Camera off',
+    callCamOn: 'Camera on',
+    callRemoteDemo: 'Demo — real calls need a server',
+    callConnecting: 'Connecting…',
+    callEnded: 'Call ended',
+    callAutoIn: 'Auto-answer in ',
+    toastCallStarted: 'Calling the senior — switch views if needed',
+    toastCamDenied: 'Camera access denied. You can still talk with a blank preview in this demo.',
+    toastCallAnswered: 'Call answered — checked in ✓',
+    toastCallDeclined: 'Call declined',
+    toastContactsAlerted: 'Demo: contacts would be alerted to visit or call 000',
+    alertStep4: 'Still no response — alert contacts and consider visiting or calling 000',
     tabMessages: 'Messages',
     elderVoiceTitle: 'Messages from family',
     voiceDeviceNote: 'Demo: voice messages stay on this device only (not sent over the internet).',
@@ -606,6 +771,47 @@ const i18n = {
     resetTime: '恢复真实时间',
     simClock: '当前模拟时间：',
     realTime: '（使用真实时间）',
+    careLadderTitle: '护理步骤',
+    careLadderIntro: '签到超时后，DailyOK 会按步骤提示家属。用演示时间按钮可逐级查看。',
+    careStep1: '步骤 1 — 日常签到：长辈点「我很好」或发语音。',
+    careStep2: '步骤 2 — 超时：提醒长辈，家属发送语音。',
+    careStep3: '步骤 3 — 等待时间内无回复：家属发起视频通话。',
+    careStep4: '步骤 4 — 仍无回应：通知所有联系人，考虑上门或拨打 000。',
+    lblCareReply: '进入下一步前的等待时间',
+    careReplyHelp: '默认超时后再等 1 小时（最终告警前再等一轮）。受演示时钟驱动。',
+    lblAutoAnswer: '自动接听家属来电（演示）',
+    autoAnswerHelp: '正式版需长辈同意。演示中来电会在 3 秒倒计时后自动接听。',
+    stepPill1: '步骤 1 · 正常',
+    stepPill2: '步骤 2 · 请发语音',
+    stepPill3: '步骤 3 · 视频通话',
+    stepPill4: '步骤 4 · 通知联系人',
+    careAction1: '一切正常 — 也可视频问候',
+    careAction2: '建议：现在发一条语音',
+    careAction3: '建议：发起视频通话',
+    careAction4: '建议：通知联系人 / 拨打 000',
+    btnSendVoice: '发送语音',
+    btnVideoCall: '视频通话',
+    btnAlertContacts: '告警联系人说明',
+    callCalling: '正在呼叫…',
+    callIncoming: '视频来电',
+    callFromFamily: '家人正在呼叫',
+    callAnswer: '接听',
+    callDecline: '拒绝',
+    callHangup: '挂断',
+    callMute: '静音',
+    callUnmute: '取消静音',
+    callCamOff: '关闭摄像头',
+    callCamOn: '打开摄像头',
+    callRemoteDemo: '演示 — 真实通话需要服务器',
+    callConnecting: '连接中…',
+    callEnded: '通话已结束',
+    callAutoIn: '自动接听倒计时 ',
+    toastCallStarted: '正在呼叫长辈 — 可切换到「我是长辈」接听',
+    toastCamDenied: '无法使用摄像头。演示中仍可继续（无画面）。',
+    toastCallAnswered: '已接听 — 并已签到 ✓',
+    toastCallDeclined: '已拒绝来电',
+    toastContactsAlerted: '演示：将通知联系人上门或拨打 000',
+    alertStep4: '仍无回应 — 请通知联系人，考虑上门或拨打 000',
     tabMessages: '语音',
     elderVoiceTitle: '家人的语音',
     voiceDeviceNote: '演示：语音只保存在本机，不会联网发送。',
@@ -698,10 +904,13 @@ function defaultState() {
     lang: 'en',
     role: 'elder',
     thresholdHours: 24,
+    careReplyHours: 1,
+    autoAnswerCalls: false,
     timeOffsetMs: 0,
     activeElderId: 'e1',
+    activeCall: null,
     elders: [
-      { id: 'e1', name: 'Margaret', lastCheckIn: now - 2 * 3600 * 1000, remindedAt: null, alertedAt: null }
+      { id: 'e1', name: 'Margaret', lastCheckIn: now - 2 * 3600 * 1000, remindedAt: null, alertedAt: null, stepNotified: 1 }
     ],
     contacts: [
       { id: 'c1', name: 'James (son)', phone: '+61 400 000 001', role: 'family' },
@@ -767,13 +976,19 @@ function pushNotif(level, elder, kind) {
       reminder: `Reminded ${elder.name} to check in`,
       overdue: `⚠️ ${elder.name} has not checked in for ${state.thresholdHours} hours — please call or visit`,
       sos: `🆘 ${elder.name} pressed SOS! Contact them or call 000 now`,
-      checkin: `${elder.name} checked in — all good`
+      checkin: `${elder.name} checked in — all good`,
+      careVoice: `Care step 2: ${elder.name} is overdue — please send a voice message`,
+      careVideo: `Care step 3: no reply from ${elder.name} — please start a video call`,
+      careAlert: `Care step 4: still no response from ${elder.name} — alert contacts / consider 000`
     },
     zh: {
       reminder: `已提醒 ${elder.name} 签到`,
       overdue: `⚠️ ${elder.name} 超过 ${state.thresholdHours} 小时未签到，请尽快上门或电话确认`,
       sos: `🆘 ${elder.name} 按下了紧急求助！请立即联系或拨打 000`,
-      checkin: `${elder.name} 已签到，一切正常`
+      checkin: `${elder.name} 已签到，一切正常`,
+      careVoice: `护理步骤 2：${elder.name} 已超时 — 请发送语音`,
+      careVideo: `护理步骤 3：${elder.name} 无回复 — 请发起视频通话`,
+      careAlert: `护理步骤 4：${elder.name} 仍无回应 — 请通知联系人 / 考虑 000`
     }
   };
   state.notifications.unshift({
@@ -785,26 +1000,77 @@ function pushNotif(level, elder, kind) {
   if (state.notifications.length > 50) state.notifications.length = 50;
 }
 
-function getStatus(elder) {
-  if (!elder.lastCheckIn) return 'alert';
-  const hours = (now() - elder.lastCheckIn) / 3600000;
+function careReplyHours() {
+  const v = parseFloat(state.careReplyHours);
+  return Number.isFinite(v) && v > 0 ? v : 1;
+}
+
+/** Care ladder: 1 on-track, 2 overdue→voice, 3 no reply→video, 4 still silent→alert contacts */
+function getCareStep(elder) {
   const th = state.thresholdHours || 24;
-  if (hours < th) return 'ok';
-  if (elder.alertedAt) return 'alert';
+  const replyH = careReplyHours();
+  if (!elder.lastCheckIn) {
+    // treat never-checked as overdue from "epoch" — force step 4 path via large hours
+    const hours = 9999;
+    return computeCareStep(elder, hours, th, replyH);
+  }
+  const hours = (now() - elder.lastCheckIn) / 3600000;
+  return computeCareStep(elder, hours, th, replyH);
+}
+
+function computeCareStep(elder, hours, th, replyH) {
+  if (hours < th) {
+    elder.stepNotified = 1;
+    return 1;
+  }
+  // Step 2: overdue
   if (!elder.remindedAt) {
     elder.remindedAt = now();
     pushNotif('warn', elder, 'reminder');
   }
-  const escalateAfter = th * 0.25;
-  if ((now() - elder.remindedAt) / 3600000 >= escalateAfter || hours >= th * 1.25) {
-    if (!elder.alertedAt) {
-      elder.alertedAt = now();
-      pushNotif('alert', elder, 'overdue');
+  const sinceOverdue = hours - th;
+  if (sinceOverdue < replyH) {
+    if ((elder.stepNotified || 1) < 2) {
+      elder.stepNotified = 2;
+      pushNotif('warn', elder, 'careVoice');
       saveState();
     }
-    return 'alert';
+    return 2;
   }
-  return 'warn';
+  // Step 3: no reply within wait → video
+  if (sinceOverdue < replyH * 2) {
+    if ((elder.stepNotified || 1) < 3) {
+      elder.stepNotified = 3;
+      pushNotif('alert', elder, 'careVideo');
+      saveState();
+    }
+    return 3;
+  }
+  // Step 4
+  if (!elder.alertedAt) {
+    elder.alertedAt = now();
+    pushNotif('alert', elder, 'overdue');
+  }
+  if ((elder.stepNotified || 1) < 4) {
+    elder.stepNotified = 4;
+    saveState();
+  }
+  return 4;
+}
+
+function getStatus(elder) {
+  const step = getCareStep(elder);
+  if (step === 1) return 'ok';
+  if (step === 2) return 'warn';
+  if (step === 3) return 'warn';
+  return 'alert';
+}
+
+function careActionFor(step) {
+  if (step === 1) return { cls: 's1', title: t('careAction1'), btn: t('btnVideoCall'), onclick: "startVideoCall('{id}')" };
+  if (step === 2) return { cls: 's2', title: t('careAction2'), btn: t('btnSendVoice'), onclick: "suggestSendVoice('{id}')" };
+  if (step === 3) return { cls: 's3', title: t('careAction3'), btn: t('btnVideoCall'), onclick: "startVideoCall('{id}')" };
+  return { cls: 's4', title: t('careAction4'), btn: t('btnAlertContacts'), onclick: "alertContactsGuidance('{id}')" };
 }
 
 function getActiveElder() {
@@ -887,6 +1153,23 @@ function applyI18n() {
   if (fhl && !document.getElementById('familyHoldTalk').classList.contains('recording')) fhl.textContent = t('holdToTalk');
   const fhh = document.getElementById('familyHoldHint');
   if (fhh) fhh.textContent = t('holdHintFamily');
+  updateCareLadderLabels();
+  const mvb = document.getElementById('messagesVideoBtn');
+  if (mvb) mvb.textContent = '📹 ' + t('btnVideoCall');
+}
+
+function updateCareLadderLabels() {
+  const set = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
+  set('careLadderTitle', 'careLadderTitle');
+  set('careLadderIntro', 'careLadderIntro');
+  set('lblCareReply', 'lblCareReply');
+  set('careReplyHelp', 'careReplyHelp');
+  set('lblAutoAnswer', 'lblAutoAnswer');
+  set('autoAnswerHelp', 'autoAnswerHelp');
+  const ol = document.getElementById('careLadderList');
+  if (ol) {
+    ol.innerHTML = [1,2,3,4].map(i => `<li>${escapeHtml(t('careStep' + i))}</li>`).join('');
+  }
 }
 
 function updateSimClock() {
@@ -921,6 +1204,11 @@ function renderElder() {
   document.getElementById('checkinSub').textContent = recent && status === 'ok' ? t('checkinDoneSub') : t('checkinSub');
   updateSimClock();
   renderElderVoice();
+  if (state.activeCall && state.activeCall.status === 'ringing') {
+    showIncomingCall(getActiveElder());
+  } else if (state.activeCall && state.activeCall.status === 'connected' && callUiMode !== 'incall') {
+    showInCall();
+  }
 }
 
 function escapeHtml(s) {
@@ -933,14 +1221,31 @@ function renderFamily() {
     list.innerHTML = `<div class="empty"><div class="emoji">🙂</div>${t('noElders')}</div>`;
   } else {
     list.innerHTML = state.elders.map(elder => {
-      const status = getStatus(elder);
-      const badge = status === 'ok' ? t('statusOk') : status === 'warn' ? t('statusWarn') : t('statusAlert');
+      const step = getCareStep(elder);
+      const status = step === 1 ? 'ok' : step === 4 ? 'alert' : 'warn';
+      const cardCls = status + ' step' + step;
       const meta = elder.lastCheckIn ? t('lastCheck') + relativeTime(elder.lastCheckIn) : t('never');
-      return `<div class="elder-item ${status}">
-        <div class="avatar">${status === 'ok' ? '😊' : status === 'warn' ? '😟' : '🚨'}</div>
-        <div class="info"><div class="name">${escapeHtml(elder.name)}</div><div class="meta">${meta}</div></div>
-        <span class="badge ${status}">${badge}</span>
-        <button type="button" class="btn btn-danger" style="padding:6px 10px;font-size:0.75rem" onclick="deleteElder('${elder.id}')">${t('delete')}</button>
+      const pill = t('stepPill' + step);
+      const act = careActionFor(step);
+      const onclick = act.onclick.replace('{id}', elder.id);
+      const emoji = step === 1 ? '😊' : step === 2 ? '😟' : step === 3 ? '📹' : '🚨';
+      return `<div class="elder-card ${cardCls}">
+        <div class="elder-card-top">
+          <div class="avatar">${emoji}</div>
+          <div class="info" style="flex:1;min-width:0">
+            <div class="name">${escapeHtml(elder.name)}</div>
+            <div class="meta">${meta}</div>
+            <span class="care-step-pill s${step}">${pill}</span>
+          </div>
+        </div>
+        <div class="care-action ${act.cls}">
+          <div class="ca-title">${escapeHtml(act.title)}</div>
+          <button type="button" class="btn btn-primary btn-block" onclick="${onclick}">${escapeHtml(act.btn)}</button>
+        </div>
+        <div class="elder-card-actions">
+          <button type="button" class="btn-video" onclick="startVideoCall('${elder.id}')">📹 ${escapeHtml(t('btnVideoCall'))}</button>
+          <button type="button" class="btn btn-danger" style="padding:12px 14px;font-size:0.85rem" onclick="deleteElder('${elder.id}')">${t('delete')}</button>
+        </div>
       </div>`;
     }).join('');
   }
@@ -973,11 +1278,18 @@ function renderFamily() {
   }
 
   document.getElementById('thresholdSelect').value = String(state.thresholdHours || 24);
+  const crs = document.getElementById('careReplySelect');
+  if (crs) crs.value = String(state.careReplyHours || 1);
+  const aac = document.getElementById('autoAnswerCheck');
+  if (aac) aac.checked = !!state.autoAnswerCalls;
   document.getElementById('activeElderSelect').innerHTML = state.elders.map(e =>
     `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
   ).join('');
   updateSimClock();
   renderFamilyMessages();
+  updateCareLadderLabels();
+  const mvb = document.getElementById('messagesVideoBtn');
+  if (mvb) mvb.textContent = '📹 ' + t('btnVideoCall');
 }
 
 function syncRoleTabs() {
@@ -1050,6 +1362,7 @@ function applyCheckIn(silent) {
   elder.lastCheckIn = now();
   elder.remindedAt = null;
   elder.alertedAt = null;
+  elder.stepNotified = 1;
   pushNotif('ok', elder, 'checkin');
   saveState();
   if (!silent) toast(t('toastCheckin'));
@@ -1126,8 +1439,43 @@ function clearNotifs() { state.notifications = []; saveState(); render(); }
 
 function saveThreshold() {
   state.thresholdHours = parseInt(document.getElementById('thresholdSelect').value, 10) || 24;
-  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
   saveState(); toast(t('toastSaved')); render();
+}
+
+function saveCareReply() {
+  state.careReplyHours = parseFloat(document.getElementById('careReplySelect').value) || 1;
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
+  saveState(); toast(t('toastSaved')); render();
+}
+
+function saveAutoAnswer() {
+  state.autoAnswerCalls = !!document.getElementById('autoAnswerCheck').checked;
+  saveState(); toast(t('toastSaved'));
+}
+
+function suggestSendVoice(elderId) {
+  if (elderId) state.activeElderId = elderId;
+  saveState();
+  setRole('family');
+  switchTab('messages');
+  toast(t('btnSendVoice'));
+}
+
+function alertContactsGuidance(elderId) {
+  const elder = state.elders.find(e => e.id === elderId) || getActiveElder();
+  if (elder) pushNotif('alert', elder, 'careAlert');
+  saveState();
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal sos-modal">
+        <h2>🚨 ${escapeHtml(t('stepPill4'))}</h2>
+        <p>${escapeHtml(t('alertStep4'))}</p>
+        <p style="font-size:1.3rem;font-weight:800;color:#b91c1c">000</p>
+        <button type="button" class="btn btn-primary btn-block" onclick="closeModal();toast(t('toastContactsAlerted'))">${escapeHtml(t('sosClose'))}</button>
+      </div>
+    </div>`;
+  render();
 }
 
 function setActiveElder() {
@@ -1144,13 +1492,13 @@ function saveLanguage() {
 
 function simulateHours(h) {
   state.timeOffsetMs = (state.timeOffsetMs || 0) + h * 3600000;
-  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+  // Do not clear care flags — the demo clock should advance the care ladder
   saveState(); toast(t('toastSim') + h + t('hours')); render();
 }
 
 function resetDemoTime() {
   state.timeOffsetMs = 0;
-  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
   saveState(); toast(t('toastTimeReset')); render();
 }
 
@@ -1181,6 +1529,8 @@ function resetAllData() {
       state.timeOffsetMs = 0;
       state.notifications = [];
       state.messages = [];
+      state.activeCall = null;
+      state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
     }
     const sim = parseInt(q.get('sim') || '', 10);
     if (sim > 0) {
@@ -1606,10 +1956,230 @@ function bindVoiceControls() {
   bindHoldButton(document.getElementById('familyHoldTalk'), 'family');
 }
 
+
+/* ===== Video call demo (local camera only) ===== */
+let callStream = null;
+let callAudioTrack = null;
+let callVideoTrack = null;
+let autoAnswerTimer = null;
+let autoAnswerTick = null;
+let callUiMode = null; // outgoing | incoming | incall
+
+function getCallOverlay() { return document.getElementById('callOverlay'); }
+
+function clearAutoAnswerTimers() {
+  clearTimeout(autoAnswerTimer);
+  clearInterval(autoAnswerTick);
+  autoAnswerTimer = null;
+  autoAnswerTick = null;
+}
+
+function stopCallMedia() {
+  if (callStream) {
+    callStream.getTracks().forEach(tr => { try { tr.stop(); } catch (e) {} });
+  }
+  callStream = null;
+  callAudioTrack = null;
+  callVideoTrack = null;
+  const vid = document.getElementById('selfPreview');
+  if (vid) vid.srcObject = null;
+}
+
+function hangUpCall(silent) {
+  clearAutoAnswerTimers();
+  stopCallMedia();
+  state.activeCall = null;
+  callUiMode = null;
+  saveState();
+  const ov = getCallOverlay();
+  if (ov) { ov.classList.add('hidden'); ov.innerHTML = ''; }
+  if (!silent) toast(t('callEnded'));
+  render();
+}
+
+function startVideoCall(elderId) {
+  const elder = (elderId && state.elders.find(e => e.id === elderId)) || getActiveElder();
+  if (!elder) return;
+  state.activeElderId = elder.id;
+  state.activeCall = {
+    elderId: elder.id,
+    status: 'ringing',
+    from: 'family',
+    at: now()
+  };
+  saveState();
+  showOutgoingCall(elder);
+  toast(t('toastCallStarted'));
+  // Demo: after a moment, flip to senior incoming if still ringing
+  setTimeout(() => {
+    if (!state.activeCall || state.activeCall.status !== 'ringing') return;
+    if (role !== 'elder') setRole('elder');
+    else showIncomingCall(elder);
+  }, 1400);
+}
+
+function showOutgoingCall(elder) {
+  callUiMode = 'outgoing';
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay';
+  ov.innerHTML = `
+    <div>
+      <div class="call-avatar">👵</div>
+      <div class="call-name">${escapeHtml(elder.name)}</div>
+      <div class="call-status">${escapeHtml(t('callCalling'))}</div>
+      <p class="muted" style="color:#94a3b8;text-align:center;margin-top:16px;font-size:0.85rem">${escapeHtml(t('callRemoteDemo'))}</p>
+    </div>
+    <div class="call-actions">
+      <button type="button" class="call-btn hangup" onclick="hangUpCall()"><span class="ico">📞</span>${escapeHtml(t('callDecline'))}</button>
+    </div>`;
+}
+
+function showIncomingCall(elder) {
+  if (!state.activeCall || state.activeCall.status !== 'ringing') return;
+  callUiMode = 'incoming';
+  role = 'elder';
+  saveState();
+  syncRoleTabs();
+  document.getElementById('elderView').classList.remove('hidden');
+  document.getElementById('familyView').classList.add('hidden');
+  document.getElementById('familyTabs').classList.add('hidden');
+
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay';
+  const auto = !!state.autoAnswerCalls;
+  ov.innerHTML = `
+    <div>
+      <div class="call-avatar">👨‍👩‍👧</div>
+      <div class="call-name">${escapeHtml(t('callIncoming'))}</div>
+      <div class="call-status">${escapeHtml(t('callFromFamily'))}</div>
+      <div class="call-countdown" id="autoAnswerCountdown"></div>
+    </div>
+    <div class="call-actions">
+      <button type="button" class="call-btn decline" onclick="declineCall()"><span class="ico">📵</span>${escapeHtml(t('callDecline'))}</button>
+      <button type="button" class="call-btn answer" onclick="answerCall()"><span class="ico">📹</span>${escapeHtml(t('callAnswer'))}</button>
+    </div>`;
+
+  clearAutoAnswerTimers();
+  if (auto) {
+    let left = 3;
+    const cd = document.getElementById('autoAnswerCountdown');
+    if (cd) cd.textContent = t('callAutoIn') + left + '…';
+    autoAnswerTick = setInterval(() => {
+      left -= 1;
+      const el = document.getElementById('autoAnswerCountdown');
+      if (el) el.textContent = left > 0 ? (t('callAutoIn') + left + '…') : t('callConnecting');
+      if (left <= 0) clearInterval(autoAnswerTick);
+    }, 1000);
+    autoAnswerTimer = setTimeout(() => answerCall(), 3000);
+  }
+}
+
+function declineCall() {
+  clearAutoAnswerTimers();
+  state.activeCall = null;
+  saveState();
+  const ov = getCallOverlay();
+  ov.classList.add('hidden');
+  ov.innerHTML = '';
+  callUiMode = null;
+  toast(t('toastCallDeclined'));
+  render();
+}
+
+async function answerCall() {
+  clearAutoAnswerTimers();
+  if (!state.activeCall) return;
+  state.activeCall.status = 'connected';
+  saveState();
+  applyCheckIn(true);
+  toast(t('toastCallAnswered'));
+  await showInCall();
+}
+
+async function showInCall() {
+  callUiMode = 'incall';
+  const elder = getActiveElder();
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay in-call';
+  ov.innerHTML = `
+    <div style="width:100%;text-align:center;font-weight:800;font-size:1.1rem">${escapeHtml(elder ? elder.name : '')}</div>
+    <div class="in-call-stage">
+      <div class="remote">
+        <div class="big">👤</div>
+        <div class="label">${escapeHtml(t('callRemoteDemo'))}</div>
+      </div>
+      <video id="selfPreview" class="self" playsinline autoplay muted></video>
+    </div>
+    <div class="in-call-bar">
+      <button type="button" class="call-btn mute" id="btnCallMute" onclick="toggleCallMute()"><span class="ico">🔇</span><span id="lblCallMute">${escapeHtml(t('callMute'))}</span></button>
+      <button type="button" class="call-btn hangup" onclick="hangUpCall()"><span class="ico">📞</span>${escapeHtml(t('callHangup'))}</button>
+      <button type="button" class="call-btn cam" id="btnCallCam" onclick="toggleCallCam()"><span class="ico">📷</span><span id="lblCallCam">${escapeHtml(t('callCamOff'))}</span></button>
+    </div>`;
+
+  stopCallMedia();
+  try {
+    callStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    callAudioTrack = callStream.getAudioTracks()[0] || null;
+    callVideoTrack = callStream.getVideoTracks()[0] || null;
+    const vid = document.getElementById('selfPreview');
+    if (vid) {
+      vid.srcObject = callStream;
+      try { await vid.play(); } catch (e) {}
+    }
+  } catch (err) {
+    const name = (err && err.name) || '';
+    toast(t('toastCamDenied'));
+    const vid = document.getElementById('selfPreview');
+    if (vid) {
+      vid.style.background = '#334155';
+      vid.insertAdjacentHTML('afterend', '');
+    }
+  }
+}
+
+function toggleCallMute() {
+  if (!callAudioTrack) return;
+  callAudioTrack.enabled = !callAudioTrack.enabled;
+  const btn = document.getElementById('btnCallMute');
+  const lbl = document.getElementById('lblCallMute');
+  const muted = !callAudioTrack.enabled;
+  if (lbl) lbl.textContent = muted ? t('callUnmute') : t('callMute');
+  if (btn) btn.classList.toggle('active-off', muted);
+}
+
+function toggleCallCam() {
+  if (!callVideoTrack) return;
+  callVideoTrack.enabled = !callVideoTrack.enabled;
+  const btn = document.getElementById('btnCallCam');
+  const lbl = document.getElementById('lblCallCam');
+  const off = !callVideoTrack.enabled;
+  if (lbl) lbl.textContent = off ? t('callCamOn') : t('callCamOff');
+  if (btn) btn.classList.toggle('active-off', off);
+}
+
+function restoreCallUiIfNeeded() {
+  const call = state.activeCall;
+  if (!call) return;
+  const elder = state.elders.find(e => e.id === call.elderId) || getActiveElder();
+  if (!elder) return;
+  if (call.status === 'ringing') {
+    if (role === 'family') showOutgoingCall(elder);
+    else showIncomingCall(elder);
+  } else if (call.status === 'connected') {
+    showInCall();
+  }
+}
+
+
 bindVoiceControls();
 
-
+// Drop stale ringing calls on hard refresh after long time? keep for demo continuity
 render();
+restoreCallUiIfNeeded();
+
 setInterval(() => {
   if (role === 'elder') renderElder();
   else if (familyTab === 'elders' || familyTab === 'alerts' || familyTab === 'messages') renderFamily();
