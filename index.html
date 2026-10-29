@@ -33,13 +33,13 @@ html, body {
   color: var(--text);
   -webkit-tap-highlight-color: transparent;
 }
-body { display: flex; flex-direction: column; min-height: 100dvh; }
+body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
 button { font-family: inherit; cursor: pointer; border: none; }
 input, select, textarea { font-family: inherit; font-size: 16px; }
 
 .topbar {
   display: flex; flex-direction: column; gap: 10px;
-  padding: 12px 12px 10px; background: var(--primary); color: #fff;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 10px; background: var(--primary); color: #fff;
   position: sticky; top: 0; z-index: 50;
 }
 .topbar h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em; text-align: center; }
@@ -143,6 +143,21 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   .voice-section#elderVoiceSection .empty .emoji { font-size: 1.4rem; margin-bottom: 2px; }
   .sos-hold { min-height: 96px; padding: 14px 14px 14px 88px; }
   .sos-hold .sos-ring { width: 64px; height: 64px; left: 12px; }
+}
+@media (max-height: 700px) {
+  .who-am-i { margin: 4px 0 2px; padding: 6px 8px; }
+  .checkin-btn { max-width: 160px; margin: 4px auto 2px; border-width: 5px; }
+  .checkin-btn .emoji { font-size: 2.2rem; }
+  .checkin-btn .label { font-size: 1.25rem; }
+  .checkin-btn .sub { font-size: 0.8rem; }
+  .elder-action-btn { min-height: 96px; padding: 10px 6px; font-size: 0.9rem; }
+  .elder-action-btn .ea-ico { font-size: 1.6rem; }
+  .elder-action-btn .hint { font-size: 0.65rem; }
+  .voice-section#elderVoiceSection .voice-inbox { max-height: 56px; }
+  .sos-hold { min-height: 84px; padding: 10px 12px 10px 78px; }
+  .sos-hold .sos-title { font-size: 1.15rem; }
+  .sos-hold .sos-hint { font-size: 0.8rem; }
+  #elderView { min-height: calc(100dvh - 120px); }
 }
 
 .sos-hold {
@@ -746,10 +761,11 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
           <div class="form-group" style="margin-top:12px;margin-bottom:8px">
             <label id="lblCareReply"></label>
             <select id="careReplySelect" onchange="saveCareReply()">
-              <option value="0.5">30 minutes</option>
-              <option value="1" selected>1 hour</option>
+              <option value="1">1 hour</option>
               <option value="2">2 hours</option>
               <option value="6">6 hours</option>
+              <option value="12" selected>12 hours</option>
+              <option value="24">24 hours</option>
             </select>
           </div>
           <p class="muted" id="careReplyHelp"></p>
@@ -806,7 +822,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 
 <script>
 const STORAGE_KEY = 'dailyok_v2';
-const DATA_SCHEMA_VERSION = 3; // multi-senior Mum+Dad seed — bump to force re-seed on old phones
+const DATA_SCHEMA_VERSION = 4; // careReplyHours 12 so +24/+48/+72 demo steps land on ladder 2/3/4
 const i18n = {
   en: {
     appTitle: 'DailyOK',
@@ -1143,7 +1159,7 @@ function defaultState() {
     lang: 'en',
     role: 'elder',
     thresholdHours: 24,
-    careReplyHours: 1,
+    careReplyHours: 12,
     autoAnswerCalls: false,
     timeOffsetMs: 0,
     activeElderId: 'e1',
@@ -1225,6 +1241,7 @@ function t(key) { return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key;
 function saveState() {
   state.lang = lang;
   state.role = role;
+  state.schemaVersion = DATA_SCHEMA_VERSION;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -1279,7 +1296,7 @@ function pushNotif(level, elder, kind) {
 
 function careReplyHours() {
   const v = parseFloat(state.careReplyHours);
-  return Number.isFinite(v) && v > 0 ? v : 1;
+  return Number.isFinite(v) && v > 0 ? v : 12;
 }
 
 /** Care ladder: 1 on-track, 2 overdue→voice, 3 no reply→video, 4 still silent→alert contacts */
@@ -1291,7 +1308,8 @@ function getCareStep(elder) {
     const hours = 9999;
     return computeCareStep(elder, hours, th, replyH);
   }
-  const hours = (now() - elder.lastCheckIn) / 3600000;
+  // Floor to whole hours so demo +24/+48/+72 buttons land on exact ladder steps
+  const hours = Math.floor((now() - elder.lastCheckIn) / 3600000);
   return computeCareStep(elder, hours, th, replyH);
 }
 
@@ -1306,7 +1324,8 @@ function computeCareStep(elder, hours, th, replyH) {
     pushNotif('warn', elder, 'reminder');
   }
   const sinceOverdue = hours - th;
-  if (sinceOverdue < replyH) {
+  // Inclusive upper bounds so +24/+48/+72 demo buttons land cleanly on steps 2/3/4
+  if (sinceOverdue <= replyH) {
     if ((elder.stepNotified || 1) < 2) {
       elder.stepNotified = 2;
       pushNotif('warn', elder, 'careVoice');
@@ -1315,7 +1334,7 @@ function computeCareStep(elder, hours, th, replyH) {
     return 2;
   }
   // Step 3: no reply within wait → video
-  if (sinceOverdue < replyH * 2) {
+  if (sinceOverdue <= replyH * 2) {
     if ((elder.stepNotified || 1) < 3) {
       elder.stepNotified = 3;
       pushNotif('alert', elder, 'careVideo');
@@ -1355,8 +1374,11 @@ function getActiveElder() {
 }
 
 function elderNick(elder) {
-  if (!elder) return '';
-  return elder.nick || '';
+  if (!elder || !elder.nick) return '';
+  const n = String(elder.nick).trim();
+  if (/^(mum|mom)$/i.test(n)) return t('nickMum');
+  if (/^dad$/i.test(n)) return t('nickDad');
+  return elder.nick;
 }
 
 function elderTitle(elder) {
@@ -1560,7 +1582,7 @@ function renderFamily() {
         <div class="elder-card-top">
           <div class="avatar">${emoji}</div>
           <div class="info" style="flex:1;min-width:0">
-            <div class="name">${escapeHtml(elder.name)}${elder.nick ? ' <span class="elder-nick">· ' + escapeHtml(elder.nick) + '</span>' : ''}</div>
+            <div class="name">${escapeHtml(elder.name)}${(elderNick(elder) ? ' <span class="elder-nick">· ' + escapeHtml(elderNick(elder)) + '</span>' : '')}</div>
             <div class="meta">${meta}</div>
             <span class="care-step-pill s${step}">${pill}</span>
           </div>
@@ -2376,20 +2398,41 @@ async function saveVoiceMessage(from, dataUrl, durationMs) {
 function bindHoldButton(el, from) {
   if (!el || el.dataset.bound === '1') return;
   el.dataset.bound = '1';
+  let lastTouchAt = 0;
   const onStart = e => startHoldRecord(from, e);
   const onEnd = e => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     stopHoldRecord(from, false);
   };
-  el.addEventListener('touchstart', onStart, { passive: false });
-  el.addEventListener('touchend', onEnd, { passive: false });
-  el.addEventListener('touchcancel', e => { e.preventDefault(); cancelHoldRecord(from); }, { passive: false });
-  el.addEventListener('mousedown', onStart);
-  el.addEventListener('mouseup', onEnd);
-  el.addEventListener('mouseleave', () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from) stopHoldRecord(from, false);
-  });
-  // Prevent context menu / long-press callout on iOS
+  // Pointer Events (iOS 13+) — avoids touch+mouse double-fire on iOS Safari
+  if (window.PointerEvent) {
+    el.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && (Date.now() - lastTouchAt) < 700) return;
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') lastTouchAt = Date.now();
+      try { el.setPointerCapture && e.pointerId != null && el.setPointerCapture(e.pointerId); } catch (err) {}
+      onStart(e);
+    });
+    el.addEventListener('pointerup', onEnd);
+    el.addEventListener('pointercancel', e => { e.preventDefault(); cancelHoldRecord(from); });
+    el.addEventListener('lostpointercapture', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from) stopHoldRecord(from, false);
+    });
+  } else {
+    el.addEventListener('touchstart', e => { lastTouchAt = Date.now(); onStart(e); }, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: false });
+    el.addEventListener('touchcancel', e => { e.preventDefault(); cancelHoldRecord(from); }, { passive: false });
+    el.addEventListener('mousedown', e => {
+      if (Date.now() - lastTouchAt < 700) return;
+      onStart(e);
+    });
+    el.addEventListener('mouseup', e => {
+      if (Date.now() - lastTouchAt < 700) return;
+      onEnd(e);
+    });
+    el.addEventListener('mouseleave', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from) stopHoldRecord(from, false);
+    });
+  }
   el.addEventListener('contextmenu', e => e.preventDefault());
 }
 
@@ -2563,7 +2606,7 @@ async function showInCall() {
         <div class="big">👤</div>
         <div class="label">${escapeHtml(t('callRemoteDemo'))}</div>
       </div>
-      <video id="selfPreview" class="self" playsinline autoplay muted></video>
+      <video id="selfPreview" class="self" playsinline webkit-playsinline autoplay muted></video>
     </div>
     <div class="in-call-bar">
       <button type="button" class="call-btn mute" id="btnCallMute" onclick="toggleCallMute()"><span class="ico">🔇</span><span id="lblCallMute">${escapeHtml(t('callMute'))}</span></button>
@@ -2667,7 +2710,8 @@ function sosTick() {
 
 function bindSosHold() {
   const btn = document.getElementById('sosBtn');
-  if (!btn) return;
+  if (!btn || btn.dataset.bound === '1') return;
+  btn.dataset.bound = '1';
   const fg = document.getElementById('sosRingFg');
   if (fg) { fg.style.strokeDasharray = String(SOS_RING_LEN); fg.style.strokeDashoffset = String(SOS_RING_LEN); }
   const start = (e) => {
@@ -2683,7 +2727,8 @@ function bindSosHold() {
   btn.addEventListener('pointerdown', start);
   btn.addEventListener('pointerup', end);
   btn.addEventListener('pointercancel', end);
-  btn.addEventListener('pointerleave', end);
+  btn.addEventListener('lostpointercapture', end);
+  // Do not cancel on pointerleave — finger drift would abort SOS for seniors
   btn.addEventListener('contextmenu', e => e.preventDefault());
   // Keyboard: hold Space/Enter
   btn.addEventListener('keydown', e => {
