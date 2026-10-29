@@ -112,14 +112,123 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   border-color: #bbf7d0;
 }
 
-.sos-btn {
-  width: 100%; padding: 22px; border-radius: var(--radius);
-  background: var(--sos); color: #fff; font-size: 1.4rem; font-weight: 800;
-  box-shadow: 0 8px 24px rgba(185, 28, 28, 0.35);
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  margin-top: 8px;
+/* Sticky SOS footer — always separated from voice/video */
+.sos-zone {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  margin-top: 24px;
+  padding: 14px 0 calc(10px + var(--safe-bottom));
+  border-top: 3px dashed #fca5a5;
+  background: linear-gradient(180deg, rgba(254,242,242,0.92), #fef2f2 40%);
+  box-shadow: 0 -8px 24px rgba(127, 29, 29, 0.08);
 }
-.sos-btn:active { background: #991b1b; }
+#elderView {
+  padding-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 140px);
+}
+#elderView .sos-zone { margin-top: auto; }
+.voice-section#elderVoiceSection .voice-inbox {
+  max-height: 100px;
+}
+@media (max-height: 900px) {
+  .elder-hero { margin-bottom: 2px; }
+  .elder-hero .elder-name { font-size: 1.3rem; }
+  .elder-hero .last-check { font-size: 0.85rem; }
+  .voice-section#elderVoiceSection { margin: 6px 0 0; }
+  .voice-section#elderVoiceSection .voice-inbox { max-height: 72px; }
+  .voice-section#elderVoiceSection .empty { padding: 6px; }
+  .voice-section#elderVoiceSection .empty .emoji { font-size: 1.4rem; margin-bottom: 2px; }
+  .sos-hold { min-height: 96px; padding: 14px 14px 14px 88px; }
+  .sos-hold .sos-ring { width: 64px; height: 64px; left: 12px; }
+}
+
+.sos-hold {
+  position: relative;
+  width: 100%;
+  min-height: 112px;
+  padding: 18px 16px 18px 96px;
+  border-radius: 20px;
+  background: #7f1d1d;
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(127, 29, 29, 0.4);
+  text-align: left;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none;
+  border: 3px solid #fecaca;
+}
+.sos-hold.holding { background: #991b1b; }
+.sos-hold .sos-ring {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  width: 72px; height: 72px;
+}
+.sos-hold .sos-ring-bg {
+  fill: none; stroke: rgba(255,255,255,0.25); stroke-width: 8;
+}
+.sos-hold .sos-ring-fg {
+  fill: none; stroke: #fbbf24; stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 276.46;
+  stroke-dashoffset: 276.46;
+  transform: rotate(-90deg); transform-origin: 50% 50%;
+  transition: none;
+}
+.sos-hold .sos-inner { display: flex; flex-direction: column; gap: 2px; }
+.sos-hold .sos-emoji { font-size: 1.4rem; line-height: 1; }
+.sos-hold .sos-title { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.02em; }
+.sos-hold .sos-hint { font-size: 0.9rem; font-weight: 600; opacity: 0.92; }
+
+.elder-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+.elder-action-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 18px 10px; border-radius: 18px;
+  color: #fff; font-weight: 800; font-size: 1.05rem; line-height: 1.2;
+  text-align: center; min-height: 128px;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+  border: 4px solid transparent;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+.elder-action-btn .ea-ico { font-size: 2.2rem; line-height: 1; }
+.elder-action-btn .hint {
+  display: block; font-size: 0.72rem; font-weight: 600; opacity: 0.9; margin-top: 2px;
+}
+.elder-action-btn.voice {
+  background: linear-gradient(145deg, #2563eb, #1d4ed8);
+  border-color: #93c5fd;
+}
+.elder-action-btn.voice:active, .elder-action-btn.voice.recording {
+  background: linear-gradient(145deg, #dc2626, #b91c1c);
+  border-color: #fecaca;
+  transform: scale(0.98);
+}
+.elder-action-btn.video {
+  background: linear-gradient(145deg, #7c3aed, #6d28d9);
+  border-color: #c4b5fd;
+}
+.elder-action-btn.video:active { background: linear-gradient(145deg, #6d28d9, #5b21b6); transform: scale(0.98); }
+
+.contact-item .c-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.contact-item .prio {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #e0f2f1; color: var(--primary); font-size: 0.75rem; font-weight: 800;
+  margin-right: 6px;
+}
+.btn-icon {
+  width: 36px; height: 36px; border-radius: 10px; font-size: 1rem; font-weight: 800;
+  background: #e0f2f1; color: var(--primary); display: inline-flex;
+  align-items: center; justify-content: center;
+}
+.btn-icon:disabled { opacity: 0.35; }
+.btn-icon.danger { background: #fee2e2; color: var(--alert); }
 
 .reminder-banner {
   background: #fef3c7; border: 2px solid #f59e0b; border-radius: var(--radius);
@@ -320,7 +429,12 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   vertical-align: middle;
 }
 .tabs .tab { font-size: 0.78rem; padding: 12px 2px; }
-.checkin-btn { max-width: 240px; margin: 12px auto; }
+.checkin-btn { max-width: 200px; margin: 8px auto 4px; }
+.checkin-btn .emoji { font-size: 2.8rem; }
+.checkin-btn .label { font-size: 1.55rem; }
+.elder-action-btn { min-height: 112px; padding: 14px 8px; }
+.elder-action-btn .ea-ico { font-size: 1.9rem; }
+.elder-action-btn { font-size: 0.98rem; }
 
 .elder-card {
   background: var(--card); border-radius: var(--radius);
@@ -451,6 +565,18 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
       <span class="label" id="checkinLabel"></span>
       <span class="sub" id="checkinSub"></span>
     </button>
+    <div class="elder-actions-row">
+      <button type="button" class="elder-action-btn voice" id="elderHoldTalk" aria-label="Hold to talk">
+        <span class="ea-ico" aria-hidden="true">🎙️</span>
+        <span id="elderHoldLabel">Hold to talk</span>
+        <span class="hint" id="elderHoldHint">Release to send · also checks you in</span>
+      </button>
+      <button type="button" class="elder-action-btn video" id="elderVideoCallBtn" onclick="startElderVideoCall()">
+        <span class="ea-ico" aria-hidden="true">📹</span>
+        <span id="elderVideoLabel">Video call family</span>
+        <span class="hint" id="elderVideoHint">Calls contacts in priority order</span>
+      </button>
+    </div>
     <div class="voice-section" id="elderVoiceSection">
       <div class="voice-head">
         <h2 id="elderVoiceTitle">Messages from family</h2>
@@ -458,14 +584,20 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
       </div>
       <p class="voice-device-note" id="elderVoiceNote"></p>
       <div class="voice-inbox" id="elderVoiceInbox"></div>
-      <button type="button" class="hold-talk" id="elderHoldTalk" aria-label="Hold to talk">
-        <span id="elderHoldLabel">Hold to talk</span>
-        <span class="hint" id="elderHoldHint">Release to send · also checks you in</span>
+    </div>
+    <div class="sos-zone">
+      <button type="button" class="sos-hold" id="sosBtn" aria-label="Hold 2 seconds for emergency SOS">
+        <svg class="sos-ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="sos-ring-bg" cx="50" cy="50" r="44"></circle>
+          <circle class="sos-ring-fg" id="sosRingFg" cx="50" cy="50" r="44"></circle>
+        </svg>
+        <span class="sos-inner">
+          <span class="sos-emoji">🆘</span>
+          <span class="sos-title" id="sosLabel">SOS</span>
+          <span class="sos-hint" id="sosHoldHint">Hold 2s for emergency</span>
+        </span>
       </button>
     </div>
-    <button type="button" class="sos-btn" id="sosBtn" onclick="doSOS()">
-      <span>🆘</span> <span id="sosLabel"></span>
-    </button>
   </section>
 
   <section id="familyView" class="hidden">
@@ -499,7 +631,8 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
     <div id="tabContacts" class="hidden">
       <div class="card">
         <h2 id="contactsTitle"></h2>
-        <p class="muted" id="contactsDesc" style="margin-bottom:12px"></p>
+        <p class="muted" id="contactsDesc" style="margin-bottom:8px"></p>
+        <p class="muted" id="contactsPriorityHelp" style="margin-bottom:12px;font-weight:600;color:var(--primary)"></p>
         <div id="contactList"></div>
         <div class="form-group" style="margin-top:16px">
           <label id="lblContactName"></label>
@@ -620,7 +753,20 @@ const i18n = {
     checkinSub: 'Tap to let family know',
     checkinDone: "You're checked in ✓",
     checkinDoneSub: 'Tap again to update',
-    sosLabel: 'SOS — call for help',
+    sosLabel: 'SOS',
+    sosHoldHint: 'Hold 2s for emergency',
+    elderVideoLabel: 'Video call family',
+    elderVideoHint: 'Calls contacts in priority order',
+    contactsPriorityHelp: 'Order is call priority. Use ↑ ↓ so the senior reaches the right person first.',
+    callPriority: 'Priority',
+    callTrying: 'Calling',
+    callOf: 'of',
+    callNoAnswerDemo: 'No answer (demo)',
+    callSimulateAnswer: 'Simulate answer',
+    toastNoContacts: 'Add a family contact first (Family → Contacts)',
+    toastTryingNext: 'No answer — trying next contact…',
+    toastNoAnswerAll: 'No one answered. Try again or use SOS if this is urgent.',
+    toastCallingContact: 'Calling ',
     lastNever: 'No check-in yet',
     lastCheck: 'Last check-in: ',
     statusOk: 'All good',
@@ -703,7 +849,7 @@ const i18n = {
     lblElderName: 'Name',
     btnAddElder: 'Add',
     contactsTitle: 'Emergency contacts',
-    contactsDesc: 'When a check-in is overdue or SOS is pressed, DailyOK simulates notifying these people. A full version can send SMS or push alerts.',
+    contactsDesc: 'When a check-in is overdue or SOS is pressed, DailyOK simulates notifying these people. Order is the video-call priority for “Video call family”. A full version can send SMS or push alerts.',
     lblContactName: 'Name',
     lblContactPhone: 'Mobile number',
     lblContactRole: 'Role',
@@ -760,6 +906,19 @@ const i18n = {
     checkinDone: '今日已签到 ✓',
     checkinDoneSub: '再点也可以更新时间',
     sosLabel: '紧急求助',
+    sosHoldHint: '按住 2 秒启动紧急求助',
+    elderVideoLabel: '视频呼叫家人',
+    elderVideoHint: '按联系人优先级依次拨打',
+    contactsPriorityHelp: '顺序即呼叫优先级。用 ↑ ↓ 把最该先接到的人排在最前。',
+    callPriority: '优先级',
+    callTrying: '正在呼叫',
+    callOf: '/',
+    callNoAnswerDemo: '无人接听（演示）',
+    callSimulateAnswer: '模拟接听',
+    toastNoContacts: '请先在「家属 → 联系人」添加联系人',
+    toastTryingNext: '无人接听 — 正在尝试下一位…',
+    toastNoAnswerAll: '无人接听。可再试，或紧急时用 SOS。',
+    toastCallingContact: '正在呼叫 ',
     lastNever: '还没有签到过',
     lastCheck: '上次签到：',
     statusOk: '一切正常',
@@ -842,7 +1001,7 @@ const i18n = {
     lblElderName: '姓名',
     btnAddElder: '添加',
     contactsTitle: '紧急联系人',
-    contactsDesc: '超时或按 SOS 时，会在此模拟通知这些人（正式版可发短信/推送）。',
+    contactsDesc: '超时或按 SOS 时，会在此模拟通知这些人。「视频呼叫家人」按此顺序拨打（正式版可发短信/推送）。',
     lblContactName: '姓名',
     lblContactPhone: '手机号',
     lblContactRole: '身份',
@@ -914,7 +1073,8 @@ function defaultState() {
     ],
     contacts: [
       { id: 'c1', name: 'James (son)', phone: '+61 400 000 001', role: 'family' },
-      { id: 'c2', name: 'Sarah (carer)', phone: '+61 400 000 002', role: 'carer' }
+      { id: 'c2', name: 'Sarah (carer)', phone: '+61 400 000 002', role: 'carer' },
+      { id: 'c3', name: 'Emma (daughter)', phone: '+61 400 000 003', role: 'family' }
     ],
     notifications: [],
     messages: []
@@ -1095,6 +1255,12 @@ function applyI18n() {
   document.getElementById('checkinLabel').textContent = t('checkinLabel');
   document.getElementById('checkinSub').textContent = t('checkinSub');
   document.getElementById('sosLabel').textContent = t('sosLabel');
+  const sosHint = document.getElementById('sosHoldHint');
+  if (sosHint) sosHint.textContent = t('sosHoldHint');
+  const evl = document.getElementById('elderVideoLabel');
+  if (evl) evl.textContent = t('elderVideoLabel');
+  const evh = document.getElementById('elderVideoHint');
+  if (evh) evh.textContent = t('elderVideoHint');
   document.getElementById('demoTitle').textContent = t('demoTitle');
   document.getElementById('resetTimeBtn').textContent = t('resetTime');
   document.getElementById('familyHint').textContent = t('familyHint');
@@ -1103,6 +1269,8 @@ function applyI18n() {
   document.getElementById('btnAddElder').textContent = t('btnAddElder');
   document.getElementById('contactsTitle').textContent = t('contactsTitle');
   document.getElementById('contactsDesc').textContent = t('contactsDesc');
+  const cph = document.getElementById('contactsPriorityHelp');
+  if (cph) cph.textContent = t('contactsPriorityHelp');
   document.getElementById('lblContactName').textContent = t('lblContactName');
   document.getElementById('lblContactPhone').textContent = t('lblContactPhone');
   document.getElementById('lblContactRole').textContent = t('lblContactRole');
@@ -1243,7 +1411,6 @@ function renderFamily() {
           <button type="button" class="btn btn-primary btn-block" onclick="${onclick}">${escapeHtml(act.btn)}</button>
         </div>
         <div class="elder-card-actions">
-          <button type="button" class="btn-video" onclick="startVideoCall('${elder.id}')">📹 ${escapeHtml(t('btnVideoCall'))}</button>
           <button type="button" class="btn btn-danger" style="padding:12px 14px;font-size:0.85rem" onclick="deleteElder('${elder.id}')">${t('delete')}</button>
         </div>
       </div>`;
@@ -1256,13 +1423,21 @@ function renderFamily() {
     cl.innerHTML = `<div class="empty"><div class="emoji">📞</div>${t('noContacts')}</div>`;
   } else {
     const roleLabel = { family: t('roleFamilyOpt'), carer: t('roleCarerOpt'), nurse: t('roleNurseOpt') };
-    cl.innerHTML = state.contacts.map(c => `
+    const n = state.contacts.length;
+    cl.innerHTML = state.contacts.map((c, idx) => `
       <div class="contact-item">
-        <div>
-          <div class="c-name">${escapeHtml(c.name)} <span class="muted">· ${roleLabel[c.role] || c.role}</span></div>
-          <div class="c-phone">${escapeHtml(c.phone || '')}</div>
+        <div style="display:flex;align-items:flex-start;gap:4px;min-width:0;flex:1">
+          <span class="prio" title="${escapeHtml(t('callPriority'))}">${idx + 1}</span>
+          <div style="min-width:0">
+            <div class="c-name">${escapeHtml(c.name)} <span class="muted">· ${roleLabel[c.role] || c.role}</span></div>
+            <div class="c-phone">${escapeHtml(c.phone || '')}</div>
+          </div>
         </div>
-        <button type="button" class="btn btn-danger" style="padding:6px 10px;font-size:0.75rem" onclick="deleteContact('${c.id}')">${t('delete')}</button>
+        <div class="c-actions">
+          <button type="button" class="btn-icon" ${idx === 0 ? 'disabled' : ''} onclick="moveContact('${c.id}',-1)" aria-label="Move up">↑</button>
+          <button type="button" class="btn-icon" ${idx === n - 1 ? 'disabled' : ''} onclick="moveContact('${c.id}',1)" aria-label="Move down">↓</button>
+          <button type="button" class="btn-icon danger" onclick="deleteContact('${c.id}')" aria-label="${escapeHtml(t('delete'))}">✕</button>
+        </div>
       </div>`).join('');
   }
 
@@ -1433,6 +1608,18 @@ function deleteContact(id) {
   if (!confirm(t('confirmDelete'))) return;
   state.contacts = state.contacts.filter(c => c.id !== id);
   saveState(); toast(t('toastDeleted')); render();
+}
+
+function moveContact(id, dir) {
+  const i = state.contacts.findIndex(c => c.id === id);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j < 0 || j >= state.contacts.length) return;
+  const tmp = state.contacts[i];
+  state.contacts[i] = state.contacts[j];
+  state.contacts[j] = tmp;
+  saveState();
+  render();
 }
 
 function clearNotifs() { state.notifications = []; saveState(); render(); }
@@ -1756,7 +1943,7 @@ function renderElderVoice() {
     badge.classList.toggle('hidden', unread === 0);
   }
   if (!msgs.length) {
-    inbox.innerHTML = `<div class="empty" style="padding:16px"><div class="emoji">🎙️</div>${escapeHtml(t('voiceEmptyElder'))}</div>`;
+    inbox.innerHTML = `<div class="empty" style="padding:8px"><div class="emoji">🎙️</div>${escapeHtml(t('voiceEmptyElder'))}</div>`;
   } else {
     inbox.innerHTML = msgs.map(m => `
       <div class="voice-row ${m.readByElder ? '' : 'unread'}">
@@ -1987,6 +2174,7 @@ function stopCallMedia() {
 
 function hangUpCall(silent) {
   clearAutoAnswerTimers();
+  if (typeof clearElderCallTimers === 'function') clearElderCallTimers();
   stopCallMedia();
   state.activeCall = null;
   callUiMode = null;
@@ -2101,11 +2289,12 @@ async function answerCall() {
 async function showInCall() {
   callUiMode = 'incall';
   const elder = getActiveElder();
+  const outContact = (state.activeCall && state.activeCall.from === 'elder') ? currentCallContact() : null;
   const ov = getCallOverlay();
   ov.classList.remove('hidden');
   ov.className = 'call-overlay in-call';
   ov.innerHTML = `
-    <div style="width:100%;text-align:center;font-weight:800;font-size:1.1rem">${escapeHtml(elder ? elder.name : '')}</div>
+    <div style="width:100%;text-align:center;font-weight:800;font-size:1.1rem">${escapeHtml(outContact ? outContact.name : (elder ? elder.name : ''))}</div>
     <div class="in-call-stage">
       <div class="remote">
         <div class="big">👤</div>
@@ -2165,6 +2354,10 @@ function restoreCallUiIfNeeded() {
   if (!call) return;
   const elder = state.elders.find(e => e.id === call.elderId) || getActiveElder();
   if (!elder) return;
+  if (call.from === 'elder' && call.status === 'dialing') {
+    showElderOutgoing();
+    return;
+  }
   if (call.status === 'ringing') {
     if (role === 'family') showOutgoingCall(elder);
     else showIncomingCall(elder);
@@ -2174,7 +2367,161 @@ function restoreCallUiIfNeeded() {
 }
 
 
+/* ===== SOS press-and-hold (2s) ===== */
+const SOS_HOLD_MS = 2000;
+const SOS_RING_LEN = 2 * Math.PI * 44;
+let sosHoldStart = 0;
+let sosHoldRaf = null;
+let sosHoldFired = false;
+
+function setSosProgress(p) {
+  const fg = document.getElementById('sosRingFg');
+  if (fg) fg.style.strokeDashoffset = String(SOS_RING_LEN * (1 - Math.max(0, Math.min(1, p))));
+}
+
+function cancelSosHold() {
+  if (sosHoldRaf) cancelAnimationFrame(sosHoldRaf);
+  sosHoldRaf = null;
+  sosHoldStart = 0;
+  const btn = document.getElementById('sosBtn');
+  if (btn) btn.classList.remove('holding');
+  setSosProgress(0);
+}
+
+function sosTick() {
+  if (!sosHoldStart) return;
+  const p = (performance.now() - sosHoldStart) / SOS_HOLD_MS;
+  setSosProgress(p);
+  if (p >= 1) {
+    sosHoldFired = true;
+    cancelSosHold();
+    if (navigator.vibrate) { try { navigator.vibrate(200); } catch (e) {} }
+    doSOS();
+    return;
+  }
+  sosHoldRaf = requestAnimationFrame(sosTick);
+}
+
+function bindSosHold() {
+  const btn = document.getElementById('sosBtn');
+  if (!btn) return;
+  const fg = document.getElementById('sosRingFg');
+  if (fg) { fg.style.strokeDasharray = String(SOS_RING_LEN); fg.style.strokeDashoffset = String(SOS_RING_LEN); }
+  const start = (e) => {
+    e.preventDefault();
+    sosHoldFired = false;
+    cancelSosHold();
+    btn.classList.add('holding');
+    sosHoldStart = performance.now();
+    try { btn.setPointerCapture && e.pointerId != null && btn.setPointerCapture(e.pointerId); } catch (err) {}
+    sosHoldRaf = requestAnimationFrame(sosTick);
+  };
+  const end = () => { if (!sosHoldFired) cancelSosHold(); };
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup', end);
+  btn.addEventListener('pointercancel', end);
+  btn.addEventListener('pointerleave', end);
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+  // Keyboard: hold Space/Enter
+  btn.addEventListener('keydown', e => {
+    if ((e.key === ' ' || e.key === 'Enter') && !sosHoldStart) start(e);
+  });
+  btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') end(); });
+}
+
+/* ===== Senior → family video call (priority cascade, demo) ===== */
+const ELDER_CALL_NOANSWER_MS = 10000;
+let elderCallTimer = null;
+let elderCallTick = null;
+
+function clearElderCallTimers() {
+  clearTimeout(elderCallTimer);
+  clearInterval(elderCallTick);
+  elderCallTimer = null;
+  elderCallTick = null;
+}
+
+function startElderVideoCall() {
+  if (!state.contacts.length) { toast(t('toastNoContacts')); return; }
+  const elder = getActiveElder();
+  if (!elder) return;
+  // Pressing call is a sign of life → counts as check-in
+  applyCheckIn(true);
+  state.activeCall = { elderId: elder.id, from: 'elder', status: 'dialing', contactIdx: 0, at: now() };
+  saveState();
+  showElderOutgoing();
+}
+
+function currentCallContact() {
+  const c = state.activeCall;
+  if (!c || c.from !== 'elder') return null;
+  return state.contacts[c.contactIdx] || null;
+}
+
+function showElderOutgoing() {
+  const call = state.activeCall;
+  const contact = currentCallContact();
+  if (!call || !contact) return;
+  clearElderCallTimers();
+  callUiMode = 'outgoing';
+  const total = state.contacts.length;
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay';
+  ov.innerHTML = `
+    <div style="width:100%">
+      <div class="call-avatar">👨‍👩‍👧</div>
+      <div class="call-name" id="elderCallName">${escapeHtml(contact.name)}</div>
+      <div class="call-status">${escapeHtml(t('callCalling'))} · ${escapeHtml(t('callPriority'))} ${call.contactIdx + 1} ${escapeHtml(t('callOf'))} ${total}</div>
+      <div class="call-countdown" id="elderCallCountdown" style="text-align:center;margin-top:10px;opacity:.8"></div>
+      <p style="color:#94a3b8;text-align:center;margin-top:12px;font-size:0.85rem">${escapeHtml(t('callRemoteDemo'))}</p>
+    </div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:18px;align-items:center">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button type="button" class="btn btn-secondary" id="btnDemoNoAnswer" onclick="elderCallNoAnswer()">${escapeHtml(t('callNoAnswerDemo'))}</button>
+        <button type="button" class="btn btn-primary" id="btnDemoAnswer" onclick="elderCallAnswered()">${escapeHtml(t('callSimulateAnswer'))}</button>
+      </div>
+      <div class="call-actions">
+        <button type="button" class="call-btn hangup" onclick="hangUpCall()"><span class="ico">📞</span>${escapeHtml(t('callHangup'))}</button>
+      </div>
+    </div>`;
+  let left = Math.round(ELDER_CALL_NOANSWER_MS / 1000);
+  const cd = () => {
+    const el = document.getElementById('elderCallCountdown');
+    if (el) el.textContent = left + 's';
+  };
+  cd();
+  elderCallTick = setInterval(() => { left -= 1; if (left >= 0) cd(); }, 1000);
+  elderCallTimer = setTimeout(() => elderCallNoAnswer(), ELDER_CALL_NOANSWER_MS);
+}
+
+function elderCallNoAnswer() {
+  const call = state.activeCall;
+  if (!call || call.from !== 'elder' || call.status !== 'dialing') return;
+  clearElderCallTimers();
+  if (call.contactIdx + 1 < state.contacts.length) {
+    call.contactIdx += 1;
+    saveState();
+    toast(t('toastTryingNext'));
+    showElderOutgoing();
+  } else {
+    toast(t('toastNoAnswerAll'));
+    hangUpCall(true);
+  }
+}
+
+async function elderCallAnswered() {
+  const call = state.activeCall;
+  if (!call || call.from !== 'elder') return;
+  clearElderCallTimers();
+  call.status = 'connected';
+  saveState();
+  toast(t('toastCallAnswered'));
+  await showInCall();
+}
+
 bindVoiceControls();
+bindSosHold();
 
 // Drop stale ringing calls on hard refresh after long time? keep for demo continuity
 render();
