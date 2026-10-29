@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DailyOK">
+<meta name="theme-color" content="#0f766e">
+<meta name="description" content="DailyOK — a simple daily check-in so family and carers know you're alright.">
+<title>DailyOK</title>
+<style>
+:root {
+  --bg: #f0fdf4;
+  --card: #ffffff;
+  --primary: #0f766e;
+  --primary-dark: #0d5f58;
+  --ok: #16a34a;
+  --warn: #ca8a04;
+  --alert: #dc2626;
+  --text: #134e4a;
+  --muted: #5f7a76;
+  --border: #ccfbf1;
+  --sos: #b91c1c;
+  --shadow: 0 4px 20px rgba(15, 118, 110, 0.12);
+  --radius: 16px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+body { display: flex; flex-direction: column; min-height: 100dvh; }
+button { font-family: inherit; cursor: pointer; border: none; }
+input, select, textarea { font-family: inherit; font-size: 16px; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: var(--primary); color: #fff;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em; }
+.topbar .actions { display: flex; gap: 8px; align-items: center; }
+.role-btn {
+  background: rgba(255,255,255,0.2); color: #fff;
+  padding: 6px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+}
+.role-btn:active { background: rgba(255,255,255,0.35); }
+
+.tabs {
+  display: flex; background: #fff; border-bottom: 1px solid var(--border);
+  position: sticky; top: 48px; z-index: 40;
+}
+.tab {
+  flex: 1; padding: 14px 8px; text-align: center; font-weight: 600;
+  color: var(--muted); background: transparent; font-size: 0.9rem;
+  border-bottom: 3px solid transparent;
+}
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); max-width: 560px; margin: 0 auto; width: 100%; }
+
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px;
+}
+.card h2 { font-size: 1.15rem; margin-bottom: 12px; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.hidden { display: none !important; }
+
+.elder-hero { text-align: center; padding: 8px 0 16px; }
+.elder-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.status-pill {
+  display: inline-block; padding: 6px 16px; border-radius: 999px;
+  font-weight: 700; font-size: 0.95rem; margin: 8px 0;
+}
+.status-pill.ok { background: #dcfce7; color: var(--ok); }
+.status-pill.warn { background: #fef9c3; color: var(--warn); }
+.status-pill.alert { background: #fee2e2; color: var(--alert); }
+.last-check { font-size: 1.05rem; margin-top: 8px; line-height: 1.5; }
+
+.checkin-btn {
+  width: 100%; aspect-ratio: 1; max-width: 280px; margin: 20px auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 50%; background: linear-gradient(145deg, #14b8a6, #0f766e);
+  color: #fff; box-shadow: 0 12px 40px rgba(15, 118, 110, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 8px solid #99f6e4;
+}
+.checkin-btn:active { transform: scale(0.96); }
+.checkin-btn .emoji { font-size: 3.5rem; line-height: 1; margin-bottom: 8px; }
+.checkin-btn .label { font-size: 2rem; font-weight: 800; letter-spacing: 0.02em; }
+.checkin-btn .sub { font-size: 1rem; opacity: 0.9; margin-top: 4px; font-weight: 500; }
+.checkin-btn.done {
+  background: linear-gradient(145deg, #4ade80, #16a34a);
+  border-color: #bbf7d0;
+}
+
+.sos-btn {
+  width: 100%; padding: 22px; border-radius: var(--radius);
+  background: var(--sos); color: #fff; font-size: 1.4rem; font-weight: 800;
+  box-shadow: 0 8px 24px rgba(185, 28, 28, 0.35);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 8px;
+}
+.sos-btn:active { background: #991b1b; }
+
+.reminder-banner {
+  background: #fef3c7; border: 2px solid #f59e0b; border-radius: var(--radius);
+  padding: 16px; margin-bottom: 16px; text-align: center; font-size: 1.1rem; font-weight: 600;
+  color: #92400e;
+}
+.alert-banner {
+  background: #fee2e2; border: 2px solid #ef4444; border-radius: var(--radius);
+  padding: 16px; margin-bottom: 16px; text-align: center; font-size: 1.1rem; font-weight: 600;
+  color: #991b1b;
+}
+
+.elder-list { display: flex; flex-direction: column; gap: 12px; }
+.elder-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px; background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); border-left: 6px solid var(--ok);
+  text-align: left; width: 100%;
+}
+.elder-item.warn { border-left-color: var(--warn); }
+.elder-item.alert { border-left-color: var(--alert); }
+.elder-item .avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #ccfbf1; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; flex-shrink: 0;
+}
+.elder-item.warn .avatar { background: #fef9c3; }
+.elder-item.alert .avatar { background: #fee2e2; }
+.elder-item .info { flex: 1; min-width: 0; }
+.elder-item .name { font-size: 1.15rem; font-weight: 700; }
+.elder-item .meta { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.badge {
+  padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700;
+  white-space: nowrap;
+}
+.badge.ok { background: #dcfce7; color: var(--ok); }
+.badge.warn { background: #fef9c3; color: var(--warn); }
+.badge.alert { background: #fee2e2; color: var(--alert); }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.95rem; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--border);
+  border-radius: 12px; background: #fff; color: var(--text);
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none; border-color: var(--primary);
+}
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.95rem;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:active { background: var(--primary-dark); }
+.btn-secondary { background: #e0f2f1; color: var(--primary); }
+.btn-danger { background: #fee2e2; color: var(--alert); }
+.btn-block { width: 100%; }
+
+.contact-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px;
+}
+.contact-item .c-name { font-weight: 700; }
+.contact-item .c-phone { font-size: 0.85rem; color: var(--muted); }
+
+.notif-list { display: flex; flex-direction: column; gap: 10px; }
+.notif {
+  padding: 14px; border-radius: 12px; background: #fff;
+  border-left: 4px solid var(--primary); box-shadow: var(--shadow);
+}
+.notif.warn { border-left-color: var(--warn); background: #fffbeb; }
+.notif.alert { border-left-color: var(--alert); background: #fef2f2; }
+.notif .n-time { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+.demo-panel {
+  margin-top: 20px; padding: 14px; background: #f8fafc;
+  border: 2px dashed #94a3b8; border-radius: var(--radius);
+}
+.demo-panel h3 { font-size: 0.9rem; color: #64748b; margin-bottom: 10px; }
+.demo-panel .btn { font-size: 0.8rem; padding: 8px 12px; }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px;
+}
+.modal {
+  background: #fff; border-radius: 20px; padding: 24px;
+  max-width: 400px; width: 100%; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal h2 { font-size: 1.4rem; margin-bottom: 12px; }
+.modal p { font-size: 1.05rem; line-height: 1.5; margin-bottom: 16px; color: var(--text); }
+.modal.sos-modal { border: 4px solid var(--sos); }
+.modal.sos-modal h2 { color: var(--sos); font-size: 1.8rem; }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty .emoji { font-size: 3rem; margin-bottom: 12px; }
+
+.toast {
+  position: fixed; bottom: calc(24px + var(--safe-bottom)); left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: #134e4a; color: #fff; padding: 14px 24px;
+  border-radius: 999px; font-weight: 600; z-index: 200;
+  transition: transform 0.3s; max-width: 90%; text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.setup-hint {
+  background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px;
+  padding: 12px; font-size: 0.9rem; margin-bottom: 16px; line-height: 1.45;
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <h1 id="appTitle">DailyOK</h1>
+  <div class="actions">
+    <button type="button" class="role-btn" id="roleBtn" onclick="toggleRole()"></button>
+  </div>
+</header>
+
+<div id="familyTabs" class="tabs hidden">
+  <button type="button" class="tab active" data-tab="elders" onclick="switchTab('elders')"></button>
+  <button type="button" class="tab" data-tab="contacts" onclick="switchTab('contacts')"></button>
+  <button type="button" class="tab" data-tab="alerts" onclick="switchTab('alerts')"></button>
+  <button type="button" class="tab" data-tab="settings" onclick="switchTab('settings')"></button>
+</div>
+
+<main>
+  <section id="elderView">
+    <div id="elderReminder" class="reminder-banner hidden"></div>
+    <div id="elderAlertBanner" class="alert-banner hidden"></div>
+    <div class="elder-hero">
+      <div class="elder-name" id="elderDisplayName"></div>
+      <div class="status-pill ok" id="elderStatusPill"></div>
+      <div class="last-check" id="elderLastCheck"></div>
+    </div>
+    <button type="button" class="checkin-btn" id="checkinBtn" onclick="doCheckIn()">
+      <span class="emoji">👍</span>
+      <span class="label" id="checkinLabel"></span>
+      <span class="sub" id="checkinSub"></span>
+    </button>
+    <button type="button" class="sos-btn" id="sosBtn" onclick="doSOS()">
+      <span>🆘</span> <span id="sosLabel"></span>
+    </button>
+    <div class="demo-panel" id="elderDemo">
+      <h3 id="demoTitle"></h3>
+      <div class="btn-row" style="margin-bottom:8px">
+        <button type="button" class="btn btn-secondary" onclick="simulateHours(12)">+12h</button>
+        <button type="button" class="btn btn-secondary" onclick="simulateHours(24)">+24h</button>
+        <button type="button" class="btn btn-secondary" onclick="simulateHours(48)">+48h</button>
+        <button type="button" class="btn btn-secondary" onclick="simulateHours(72)">+72h</button>
+      </div>
+      <button type="button" class="btn btn-danger btn-block" onclick="resetDemoTime()" id="resetTimeBtn"></button>
+      <p class="muted" style="margin-top:8px" id="simClock"></p>
+    </div>
+  </section>
+
+  <section id="familyView" class="hidden">
+    <div id="tabElders">
+      <div class="setup-hint" id="familyHint"></div>
+      <div class="elder-list" id="elderList"></div>
+      <div class="card" style="margin-top:16px">
+        <h2 id="addElderTitle"></h2>
+        <div class="form-group">
+          <label id="lblElderName"></label>
+          <input type="text" id="newElderName" maxlength="40">
+        </div>
+        <button type="button" class="btn btn-primary btn-block" onclick="addElder()" id="btnAddElder"></button>
+      </div>
+    </div>
+
+    <div id="tabContacts" class="hidden">
+      <div class="card">
+        <h2 id="contactsTitle"></h2>
+        <p class="muted" id="contactsDesc" style="margin-bottom:12px"></p>
+        <div id="contactList"></div>
+        <div class="form-group" style="margin-top:16px">
+          <label id="lblContactName"></label>
+          <input type="text" id="newContactName" maxlength="40">
+        </div>
+        <div class="form-group">
+          <label id="lblContactPhone"></label>
+          <input type="tel" id="newContactPhone" placeholder="+61 4…">
+        </div>
+        <div class="form-group">
+          <label id="lblContactRole"></label>
+          <select id="newContactRole">
+            <option value="family"></option>
+            <option value="carer"></option>
+            <option value="nurse"></option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" onclick="addContact()" id="btnAddContact"></button>
+      </div>
+    </div>
+
+    <div id="tabAlerts" class="hidden">
+      <div class="card">
+        <h2 id="alertsTitle"></h2>
+        <p class="muted" id="alertsDesc" style="margin-bottom:12px"></p>
+        <div class="notif-list" id="notifList"></div>
+        <button type="button" class="btn btn-secondary btn-block" style="margin-top:12px" onclick="clearNotifs()" id="btnClearNotifs"></button>
+      </div>
+    </div>
+
+    <div id="tabSettings" class="hidden">
+      <div class="card">
+        <h2 id="settingsTitle"></h2>
+        <div class="form-group">
+          <label id="lblThreshold"></label>
+          <select id="thresholdSelect" onchange="saveThreshold()">
+            <option value="12">12 hours</option>
+            <option value="24" selected>24 hours</option>
+            <option value="48">48 hours</option>
+            <option value="72">72 hours</option>
+          </select>
+        </div>
+        <p class="muted" id="thresholdHelp" style="margin-bottom:16px"></p>
+        <div class="form-group">
+          <label id="lblActiveElder"></label>
+          <select id="activeElderSelect" onchange="setActiveElder()"></select>
+        </div>
+        <p class="muted" id="activeElderHelp" style="margin-bottom:16px"></p>
+        <div class="form-group">
+          <label id="lblLanguage"></label>
+          <select id="languageSelect" onchange="saveLanguage()">
+            <option value="en">English (Australia)</option>
+            <option value="zh">中文（简体）</option>
+          </select>
+        </div>
+        <p class="muted" id="languageHelp" style="margin-bottom:16px"></p>
+        <button type="button" class="btn btn-danger btn-block" onclick="resetAllData()" id="btnResetAll"></button>
+      </div>
+      <div class="demo-panel">
+        <h3 id="demoTitle2"></h3>
+        <div class="btn-row" style="margin-bottom:8px">
+          <button type="button" class="btn btn-secondary" onclick="simulateHours(12)">+12h</button>
+          <button type="button" class="btn btn-secondary" onclick="simulateHours(24)">+24h</button>
+          <button type="button" class="btn btn-secondary" onclick="simulateHours(48)">+48h</button>
+          <button type="button" class="btn btn-secondary" onclick="simulateHours(72)">+72h</button>
+        </div>
+        <button type="button" class="btn btn-danger btn-block" onclick="resetDemoTime()" id="resetTimeBtn2"></button>
+        <p class="muted" style="margin-top:8px" id="simClock2"></p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2 id="aboutTitle"></h2>
+        <p class="muted" id="aboutText" style="line-height:1.5"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'dailyok_v2';
+const i18n = {
+  en: {
+    appTitle: 'DailyOK',
+    roleElder: 'Elder view',
+    roleFamily: 'Family view',
+    checkinLabel: "I'm OK",
+    checkinSub: 'Tap to let family know',
+    checkinDone: "You're checked in ✓",
+    checkinDoneSub: 'Tap again to update',
+    sosLabel: 'SOS — call for help',
+    lastNever: 'No check-in yet',
+    lastCheck: 'Last check-in: ',
+    statusOk: 'All good',
+    statusWarn: 'Please check in',
+    statusAlert: 'Alert sent',
+    reminderText: '⏰ Time to check in — tap "I\'m OK"',
+    alertText: '⚠️ Past due — your family has been notified',
+    demoTitle: 'Demo: simulate time passing',
+    resetTime: 'Back to real time',
+    simClock: 'Simulated time: ',
+    realTime: '(using real time)',
+    tabElders: 'People',
+    tabContacts: 'Contacts',
+    tabAlerts: 'Alerts',
+    tabSettings: 'Settings',
+    familyHint: 'Green = OK · Yellow = elder reminded · Red = family alerted. Use the demo buttons to simulate an overdue check-in.',
+    addElderTitle: 'Add someone',
+    lblElderName: 'Name',
+    btnAddElder: 'Add',
+    contactsTitle: 'Emergency contacts',
+    contactsDesc: 'When a check-in is overdue or SOS is pressed, DailyOK simulates notifying these people. A full version can send SMS or push alerts.',
+    lblContactName: 'Name',
+    lblContactPhone: 'Mobile number',
+    lblContactRole: 'Role',
+    roleFamilyOpt: 'Family',
+    roleCarerOpt: 'Carer',
+    roleNurseOpt: 'Nurse',
+    btnAddContact: 'Add contact',
+    alertsTitle: 'Alert log',
+    alertsDesc: 'These are in-app demo notifications. A production app would send SMS (e.g. Twilio) or push notifications.',
+    btnClearNotifs: 'Clear alerts',
+    settingsTitle: 'Settings',
+    lblThreshold: 'Alert if no check-in for',
+    thresholdHelp: 'Default is 24 hours. We remind the elder first, then alert contacts.',
+    lblActiveElder: 'Person shown on Elder view',
+    activeElderHelp: 'When this phone is on Elder view, this is who checks in.',
+    lblLanguage: 'Language',
+    languageHelp: 'English is the default. Chinese is optional.',
+    btnResetAll: 'Clear all local data',
+    aboutTitle: 'About DailyOK',
+    aboutText: 'DailyOK is a prototype. Data stays in this browser only (localStorage). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
+    noElders: 'No one added yet',
+    noContacts: 'No contacts yet',
+    noNotifs: 'No alerts yet',
+    toastCheckin: "Checked in — family can see you're OK.",
+    toastAdded: 'Added',
+    toastDeleted: 'Removed',
+    toastSaved: 'Saved',
+    toastReset: 'All local data cleared',
+    toastTimeReset: 'Back to real time',
+    toastSim: 'Simulated +',
+    hours: ' hours',
+    sosTitle: 'Emergency SOS',
+    sosBody: 'A full app would dial 000 and notify all contacts straight away. This is a demo only.',
+    sosAlert: 'Notify contacts',
+    sosClose: 'Close',
+    sosSent: 'Demo: contacts notified — dial 000 if this is real',
+    confirmDelete: 'Remove this?',
+    confirmReset: 'Clear all local data? This cannot be undone.',
+    agoJust: 'just now',
+    agoMin: ' min ago',
+    agoHour: ' h ago',
+    agoDay: ' d ago',
+    delete: 'Remove',
+    never: 'Never checked in',
+    elderPlaceholder: 'e.g. Margaret',
+  },
+  zh: {
+    appTitle: 'DailyOK',
+    roleElder: '老人端',
+    roleFamily: '家属端',
+    checkinLabel: '我很好',
+    checkinSub: '点一下告诉家人',
+    checkinDone: '今日已签到 ✓',
+    checkinDoneSub: '再点也可以更新时间',
+    sosLabel: '紧急求助',
+    lastNever: '还没有签到过',
+    lastCheck: '上次签到：',
+    statusOk: '一切正常',
+    statusWarn: '请尽快签到',
+    statusAlert: '已超时告警',
+    reminderText: '⏰ 您还没有签到，请点一下「我很好」',
+    alertText: '⚠️ 已超过时限，已通知家人',
+    demoTitle: '演示：模拟时间流逝',
+    resetTime: '恢复真实时间',
+    simClock: '当前模拟时间：',
+    realTime: '（使用真实时间）',
+    tabElders: '老人',
+    tabContacts: '联系人',
+    tabAlerts: '通知',
+    tabSettings: '设置',
+    familyHint: '绿色=正常 · 黄色=已提醒老人 · 红色=已告警家属。用下方演示按钮可模拟超时。',
+    addElderTitle: '添加老人',
+    lblElderName: '姓名',
+    btnAddElder: '添加',
+    contactsTitle: '紧急联系人',
+    contactsDesc: '超时或按 SOS 时，会在此模拟通知这些人（正式版可发短信/推送）。',
+    lblContactName: '姓名',
+    lblContactPhone: '手机号',
+    lblContactRole: '身份',
+    roleFamilyOpt: '儿女/亲属',
+    roleCarerOpt: '护工',
+    roleNurseOpt: '护士',
+    btnAddContact: '添加联系人',
+    alertsTitle: '告警记录',
+    alertsDesc: '以下为应用内模拟通知。正式版可通过短信或推送发送。',
+    btnClearNotifs: '清空通知',
+    settingsTitle: '设置',
+    lblThreshold: '多久没签到就告警',
+    thresholdHelp: '默认 24 小时。超时后先提醒老人，再通知联系人。',
+    lblActiveElder: '当前老人端显示的人',
+    activeElderHelp: '打开「老人端」时，显示并操作这位的签到。',
+    lblLanguage: '语言',
+    languageHelp: '默认英文。中文为可选项。',
+    btnResetAll: '清除所有本地数据',
+    aboutTitle: '关于 DailyOK',
+    aboutText: '这是原型。数据仅保存在本浏览器（localStorage）。正式版需要后端、短信/推送、澳洲隐私合规与应用商店账号。澳洲紧急电话：000。',
+    noElders: '还没有添加老人',
+    noContacts: '还没有联系人',
+    noNotifs: '暂无通知',
+    toastCheckin: '签到成功！家人会看到您一切正常。',
+    toastAdded: '已添加',
+    toastDeleted: '已删除',
+    toastSaved: '已保存',
+    toastReset: '已清除所有数据',
+    toastTimeReset: '已恢复真实时间',
+    toastSim: '已模拟前进 ',
+    hours: ' 小时',
+    sosTitle: '紧急求助',
+    sosBody: '正式版会拨打 000，并立即通知所有联系人。本原型仅做演示。',
+    sosAlert: '通知联系人',
+    sosClose: '关闭',
+    sosSent: '已模拟通知联系人，并提示拨打 000',
+    confirmDelete: '确定删除？',
+    confirmReset: '确定清除所有本地数据？此操作不可撤销。',
+    agoJust: '刚刚',
+    agoMin: ' 分钟前',
+    agoHour: ' 小时前',
+    agoDay: ' 天前',
+    delete: '删除',
+    never: '从未签到',
+    elderPlaceholder: '例如：张大爷',
+  }
+};
+
+let state = loadState();
+let role = state.role || 'elder';
+let lang = state.lang || 'en';
+let familyTab = 'elders';
+
+function t(key) { return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key; }
+
+function defaultState() {
+  const now = Date.now();
+  return {
+    lang: 'en',
+    role: 'elder',
+    thresholdHours: 24,
+    timeOffsetMs: 0,
+    activeElderId: 'e1',
+    elders: [
+      { id: 'e1', name: 'Margaret', lastCheckIn: now - 2 * 3600 * 1000, remindedAt: null, alertedAt: null }
+    ],
+    contacts: [
+      { id: 'c1', name: 'James (son)', phone: '+61 400 000 001', role: 'family' },
+      { id: 'c2', name: 'Sarah (carer)', phone: '+61 400 000 002', role: 'carer' }
+    ],
+    notifications: []
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // migrate away from old key silently
+      localStorage.removeItem('elderCheckin_v1');
+      return defaultState();
+    }
+    const s = JSON.parse(raw);
+    if (!s.elders || !s.elders.length) return defaultState();
+    if (s.lang !== 'zh') s.lang = 'en';
+    return Object.assign(defaultState(), s);
+  } catch (e) {
+    return defaultState();
+  }
+}
+
+function saveState() {
+  state.lang = lang;
+  state.role = role;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function now() { return Date.now() + (state.timeOffsetMs || 0); }
+
+function formatTime(ts) {
+  if (!ts) return t('never');
+  const d = new Date(ts);
+  return d.toLocaleString(lang === 'zh' ? 'zh-AU' : 'en-AU', {
+    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function relativeTime(ts) {
+  if (!ts) return t('never');
+  const diff = now() - ts;
+  if (diff < 60000) return t('agoJust');
+  if (diff < 3600000) return Math.floor(diff / 60000) + t('agoMin');
+  if (diff < 86400000) return Math.floor(diff / 3600000) + t('agoHour');
+  return Math.floor(diff / 86400000) + t('agoDay');
+}
+
+function pushNotif(level, elder, kind) {
+  const msgs = {
+    en: {
+      reminder: `Reminded ${elder.name} to check in`,
+      overdue: `⚠️ ${elder.name} has not checked in for ${state.thresholdHours} hours — please call or visit`,
+      sos: `🆘 ${elder.name} pressed SOS! Contact them or call 000 now`,
+      checkin: `${elder.name} checked in — all good`
+    },
+    zh: {
+      reminder: `已提醒 ${elder.name} 签到`,
+      overdue: `⚠️ ${elder.name} 超过 ${state.thresholdHours} 小时未签到，请尽快上门或电话确认`,
+      sos: `🆘 ${elder.name} 按下了紧急求助！请立即联系或拨打 000`,
+      checkin: `${elder.name} 已签到，一切正常`
+    }
+  };
+  state.notifications.unshift({
+    id: 'n' + Date.now() + Math.random().toString(36).slice(2, 6),
+    level, kind, elderId: elder.id,
+    message: (msgs[lang] || msgs.en)[kind],
+    at: now()
+  });
+  if (state.notifications.length > 50) state.notifications.length = 50;
+}
+
+function getStatus(elder) {
+  if (!elder.lastCheckIn) return 'alert';
+  const hours = (now() - elder.lastCheckIn) / 3600000;
+  const th = state.thresholdHours || 24;
+  if (hours < th) return 'ok';
+  if (elder.alertedAt) return 'alert';
+  if (!elder.remindedAt) {
+    elder.remindedAt = now();
+    pushNotif('warn', elder, 'reminder');
+  }
+  const escalateAfter = th * 0.25;
+  if ((now() - elder.remindedAt) / 3600000 >= escalateAfter || hours >= th * 1.25) {
+    if (!elder.alertedAt) {
+      elder.alertedAt = now();
+      pushNotif('alert', elder, 'overdue');
+      saveState();
+    }
+    return 'alert';
+  }
+  return 'warn';
+}
+
+function getActiveElder() {
+  return state.elders.find(e => e.id === state.activeElderId) || state.elders[0];
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function applyI18n() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
+  document.getElementById('appTitle').textContent = t('appTitle');
+  document.getElementById('roleBtn').textContent = role === 'elder' ? t('roleFamily') : t('roleElder');
+  document.getElementById('checkinLabel').textContent = t('checkinLabel');
+  document.getElementById('checkinSub').textContent = t('checkinSub');
+  document.getElementById('sosLabel').textContent = t('sosLabel');
+  document.getElementById('demoTitle').textContent = t('demoTitle');
+  document.getElementById('demoTitle2').textContent = t('demoTitle');
+  document.getElementById('resetTimeBtn').textContent = t('resetTime');
+  document.getElementById('resetTimeBtn2').textContent = t('resetTime');
+  document.getElementById('familyHint').textContent = t('familyHint');
+  document.getElementById('addElderTitle').textContent = t('addElderTitle');
+  document.getElementById('lblElderName').textContent = t('lblElderName');
+  document.getElementById('btnAddElder').textContent = t('btnAddElder');
+  document.getElementById('contactsTitle').textContent = t('contactsTitle');
+  document.getElementById('contactsDesc').textContent = t('contactsDesc');
+  document.getElementById('lblContactName').textContent = t('lblContactName');
+  document.getElementById('lblContactPhone').textContent = t('lblContactPhone');
+  document.getElementById('lblContactRole').textContent = t('lblContactRole');
+  const roleSel = document.getElementById('newContactRole');
+  roleSel.options[0].text = t('roleFamilyOpt');
+  roleSel.options[1].text = t('roleCarerOpt');
+  roleSel.options[2].text = t('roleNurseOpt');
+  document.getElementById('btnAddContact').textContent = t('btnAddContact');
+  document.getElementById('alertsTitle').textContent = t('alertsTitle');
+  document.getElementById('alertsDesc').textContent = t('alertsDesc');
+  document.getElementById('btnClearNotifs').textContent = t('btnClearNotifs');
+  document.getElementById('settingsTitle').textContent = t('settingsTitle');
+  document.getElementById('lblThreshold').textContent = t('lblThreshold');
+  document.getElementById('thresholdHelp').textContent = t('thresholdHelp');
+  document.getElementById('lblActiveElder').textContent = t('lblActiveElder');
+  document.getElementById('activeElderHelp').textContent = t('activeElderHelp');
+  document.getElementById('lblLanguage').textContent = t('lblLanguage');
+  document.getElementById('languageHelp').textContent = t('languageHelp');
+  document.getElementById('btnResetAll').textContent = t('btnResetAll');
+  document.getElementById('aboutTitle').textContent = t('aboutTitle');
+  document.getElementById('aboutText').textContent = t('aboutText');
+  document.getElementById('newElderName').placeholder = t('elderPlaceholder');
+  const tabs = document.querySelectorAll('#familyTabs .tab');
+  const tabKeys = ['tabElders', 'tabContacts', 'tabAlerts', 'tabSettings'];
+  tabs.forEach((el, i) => { el.textContent = t(tabKeys[i]); });
+  const langSel = document.getElementById('languageSelect');
+  if (langSel) langSel.value = lang;
+}
+
+function updateSimClock() {
+  const txt = state.timeOffsetMs
+    ? t('simClock') + formatTime(now())
+    : t('simClock') + t('realTime');
+  document.getElementById('simClock').textContent = txt;
+  document.getElementById('simClock2').textContent = txt;
+}
+
+function renderElder() {
+  const elder = getActiveElder();
+  if (!elder) return;
+  const status = getStatus(elder);
+  saveState();
+  document.getElementById('elderDisplayName').textContent = elder.name;
+  const pill = document.getElementById('elderStatusPill');
+  pill.className = 'status-pill ' + status;
+  pill.textContent = status === 'ok' ? t('statusOk') : status === 'warn' ? t('statusWarn') : t('statusAlert');
+  const lastEl = document.getElementById('elderLastCheck');
+  lastEl.textContent = !elder.lastCheckIn
+    ? t('lastNever')
+    : t('lastCheck') + formatTime(elder.lastCheckIn) + ' (' + relativeTime(elder.lastCheckIn) + ')';
+  document.getElementById('elderReminder').classList.toggle('hidden', status !== 'warn');
+  document.getElementById('elderReminder').textContent = t('reminderText');
+  document.getElementById('elderAlertBanner').classList.toggle('hidden', status !== 'alert');
+  document.getElementById('elderAlertBanner').textContent = t('alertText');
+  const btn = document.getElementById('checkinBtn');
+  const recent = elder.lastCheckIn && (now() - elder.lastCheckIn) < 6 * 3600000;
+  btn.classList.toggle('done', !!recent && status === 'ok');
+  document.getElementById('checkinLabel').textContent = recent && status === 'ok' ? t('checkinDone') : t('checkinLabel');
+  document.getElementById('checkinSub').textContent = recent && status === 'ok' ? t('checkinDoneSub') : t('checkinSub');
+  updateSimClock();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderFamily() {
+  const list = document.getElementById('elderList');
+  if (!state.elders.length) {
+    list.innerHTML = `<div class="empty"><div class="emoji">🙂</div>${t('noElders')}</div>`;
+  } else {
+    list.innerHTML = state.elders.map(elder => {
+      const status = getStatus(elder);
+      const badge = status === 'ok' ? t('statusOk') : status === 'warn' ? t('statusWarn') : t('statusAlert');
+      const meta = elder.lastCheckIn ? t('lastCheck') + relativeTime(elder.lastCheckIn) : t('never');
+      return `<div class="elder-item ${status}">
+        <div class="avatar">${status === 'ok' ? '😊' : status === 'warn' ? '😟' : '🚨'}</div>
+        <div class="info"><div class="name">${escapeHtml(elder.name)}</div><div class="meta">${meta}</div></div>
+        <span class="badge ${status}">${badge}</span>
+        <button type="button" class="btn btn-danger" style="padding:6px 10px;font-size:0.75rem" onclick="deleteElder('${elder.id}')">${t('delete')}</button>
+      </div>`;
+    }).join('');
+  }
+  saveState();
+
+  const cl = document.getElementById('contactList');
+  if (!state.contacts.length) {
+    cl.innerHTML = `<div class="empty"><div class="emoji">📞</div>${t('noContacts')}</div>`;
+  } else {
+    const roleLabel = { family: t('roleFamilyOpt'), carer: t('roleCarerOpt'), nurse: t('roleNurseOpt') };
+    cl.innerHTML = state.contacts.map(c => `
+      <div class="contact-item">
+        <div>
+          <div class="c-name">${escapeHtml(c.name)} <span class="muted">· ${roleLabel[c.role] || c.role}</span></div>
+          <div class="c-phone">${escapeHtml(c.phone || '')}</div>
+        </div>
+        <button type="button" class="btn btn-danger" style="padding:6px 10px;font-size:0.75rem" onclick="deleteContact('${c.id}')">${t('delete')}</button>
+      </div>`).join('');
+  }
+
+  const nl = document.getElementById('notifList');
+  if (!state.notifications.length) {
+    nl.innerHTML = `<div class="empty"><div class="emoji">🔔</div>${t('noNotifs')}</div>`;
+  } else {
+    nl.innerHTML = state.notifications.map(n => `
+      <div class="notif ${n.level}">
+        <div>${escapeHtml(n.message)}</div>
+        <div class="n-time">${formatTime(n.at)} · ${relativeTime(n.at)}</div>
+      </div>`).join('');
+  }
+
+  document.getElementById('thresholdSelect').value = String(state.thresholdHours || 24);
+  document.getElementById('activeElderSelect').innerHTML = state.elders.map(e =>
+    `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`
+  ).join('');
+  updateSimClock();
+}
+
+function render() {
+  applyI18n();
+  document.getElementById('elderView').classList.toggle('hidden', role !== 'elder');
+  document.getElementById('familyView').classList.toggle('hidden', role !== 'family');
+  document.getElementById('familyTabs').classList.toggle('hidden', role !== 'family');
+  if (role === 'elder') renderElder();
+  else { renderFamily(); switchTab(familyTab, true); }
+  saveState();
+}
+
+function toggleRole() {
+  role = role === 'elder' ? 'family' : 'elder';
+  saveState();
+  render();
+}
+
+function switchTab(name) {
+  familyTab = name;
+  ['elders', 'contacts', 'alerts', 'settings'].forEach(tname => {
+    const pane = document.getElementById('tab' + tname.charAt(0).toUpperCase() + tname.slice(1));
+    if (pane) pane.classList.toggle('hidden', tname !== name);
+  });
+  document.querySelectorAll('#familyTabs .tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === name);
+  });
+}
+
+function doCheckIn() {
+  const elder = getActiveElder();
+  if (!elder) return;
+  elder.lastCheckIn = now();
+  elder.remindedAt = null;
+  elder.alertedAt = null;
+  pushNotif('ok', elder, 'checkin');
+  saveState();
+  toast(t('toastCheckin'));
+  render();
+}
+
+function doSOS() {
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal sos-modal">
+        <h2>🆘 ${t('sosTitle')}</h2>
+        <p>${t('sosBody')}</p>
+        <p style="font-size:1.3rem;font-weight:800;color:#b91c1c">000</p>
+        <div class="btn-row" style="justify-content:center">
+          <button type="button" class="btn btn-danger" onclick="confirmSOS()">${t('sosAlert')}</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">${t('sosClose')}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function confirmSOS() {
+  const elder = getActiveElder();
+  if (elder) { pushNotif('alert', elder, 'sos'); saveState(); }
+  closeModal();
+  toast(t('sosSent'));
+  try { window.location.href = 'tel:000'; } catch (e) {}
+  render();
+}
+
+function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
+
+function addElder() {
+  const input = document.getElementById('newElderName');
+  const name = (input.value || '').trim();
+  if (!name) return;
+  const id = 'e' + Date.now();
+  state.elders.push({ id, name, lastCheckIn: now(), remindedAt: null, alertedAt: null });
+  if (!state.activeElderId) state.activeElderId = id;
+  input.value = '';
+  saveState(); toast(t('toastAdded')); render();
+}
+
+function deleteElder(id) {
+  if (!confirm(t('confirmDelete'))) return;
+  state.elders = state.elders.filter(e => e.id !== id);
+  if (state.activeElderId === id) state.activeElderId = state.elders[0] ? state.elders[0].id : null;
+  saveState(); toast(t('toastDeleted')); render();
+}
+
+function addContact() {
+  const name = (document.getElementById('newContactName').value || '').trim();
+  const phone = (document.getElementById('newContactPhone').value || '').trim();
+  const roleVal = document.getElementById('newContactRole').value;
+  if (!name) return;
+  state.contacts.push({ id: 'c' + Date.now(), name, phone, role: roleVal });
+  document.getElementById('newContactName').value = '';
+  document.getElementById('newContactPhone').value = '';
+  saveState(); toast(t('toastAdded')); render();
+}
+
+function deleteContact(id) {
+  if (!confirm(t('confirmDelete'))) return;
+  state.contacts = state.contacts.filter(c => c.id !== id);
+  saveState(); toast(t('toastDeleted')); render();
+}
+
+function clearNotifs() { state.notifications = []; saveState(); render(); }
+
+function saveThreshold() {
+  state.thresholdHours = parseInt(document.getElementById('thresholdSelect').value, 10) || 24;
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+  saveState(); toast(t('toastSaved')); render();
+}
+
+function setActiveElder() {
+  state.activeElderId = document.getElementById('activeElderSelect').value;
+  saveState(); toast(t('toastSaved'));
+}
+
+function saveLanguage() {
+  lang = document.getElementById('languageSelect').value === 'zh' ? 'zh' : 'en';
+  saveState();
+  render();
+  toast(t('toastSaved'));
+}
+
+function simulateHours(h) {
+  state.timeOffsetMs = (state.timeOffsetMs || 0) + h * 3600000;
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+  saveState(); toast(t('toastSim') + h + t('hours')); render();
+}
+
+function resetDemoTime() {
+  state.timeOffsetMs = 0;
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+  saveState(); toast(t('toastTimeReset')); render();
+}
+
+function resetAllData() {
+  if (!confirm(t('confirmReset'))) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('elderCheckin_v1');
+  state = defaultState();
+  lang = 'en';
+  role = 'elder';
+  toast(t('toastReset'));
+  render();
+}
+
+(function applyQuery() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('lang') === 'en' || q.get('lang') === 'zh') { lang = q.get('lang'); state.lang = lang; }
+    if (q.get('view') === 'family' || q.get('view') === 'elder') { role = q.get('view'); state.role = role; }
+    if (q.get('tab')) { familyTab = q.get('tab'); }
+    if (q.get('fresh') === '1') {
+      const e = state.elders[0];
+      if (e) { e.lastCheckIn = Date.now() - 2 * 3600000; e.remindedAt = null; e.alertedAt = null; }
+      state.timeOffsetMs = 0;
+      state.notifications = [];
+    }
+    const sim = parseInt(q.get('sim') || '', 10);
+    if (sim > 0) {
+      state.timeOffsetMs = (state.timeOffsetMs || 0) + sim * 3600000;
+      state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+    }
+    saveState();
+  } catch (e) {}
+})();
+
+render();
+setInterval(() => {
+  if (role === 'elder') renderElder();
+  else if (familyTab === 'elders' || familyTab === 'alerts') renderFamily();
+  updateSimClock();
+}, 30000);
+</script>
+</body>
+</html>
