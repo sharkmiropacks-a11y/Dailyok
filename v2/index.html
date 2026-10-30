@@ -38,11 +38,11 @@ button { font-family: inherit; cursor: pointer; border: none; }
 input, select, textarea { font-family: inherit; font-size: 16px; }
 
 .topbar {
-  display: flex; flex-direction: column; gap: 10px;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 10px; background: var(--primary); color: #fff;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px; background: var(--primary); color: #fff;
   position: sticky; top: 0; z-index: 50;
 }
-.topbar h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em; text-align: center; }
+.topbar h1 { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.02em; text-align: center; }
 
 .role-switch {
   display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
@@ -51,9 +51,9 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 .role-tab {
   appearance: none; -webkit-appearance: none;
   background: transparent; color: rgba(255,255,255,0.85);
-  padding: 14px 10px; border-radius: 11px;
-  font-size: 1rem; font-weight: 800; line-height: 1.2;
-  min-height: 52px; touch-action: manipulation;
+  padding: 10px 8px; border-radius: 11px;
+  font-size: 0.95rem; font-weight: 800; line-height: 1.2;
+  min-height: 44px; touch-action: manipulation;
   border: 2px solid transparent;
 }
 .role-tab.active {
@@ -74,7 +74,7 @@ input, select, textarea { font-family: inherit; font-size: 16px; }
 }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); max-width: 560px; margin: 0 auto; width: 100%; }
+main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; padding-bottom: calc(12px + var(--safe-bottom)); max-width: 560px; margin: 0 auto; width: 100%; min-height: 0; }
 
 .card {
   background: var(--card); border-radius: var(--radius);
@@ -84,29 +84,31 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 .muted { color: var(--muted); font-size: 0.9rem; }
 .hidden { display: none !important; }
 
-.elder-hero { text-align: center; padding: 8px 0 16px; }
-.elder-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.elder-hero { text-align: center; padding: 2px 0 6px; flex-shrink: 0; }
+.elder-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 2px; }
 .status-pill {
-  display: inline-block; padding: 6px 16px; border-radius: 999px;
-  font-weight: 700; font-size: 0.95rem; margin: 8px 0;
+  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  font-weight: 700; font-size: 0.85rem; margin: 4px 0;
 }
 .status-pill.ok { background: #dcfce7; color: var(--ok); }
 .status-pill.warn { background: #fef9c3; color: var(--warn); }
 .status-pill.alert { background: #fee2e2; color: var(--alert); }
-.last-check { font-size: 1.05rem; margin-top: 8px; line-height: 1.5; }
+.last-check { font-size: 0.92rem; margin-top: 4px; line-height: 1.35; }
 
+/* ~60% of original 280px circle — still large for elderly thumbs */
 .checkin-btn {
-  width: 100%; aspect-ratio: 1; max-width: 280px; margin: 20px auto;
+  width: 100%; aspect-ratio: 1; max-width: 148px; margin: 2px auto 4px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   border-radius: 50%; background: linear-gradient(145deg, #14b8a6, #0f766e);
-  color: #fff; box-shadow: 0 12px 40px rgba(15, 118, 110, 0.4);
+  color: #fff; box-shadow: 0 8px 28px rgba(15, 118, 110, 0.35);
   transition: transform 0.15s, box-shadow 0.15s;
-  border: 8px solid #99f6e4;
+  border: 5px solid #99f6e4;
+  flex-shrink: 0;
 }
 .checkin-btn:active { transform: scale(0.96); }
-.checkin-btn .emoji { font-size: 3.5rem; line-height: 1; margin-bottom: 8px; }
-.checkin-btn .label { font-size: 2rem; font-weight: 800; letter-spacing: 0.02em; }
-.checkin-btn .sub { font-size: 1rem; opacity: 0.9; margin-top: 4px; font-weight: 500; }
+.checkin-btn .emoji { font-size: 1.9rem; line-height: 1; margin-bottom: 2px; }
+.checkin-btn .label { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.02em; }
+.checkin-btn .sub { font-size: 0.78rem; opacity: 0.9; margin-top: 2px; font-weight: 500; }
 .checkin-btn.done {
   background: linear-gradient(145deg, #4ade80, #16a34a);
   border-color: #bbf7d0;
@@ -117,47 +119,83 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   position: sticky;
   bottom: 0;
   z-index: 30;
-  margin-top: 24px;
-  padding: 14px 0 calc(10px + var(--safe-bottom));
+  margin-top: 8px;
+  padding: 10px 0 calc(8px + var(--safe-bottom));
   border-top: 3px dashed #fca5a5;
   background: linear-gradient(180deg, rgba(254,242,242,0.92), #fef2f2 40%);
   box-shadow: 0 -8px 24px rgba(127, 29, 29, 0.08);
+  flex-shrink: 0;
 }
 #elderView {
-  padding-bottom: 4px;
+  padding-bottom: 0;
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 140px);
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 #elderView .sos-zone { margin-top: auto; }
+#elderView .elder-actions-row { flex-shrink: 0; }
+.voice-section#elderVoiceSection {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.voice-section#elderVoiceSection .voice-head { flex-shrink: 0; }
+.voice-section#elderVoiceSection .voice-device-note { flex-shrink: 0; }
 .voice-section#elderVoiceSection .voice-inbox {
-  max-height: 100px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 0;
 }
 @media (max-height: 900px) {
-  .elder-hero { margin-bottom: 2px; }
-  .elder-hero .elder-name { font-size: 1.3rem; }
-  .elder-hero .last-check { font-size: 0.85rem; }
-  .voice-section#elderVoiceSection { margin: 6px 0 0; }
-  .voice-section#elderVoiceSection .voice-inbox { max-height: 72px; }
-  .voice-section#elderVoiceSection .empty { padding: 6px; }
+  .elder-hero { margin-bottom: 0; padding: 0 0 4px; }
+  .elder-hero .elder-name { font-size: 1.15rem; }
+  .elder-hero .last-check { font-size: 0.82rem; }
+  .checkin-btn { max-width: 148px; margin: 2px auto 4px; }
+  .elder-action-btn { min-height: 80px; padding: 8px 6px; font-size: 0.9rem; }
+  .elder-action-btn .ea-ico { font-size: 1.7rem; }
+  .voice-section#elderVoiceSection { margin: 4px 0 0; }
+  .voice-section#elderVoiceSection .voice-device-note { display: none; }
+  .voice-section#elderVoiceSection .empty { padding: 8px; }
   .voice-section#elderVoiceSection .empty .emoji { font-size: 1.4rem; margin-bottom: 2px; }
-  .sos-hold { min-height: 96px; padding: 14px 14px 14px 88px; }
-  .sos-hold .sos-ring { width: 64px; height: 64px; left: 12px; }
+  .sos-hold { min-height: 88px; padding: 12px 14px 12px 84px; }
+  .sos-hold .sos-ring { width: 60px; height: 60px; left: 12px; }
 }
 @media (max-height: 700px) {
-  .who-am-i { margin: 4px 0 2px; padding: 6px 8px; }
-  .checkin-btn { max-width: 160px; margin: 4px auto 2px; border-width: 5px; }
-  .checkin-btn .emoji { font-size: 2.2rem; }
-  .checkin-btn .label { font-size: 1.25rem; }
-  .checkin-btn .sub { font-size: 0.8rem; }
-  .elder-action-btn { min-height: 96px; padding: 10px 6px; font-size: 0.9rem; }
-  .elder-action-btn .ea-ico { font-size: 1.6rem; }
-  .elder-action-btn .hint { font-size: 0.65rem; }
-  .voice-section#elderVoiceSection .voice-inbox { max-height: 56px; }
-  .sos-hold { min-height: 84px; padding: 10px 12px 10px 78px; }
-  .sos-hold .sos-title { font-size: 1.15rem; }
-  .sos-hold .sos-hint { font-size: 0.8rem; }
-  #elderView { min-height: calc(100dvh - 120px); }
+  .topbar { gap: 4px; padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 6px; }
+  .topbar h1 { font-size: 0.95rem; }
+  .role-tab { min-height: 40px; padding: 8px 6px; font-size: 0.88rem; }
+  .who-am-i { margin: 2px 0; padding: 4px 6px; }
+  .elder-hero { padding: 0; }
+  .elder-hero .elder-name { font-size: 1.05rem; }
+  .elder-hero .last-check { font-size: 0.75rem; }
+  .elder-hero .status-pill { margin: 2px 0; padding: 2px 8px; font-size: 0.72rem; }
+  .checkin-btn { max-width: 108px; margin: 2px auto; border-width: 4px; }
+  .checkin-btn .emoji { font-size: 1.4rem; margin-bottom: 0; }
+  .checkin-btn .label { font-size: 0.95rem; }
+  .checkin-btn .sub { display: none; }
+  .elder-action-btn { min-height: 60px; padding: 6px 4px; font-size: 0.78rem; }
+  .elder-action-btn .ea-ico { font-size: 1.25rem; }
+  .elder-action-btn .hint { display: none; }
+  .sos-hold { min-height: 64px; padding: 8px 10px 8px 64px; }
+  .sos-hold .sos-ring { width: 48px; height: 48px; left: 10px; }
+  .sos-hold .sos-title { font-size: 1rem; }
+  .sos-hold .sos-hint { font-size: 0.68rem; }
+  .sos-zone { padding: 4px 0 calc(4px + var(--safe-bottom)); margin-top: 4px; }
+  main { padding: 6px 10px; padding-bottom: calc(6px + var(--safe-bottom)); }
+}
+@media (min-height: 800px) {
+  .checkin-btn { max-width: 156px; }
+}
+@media (min-height: 900px) {
+  .checkin-btn { max-width: 168px; }
 }
 
 .sos-hold {
@@ -199,14 +237,14 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 .elder-actions-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 8px 0 4px;
+  gap: 10px;
+  margin: 4px 0 2px;
 }
 .elder-action-btn {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; padding: 18px 10px; border-radius: 18px;
-  color: #fff; font-weight: 800; font-size: 1.05rem; line-height: 1.2;
-  text-align: center; min-height: 128px;
+  gap: 2px; padding: 12px 8px; border-radius: 16px;
+  color: #fff; font-weight: 800; font-size: 0.98rem; line-height: 1.15;
+  text-align: center; min-height: 92px;
   user-select: none; -webkit-user-select: none; touch-action: none;
   border: 4px solid transparent;
   box-shadow: 0 8px 24px rgba(0,0,0,0.18);
@@ -223,6 +261,15 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   background: linear-gradient(145deg, #dc2626, #b91c1c);
   border-color: #fecaca;
   transform: scale(0.98);
+}
+.elder-action-btn.voice.arming {
+  background: linear-gradient(145deg, #ea580c, #c2410c);
+  border-color: #fdba74;
+  transform: scale(0.99);
+}
+.hold-talk.arming {
+  background: linear-gradient(145deg, #ea580c, #c2410c);
+  border-color: #fdba74;
 }
 .elder-action-btn.video {
   background: linear-gradient(145deg, #7c3aed, #6d28d9);
@@ -361,10 +408,10 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 .voice-section { margin: 16px 0 8px; }
 .voice-section .voice-head {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px; gap: 8px;
+  margin-bottom: 4px; gap: 8px;
 }
 .voice-section .voice-head h2 {
-  font-size: 1.05rem; font-weight: 800; color: var(--text);
+  font-size: 0.95rem; font-weight: 800; color: var(--text);
 }
 .unread-badge {
   display: inline-flex; align-items: center; justify-content: center;
@@ -374,13 +421,13 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 }
 .unread-badge.hidden { display: none !important; }
 .voice-device-note {
-  font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4;
+  font-size: 0.75rem; color: var(--muted); margin: 2px 0 6px; line-height: 1.3;
 }
 .voice-inbox { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 220px; overflow-y: auto; }
 .voice-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px; background: var(--card); border-radius: 14px;
-  box-shadow: var(--shadow); border: 2px solid transparent;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 12px;
+  background: #fff; border: 1px solid var(--border);
 }
 .voice-row.unread { border-color: #f59e0b; background: #fffbeb; }
 .voice-play {
@@ -444,12 +491,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   vertical-align: middle;
 }
 .tabs .tab { font-size: 0.78rem; padding: 12px 2px; }
-.checkin-btn { max-width: 200px; margin: 8px auto 4px; }
-.checkin-btn .emoji { font-size: 2.8rem; }
-.checkin-btn .label { font-size: 1.55rem; }
-.elder-action-btn { min-height: 112px; padding: 14px 8px; }
-.elder-action-btn .ea-ico { font-size: 1.9rem; }
-.elder-action-btn { font-size: 0.98rem; }
+/* check-in / action sizes controlled above + height media queries */
 
 .elder-card {
   background: var(--card); border-radius: var(--radius);
@@ -993,6 +1035,7 @@ const i18n = {
     holdToTalk: 'Hold to talk',
     holdHintElder: 'Release to send · also checks you in',
     holdHintFamily: 'Release to send to the senior',
+    holdArming: 'Getting mic ready…',
     holdRecording: 'Recording… release to send',
     voiceEmptyElder: 'No voice messages yet. Family can send one from Messages.',
     voiceEmptyFamily: 'No messages yet. Hold the button below to send a voice note.',
@@ -1188,6 +1231,7 @@ const i18n = {
     holdToTalk: '按住说话',
     holdHintElder: '松手发送 · 同时算作签到',
     holdHintFamily: '松手发送给长辈',
+    holdArming: '正在打开麦克风…',
     holdRecording: '正在录音…松手发送',
     voiceEmptyElder: '还没有语音。家人可在「语音」页发送。',
     voiceEmptyFamily: '还没有消息。按住下方按钮发送语音。',
@@ -1645,7 +1689,12 @@ function applyI18n() {
   const evn = document.getElementById('elderVoiceNote');
   if (evn) evn.textContent = t('voiceDeviceNote');
   const ehl = document.getElementById('elderHoldLabel');
-  if (ehl && !document.getElementById('elderHoldTalk').classList.contains('recording')) ehl.textContent = t('holdToTalk');
+  if (ehl) {
+    const eb = document.getElementById('elderHoldTalk');
+    if (eb && eb.classList.contains('arming')) ehl.textContent = t('holdArming');
+    else if (eb && eb.classList.contains('recording')) ehl.textContent = t('holdRecording');
+    else ehl.textContent = t('holdToTalk');
+  }
   const ehh = document.getElementById('elderHoldHint');
   if (ehh) ehh.textContent = t('holdHintElder');
   const mh = document.getElementById('messagesHint');
@@ -1654,7 +1703,12 @@ function applyI18n() {
   if (wil) wil.textContent = t('whoAmILabel');
   fillWhoAmISelect();
   const fhl = document.getElementById('familyHoldLabel');
-  if (fhl && !document.getElementById('familyHoldTalk').classList.contains('recording')) fhl.textContent = t('holdToTalk');
+  if (fhl) {
+    const fb = document.getElementById('familyHoldTalk');
+    if (fb && fb.classList.contains('arming')) fhl.textContent = t('holdArming');
+    else if (fb && fb.classList.contains('recording')) fhl.textContent = t('holdRecording');
+    else fhl.textContent = t('holdToTalk');
+  }
   const fhh = document.getElementById('familyHoldHint');
   if (fhh) fhh.textContent = t('holdHintFamily');
   updateCareLadderLabels();
@@ -1839,12 +1893,14 @@ function setRole(next) {
     // Still re-render so a missed first paint cannot leave the wrong pane
     render();
     syncViewUrl();
+    if (next === 'elder') try { warmMicForSenior(); } catch (e) {}
     return;
   }
   role = next;
   saveState();
   render();
   syncViewUrl();
+  if (next === 'elder') try { warmMicForSenior(); } catch (e) {}
 }
 
 function toggleRole() {
@@ -2074,14 +2130,17 @@ function resetAllData() { resetDemoData(); }
 const VOICE_IDB = 'presok_voice_v2';
 const VOICE_STORE = 'clips';
 const MAX_VOICE_MSGS = 40;
-const MIN_REC_MS = 450;
+const MIN_REC_MS = 700;
+const MIN_HOLD_ACCEPT_MS = 900;
 const MAX_REC_MS = 60000;
 
 let voiceDbPromise = null;
 let mediaRecorder = null;
 let mediaStream = null;
+let micWarmPromise = null;
 let recChunks = [];
 let recStartedAt = 0;
+let holdPressedAt = 0;
 let recFrom = null; // 'elder' | 'family'
 let recMaxTimer = null;
 let playingAudio = null;
@@ -2406,12 +2465,54 @@ function renderFamilyMessages() {
   else renderConvList();
 }
 
-function setHoldUi(from, recording) {
+function setHoldUi(from, mode) {
+  // mode: false | 'arming' | true/'recording'
   const btn = document.getElementById(from === 'elder' ? 'elderHoldTalk' : 'familyHoldTalk');
   const label = document.getElementById(from === 'elder' ? 'elderHoldLabel' : 'familyHoldLabel');
   if (!btn || !label) return;
-  btn.classList.toggle('recording', !!recording);
-  label.textContent = recording ? t('holdRecording') : t('holdToTalk');
+  const recording = mode === true || mode === 'recording';
+  const arming = mode === 'arming';
+  btn.classList.toggle('recording', recording || arming);
+  btn.classList.toggle('arming', arming);
+  if (arming) label.textContent = t('holdArming') || 'Getting mic ready…';
+  else if (recording) label.textContent = t('holdRecording');
+  else label.textContent = t('holdToTalk');
+}
+
+async function ensureMicStream() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw Object.assign(new Error('no media'), { name: 'NotSupportedError' });
+  }
+  if (mediaStream) {
+    const live = mediaStream.getTracks().some(tr => tr.readyState === 'live');
+    if (live) return mediaStream;
+    try { mediaStream.getTracks().forEach(tr => tr.stop()); } catch (e) {}
+    mediaStream = null;
+  }
+  if (micWarmPromise) return micWarmPromise;
+  micWarmPromise = navigator.mediaDevices.getUserMedia({
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    }
+  }).then(stream => {
+    mediaStream = stream;
+    // Keep tracks alive; if browser ends them, clear cache
+    stream.getTracks().forEach(tr => {
+      tr.onended = () => {
+        if (mediaStream === stream) mediaStream = null;
+      };
+    });
+    return stream;
+  }).finally(() => { micWarmPromise = null; });
+  return micWarmPromise;
+}
+
+function warmMicForSenior() {
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return;
+  // Fire-and-forget; permission prompt may appear — that's OK on first open
+  ensureMicStream().catch(() => {});
 }
 
 async function startHoldRecord(from, ev) {
@@ -2426,16 +2527,19 @@ async function startHoldRecord(from, ev) {
   recCancelled = false;
   recFrom = from;
   recChunks = [];
-  setHoldUi(from, true);
+  holdPressedAt = Date.now();
+  // Instant feedback before any mic work (paint before await)
+  setHoldUi(from, 'arming');
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  if (recCancelled) { setHoldUi(from, false); return; }
   recArming = (async () => {
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (recCancelled) { stopMediaTracks(); return; }
+      await ensureMicStream();
+      if (recCancelled) return;
       const mime = pickRecorderMime();
       try {
         mediaRecorder = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
       } catch (err) {
-        stopMediaTracks();
         setHoldUi(from, false);
         toast(t('toastVoiceFailed'));
         return;
@@ -2444,6 +2548,7 @@ async function startHoldRecord(from, ev) {
       mediaRecorder.onerror = () => { toast(t('toastVoiceFailed')); };
       recStartedAt = Date.now();
       mediaRecorder.start(100);
+      setHoldUi(from, true);
       clearTimeout(recMaxTimer);
       recMaxTimer = setTimeout(() => stopHoldRecord(from, true), MAX_REC_MS);
       if (recCancelled) { await stopHoldRecord(from, false); }
@@ -2459,7 +2564,9 @@ async function startHoldRecord(from, ev) {
   await recArming;
 }
 
-function stopMediaTracks() {
+function stopMediaTracks(force) {
+  // By default keep the mic stream warm for the next hold-to-talk (iOS Safari latency).
+  if (!force) return;
   if (mediaStream) {
     mediaStream.getTracks().forEach(tr => { try { tr.stop(); } catch (e) {} });
     mediaStream = null;
@@ -2469,7 +2576,8 @@ function stopMediaTracks() {
 async function stopHoldRecord(from, auto) {
   clearTimeout(recMaxTimer);
   const btnFrom = from || recFrom;
-  // If still arming mic, mark cancel/finish after start resolves
+  const pressedAt = holdPressedAt || Date.now();
+  // If still arming mic, wait for start — don't discard solely due to startup latency
   if (recArming && !(mediaRecorder && mediaRecorder.state === 'recording')) {
     recCancelled = true;
     try { await recArming; } catch (e) {}
@@ -2477,11 +2585,14 @@ async function stopHoldRecord(from, auto) {
   setHoldUi(btnFrom || 'elder', false);
   const mr = mediaRecorder;
   if (!mr || mr.state === 'inactive') {
-    stopMediaTracks();
     mediaRecorder = null;
+    // If user held long but mic never started, soft tip
+    if (!auto && (Date.now() - pressedAt) < MIN_HOLD_ACCEPT_MS) {
+      /* ignore quick abort while arming */
+    }
     return;
   }
-  const started = recStartedAt;
+  const started = recStartedAt || pressedAt;
   const who = recFrom;
   const mime = mr.mimeType || pickRecorderMime() || 'audio/webm';
   const blob = await new Promise(resolve => {
@@ -2490,14 +2601,22 @@ async function stopHoldRecord(from, auto) {
     };
     try { mr.stop(); } catch (e) { resolve(new Blob()); }
   });
-  stopMediaTracks();
+  // Keep mic stream warm (do not stop tracks)
   mediaRecorder = null;
   recChunks = [];
-  const dur = Date.now() - started;
-  if (dur < MIN_REC_MS || !blob || blob.size < 20) {
+  const recDur = Date.now() - started;
+  const holdDur = Date.now() - pressedAt;
+  const tooShortRec = recDur < MIN_REC_MS;
+  const heldLongEnough = holdDur >= MIN_HOLD_ACCEPT_MS;
+  if (!blob || blob.size < 20) {
     toast(t('toastVoiceTooShort'));
     return;
   }
+  if (tooShortRec && !heldLongEnough) {
+    toast(t('toastVoiceTooShort'));
+    return;
+  }
+  const dur = Math.max(recDur, Math.min(holdDur, MAX_REC_MS));
   try {
     const dataUrl = await blobToDataUrl(blob);
     await saveVoiceMessage(who, dataUrl, dur);
@@ -2516,7 +2635,7 @@ function cancelHoldRecord(from) {
   }
   mediaRecorder = null;
   recChunks = [];
-  stopMediaTracks();
+  // keep mediaStream warm
 }
 
 async function saveVoiceMessage(from, dataUrl, durationMs) {
@@ -3177,6 +3296,7 @@ function finishBootUi() {
   render();
   restoreCallUiIfNeeded();
   _bootDone = true;
+  try { if (role === 'elder') warmMicForSenior(); } catch (e) {}
 }
 
 function maybeBrowserNotifySetup() {
