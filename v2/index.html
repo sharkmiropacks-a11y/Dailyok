@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v41 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v42 / presok-med-preview-family-v42 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -147,7 +147,6 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 @media (max-height: 900px) {
   #elderSettingsHelp, #elderSettingsTitle { display: none; }
   #elderSettingsCard { padding: 6px 8px; margin-top: 4px; }
-  #btnTestMedAlarm { padding: 10px 12px; font-size: 0.88rem; min-height: 44px; }
 }
 .voice-section#elderVoiceSection {
   flex: 1 1 auto;
@@ -920,11 +919,6 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
         </span>
       </button>
     </div>
-    <div class="card" id="elderSettingsCard">
-      <h2 id="elderSettingsTitle" style="margin:0 0 6px;font-size:0.95rem">Settings</h2>
-      <p class="muted" id="elderSettingsHelp" style="margin:0 0 8px;font-size:0.8rem"></p>
-      <button type="button" class="btn btn-secondary btn-block" id="btnTestMedAlarm" onclick="testMedAlarm()">Test medicine alarm</button>
-    </div>
   </section>
 
   <section id="familyView" class="hidden">
@@ -1065,7 +1059,7 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 
 
         <div class="form-group" id="medAlarmTestGroup">
-          <button type="button" class="btn btn-secondary btn-block" id="btnTestMedAlarmFamily" onclick="testMedAlarm()">Test medicine alarm</button>
+          <button type="button" class="btn btn-secondary btn-block" id="btnTestMedAlarmFamily" onclick="testMedAlarm()">Preview medicine alarm</button>
           <p class="muted" id="medAlarmTestHelp" style="margin-top:6px;margin-bottom:16px"></p>
         </div>
         <div class="demo-panel" id="familyDemo" style="margin:0 0 16px; background:#f8fafc; border:1px dashed #94a3b8; border-radius:12px; padding:14px">
@@ -1205,7 +1199,7 @@ const i18n = {
     msgChimeHelp: 'Plays a chime and vibrates when a new voice message arrives while this page is open. No sound when the page is closed or the phone is locked (browser limit).',
     elderSettingsTitle: 'Settings',
     elderSettingsHelp: 'Tap once on this page first so the phone can play sounds. Medicine alarms are louder than the message chime.',
-    btnTestMedAlarm: 'Test medicine alarm',
+    btnTestMedAlarm: 'Preview medicine alarm',
     medAlarmTestHelp: 'Plays the loud medicine alarm (same sound the senior hears). Message chime stays soft.',
     toastMedAlarmTest: 'Playing medicine alarm',
     toastNewVoice: 'New voice message',
@@ -1445,7 +1439,7 @@ toastCheckin: "Checked in — family can see you're OK.",
     msgChimeHelp: '页面打开时收到新语音会响一声并震动。页面关闭或锁屏时无法响铃（浏览器限制）。',
     elderSettingsTitle: '设置',
     elderSettingsHelp: '请先在页面上点一下，手机才能出声。吃药提醒比消息提示音更响、更长。',
-    btnTestMedAlarm: '试听吃药提醒音',
+    btnTestMedAlarm: '试听吃药铃声',
     medAlarmTestHelp: '播放大声的吃药提醒音（与长辈手机相同）。消息提示音保持轻柔。',
     toastMedAlarmTest: '正在播放吃药提醒音',
     toastNewVoice: '收到新语音消息',
@@ -2779,9 +2773,6 @@ function updateCareLadderLabels() {
   set('autoAnswerHelp', 'autoAnswerHelp');
   set('lblMsgChime', 'lblMsgChime');
   set('msgChimeHelp', 'msgChimeHelp');
-  set('elderSettingsTitle', 'elderSettingsTitle');
-  set('elderSettingsHelp', 'elderSettingsHelp');
-  set('btnTestMedAlarm', 'btnTestMedAlarm');
   set('btnTestMedAlarmFamily', 'btnTestMedAlarm');
   set('medAlarmTestHelp', 'medAlarmTestHelp');
   set('medTitle', 'medTitle');
