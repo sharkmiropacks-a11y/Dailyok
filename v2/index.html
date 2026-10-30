@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v35 / presok-msg-chime-v35 -->
+<!-- presok-v36 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -1941,6 +1941,14 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* presok-mojibake-v36: repair em-dash mojibake from SQL Editor paste without charset */
+function sanitizeAlertText(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/ ?\u00e2\u20ac\u201d ?/g, ' - ')  /* cp1252 mojibake of U+2014 */
+    .replace(/ ?\u2014 ?/g, ' - ');               /* real em dash */
+}
+
 function renderFamily() {
   const list = document.getElementById('elderList');
   if (!state.elders.length) {
@@ -2005,7 +2013,7 @@ function renderFamily() {
   } else {
     nl.innerHTML = state.notifications.map(n => `
       <div class="notif ${n.level}">
-        <div>${escapeHtml(n.message)}</div>
+        <div>${escapeHtml(sanitizeAlertText(n.message))}</div>
         <div class="n-time">${formatTime(n.at)} · ${relativeTime(n.at)}</div>
       </div>`).join('');
   }
@@ -2303,6 +2311,7 @@ const MAX_VOICE_MSGS = 40;
 /* presok-pair-fix-v33 */
 /* presok-playback-ui-v34 */
 /* presok-msg-chime-v35 */
+/* presok-mojibake-v36 */
 const MIN_REC_MS = 500;
 const MIN_HOLD_ACCEPT_MS = 600;
 const MIN_BLOB_BYTES = 64;
