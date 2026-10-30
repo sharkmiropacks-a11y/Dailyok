@@ -188,9 +188,58 @@
   .pref-row label { font-size: 0.95rem; font-weight: 600; }
   .pref-row input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--teal); }
   .sheet-close { margin-top: 16px; width: 100%; min-height: 48px; border: none; border-radius: 14px; background: var(--teal); color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; }
+
+  .weather-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 999px; padding: 6px 10px; font-size: 0.72rem; font-weight: 600; margin-bottom: 8px;
+  }
+  .weather-pill.rain { background: rgba(30,64,175,0.35); }
+  .offline-banner {
+    display: none; background: #78350f; color: #fff; text-align: center;
+    padding: 8px 12px; font-size: 0.78rem; font-weight: 600;
+  }
+  .offline-banner.show { display: block; }
+  .tool-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .tool-btn {
+    background: var(--card); border: 2px solid var(--soft); color: var(--teal-dark);
+    border-radius: 12px; padding: 10px 12px; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; min-height: 42px; box-shadow: 0 2px 8px rgba(13,148,136,0.06);
+  }
+  .follow-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .follow-chip {
+    background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; border-radius: 999px;
+    padding: 6px 10px; font-size: 0.72rem; font-weight: 700; cursor: pointer; min-height: 32px;
+  }
+  .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
+  .icon-mini {
+    background: #f0fdfa; border: 1px solid var(--soft); border-radius: 10px;
+    padding: 8px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--teal-dark); min-height: 40px;
+  }
+  .icon-mini.loved { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
+  .day-slot { margin-bottom: 12px; }
+  .day-slot h3 { font-size: 0.85rem; color: var(--teal-dark); margin-bottom: 6px; }
+  .day-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: #f8fffe; border: 1px solid var(--soft); border-radius: 10px;
+    padding: 8px 10px; margin-bottom: 6px; font-size: 0.85rem;
+  }
+  .day-item button { border: none; background: #fee2e2; color: #b91c1c; border-radius: 8px; padding: 4px 8px; cursor: pointer; font-weight: 700; }
+  .empty-day { font-size: 0.8rem; color: #64748b; padding: 6px 0; }
+  .sos-card {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fecaca;
+    border-radius: var(--radius); padding: 14px; margin-top: 8px;
+  }
+  .sos-card a.action-btn { border-color: #dc2626; color: #991b1b; }
+  .transport-note {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px;
+    padding: 10px 12px; margin-top: 8px; font-size: 0.85rem; color: #1e3a8a; line-height: 1.45;
+  }
+
 </style>
 </head>
 <body>
+<div class="offline-banner" id="offlineBanner">📴 Offline · 离线模式：本地推荐仍可用，天气暂不可用</div>
 <header class="header">
   <div class="header-top">
     <div class="brand">
@@ -207,6 +256,7 @@
     </div>
   </div>
   <div class="badge-fair" id="fairBadge">✓ No paid rankings · 不收商家广告费</div>
+  <div class="weather-pill" id="weatherPill" title="Open-Meteo">⛅ …</div>
   <div class="loc-row">
     <div class="loc-badge"><span class="dot"></span><span id="locLabel">正在定位…</span></div>
   </div>
@@ -229,6 +279,12 @@
   <div class="context-card" id="contextCard">
     <div class="ctx-title" id="ctxTitle"></div>
     <p id="ctxBody"></p>
+  </div>
+  <div class="tool-row">
+    <button type="button" class="tool-btn" id="dayPlanBtn">🗓️ 今日行程</button>
+    <button type="button" class="tool-btn" id="favsBtn">❤️ 收藏</button>
+    <button type="button" class="tool-btn" id="sosBtn">🆘 求助</button>
+    <button type="button" class="tool-btn" id="transitBtn">🚋 交通</button>
   </div>
   <div class="ask-box">
     <label id="askLabel" for="askInput">问问本地向导</label>
@@ -263,8 +319,14 @@
   <div class="pref-row"><label id="prefNatureL" for="prefNature">喜欢自然绿地</label><input type="checkbox" id="prefNature" /></div>
   <button type="button" class="sheet-close" id="prefsClose">完成</button>
 </div>
+<div class="sheet" id="daySheet" role="dialog">
+  <h2 id="dayTitle">今日行程</h2>
+  <p class="sub" id="daySub">把感兴趣的地方加进来，像朋友帮你排一天。不会自动订票。</p>
+  <div id="daySlots"></div>
+  <button type="button" class="sheet-close" id="dayClose">完成</button>
+</div>
 <script>
-/* Coco Guide v2 — keyword matcher, not real AI. SpeechRecognition + speechSynthesis. */
+/* Coco Guide v3 — multi-turn, weather, emergency, day plan, favs, transport. Keyword matcher, not real AI. */
 const APP_NAME = 'Coco Guide';
 const LS_PREFS = 'cocoGuidePrefs_v1';
 const LS_ATE = 'cocoGuideAteUntil';
@@ -649,17 +711,17 @@ const PLACES = [
 
 const I18N = {
   zh: {
-    tagline: '墨尔本本地向导', locating: '正在定位…', youNear: '你在', relocate: '📍 重新定位', pretend: '假装我在…',
-    askLabel: '问问本地向导', askPlaceholder: '今天带孩子去哪儿？打车？游泳？', askBtn: '问',
-    chips: ['带孩子去哪','下雨天去哪','附近好吃的','买什么特产','免费的景点','打车','附近药房','想游泳','附近酒店'],
-    tabs: { sight: '景点', food: '美食', buy: '特产', kids: '带孩子' },
-    sectionNear: '按距离+偏好排序 · 附近推荐', walk: '步行约', walkFar: '稍远', maps: '在 Google 地图打开',
+    tagline: '墨尔本贴身旅伴', locating: '正在定位…', youNear: '你在', relocate: '📍 重新定位', pretend: '假装我在…',
+    askLabel: '按住说话，或打字问我', askPlaceholder: '带孩子？打车？下雨？急救？电车？', askBtn: '问',
+    chips: ['带孩子去哪','下雨天去哪','附近好吃的','买什么特产','免费的景点','打车','附近药房','想游泳','附近酒店','紧急求助','Myki/电车','今天怎么安排','天气怎么样','我的收藏'],
+    tabs: { sight: '景点', food: '美食', buy: '特产', kids: '带孩子', fav: '收藏' },
+    sectionNear: '按距离+偏好+天气排序 · 附近推荐', walk: '步行约', walkFar: '稍远', maps: '在 Google 地图打开',
     empty: '这一类暂时没有更近的推荐，换个分类或位置试试。',
-    footer: '原型 · 墨尔本 CBD 及周边 · 内容人工精选 · 不收商家广告费 · 非实时营业信息',
+    footer: '原型 v3 · 墨尔本 CBD 及周边 · 内容人工精选 · 不收商家广告费 · 非实时营业信息 · 天气来自 Open-Meteo',
     locFail: '定位未开，请选一个「假装我在」地点', locOk: '定位成功',
     askNote: '（原型用关键词匹配，还不是真正的 AI）',
     ctxChemistTitle: '💡 你附近有药房', ctxMarketTitle: '💡 你到了市场附近', ctxSouvenirTitle: '💡 附近适合买伴手礼',
-    hold: '🎤 按住说话', holding: '🎧 正在听…松开结束', voiceHint: '松开后 Coco 会回答你',
+    hold: '🎤 按住说话', holding: '🎧 正在听…松开结束', voiceHint: '可以说「附近还有呢」「带我去」继续聊',
     fairBadge: '✓ No paid rankings · 不收商家广告费', justAte: '🍽️ 我刚吃过', justAteDone: '好的，两小时内少提吃饭～',
     prefsTitle: '我的偏好', prefsSub: '这些会悄悄影响推荐排序，不会卖给别人。', prefsClose: '完成',
     prefKids: '带着孩子', prefNoSpicy: '不吃辣', prefBudget: '预算友好', prefPhotos: '喜欢拍照打卡', prefShop: '喜欢购物', prefNature: '喜欢自然绿地',
@@ -667,20 +729,30 @@ const I18N = {
     speechNo: '这个浏览器暂不支持语音输入（微信内置浏览器或部分旧版 iOS 可能不行）。请用上面的文字框，或用 Safari / Chrome 打开。',
     speechDenied: '麦克风权限被拒绝了，请在系统设置里打开，或改用文字输入。',
     speechErr: '语音识别出了点问题，请再说一次，或改用文字。',
-    whyPrefix: '推荐理由：', nudgeTitle: '📍 你快到了', ttsOn: '🔊 朗读开', ttsOff: '🔇 朗读关'
+    whyPrefix: '推荐理由：', nudgeTitle: '📍 你快到了', ttsOn: '🔊 朗读开', ttsOff: '🔇 朗读关',
+    dayPlan: '🗓️ 今日行程', favs: '❤️ 收藏', sos: '🆘 求助', transit: '🚋 交通',
+    dayTitle: '今日行程', daySub: '把感兴趣的地方加进来。不会自动订票或叫车。', dayClose: '完成',
+    dayEmpty: '还空着——在推荐卡上点「加入行程」，或跟我说「加入行程」。',
+    slotMorning: '上午', slotLunch: '午饭', slotAfternoon: '下午', slotDinner: '晚饭/晚上',
+    addPlan: '加入行程', removePlan: '移除', saved: '已加入今日行程', unsaved: '已取消收藏', loved: '已收藏',
+    takeMe: '带我去', moreNearby: '附近还有呢',
+    offline: '📴 离线模式：本地推荐仍可用，天气暂不可用',
+    weatherLoading: '⛅ 天气加载中…', weatherFail: '⛅ 天气暂时拿不到', weatherRain: '可能有雨', weatherOk: '还行',
+    wxWhyRain: '因为现在可能下雨，优先室内',
+    followMore: '附近还有呢', followGo: '带我去第一个', followPlan: '加入行程', followFav: '收藏第一个'
   },
   en: {
-    tagline: 'Your Melbourne local guide', locating: 'Finding you…', youNear: 'You are near', relocate: '📍 Relocate', pretend: "Pretend I'm at…",
-    askLabel: 'Ask your local guide', askPlaceholder: 'Kids? Taxi? Swim? Food nearby?', askBtn: 'Ask',
-    chips: ['Kids activities','Rainy day ideas','Good food nearby','What souvenirs','Free sights','Need a ride','Pharmacy nearby','Want to swim','Hotels nearby'],
-    tabs: { sight: 'Sights', food: 'Food', buy: 'To buy', kids: 'Kids' },
-    sectionNear: 'Sorted by distance + prefs · nearby', walk: '~', walkFar: 'a bit further', walkUnit: ' min walk', maps: 'Open in Google Maps',
+    tagline: 'Your Melbourne travel buddy', locating: 'Finding you…', youNear: 'You are near', relocate: '📍 Relocate', pretend: "Pretend I'm at…",
+    askLabel: 'Hold to talk, or type', askPlaceholder: 'Kids? Taxi? Rain? Emergency? Trams?', askBtn: 'Ask',
+    chips: ['Kids activities','Rainy day ideas','Good food nearby','What souvenirs','Free sights','Need a ride','Pharmacy nearby','Want to swim','Hotels nearby','Emergency help','Myki / trams','Plan my day','Weather','My saved places'],
+    tabs: { sight: 'Sights', food: 'Food', buy: 'To buy', kids: 'Kids', fav: 'Saved' },
+    sectionNear: 'Sorted by distance + prefs + weather · nearby', walk: '~', walkFar: 'a bit further', walkUnit: ' min walk', maps: 'Open in Google Maps',
     empty: 'Nothing closer in this tab — try another category or location.',
-    footer: 'Prototype · Melbourne CBD & nearby · Curated · No paid rankings · Not live hours',
+    footer: 'Prototype v3 · Melbourne CBD & nearby · Curated · No paid rankings · Not live hours · Weather via Open-Meteo',
     locFail: 'Location off — pick a “Pretend I\'m at” spot', locOk: 'Location found',
     askNote: '(Keyword matching prototype — not a real AI yet)',
     ctxChemistTitle: "💡 You're near a chemist", ctxMarketTitle: "💡 You're near a market", ctxSouvenirTitle: '💡 Good spot for souvenirs',
-    hold: '🎤 Hold to talk', holding: '🎧 Listening… release to send', voiceHint: 'Release and Coco will answer',
+    hold: '🎤 Hold to talk', holding: '🎧 Listening… release to send', voiceHint: 'Try “what else nearby” or “take me there”',
     fairBadge: '✓ No paid rankings · 不收商家广告费', justAte: '🍽️ I just ate', justAteDone: 'Got it — fewer food nudges for 2 hours',
     prefsTitle: 'My preferences', prefsSub: 'These quietly re-rank suggestions. Never sold.', prefsClose: 'Done',
     prefKids: 'With kids', prefNoSpicy: 'No spicy food', prefBudget: 'Budget-friendly', prefPhotos: 'Love photo spots', prefShop: 'Love shopping', prefNature: 'Love nature / parks',
@@ -688,7 +760,17 @@ const I18N = {
     speechNo: "Voice input isn't supported in this browser (WeChat in-app or some older iOS builds). Use the text box, or open in Safari / Chrome.",
     speechDenied: 'Microphone permission denied. Enable it in Settings, or type instead.',
     speechErr: 'Speech recognition hiccup — try again or type.',
-    whyPrefix: 'Why:', nudgeTitle: "📍 You're almost there", ttsOn: '🔊 Voice on', ttsOff: '🔇 Voice off'
+    whyPrefix: 'Why:', nudgeTitle: "📍 You're almost there", ttsOn: '🔊 Voice on', ttsOff: '🔇 Voice off',
+    dayPlan: '🗓️ Day plan', favs: '❤️ Saved', sos: '🆘 Help', transit: '🚋 Transit',
+    dayTitle: "Today's plan", daySub: 'Add places you like. No booking or ride requests from here.', dayClose: 'Done',
+    dayEmpty: 'Empty — tap “Add to plan” on a card, or say “add to my plan”.',
+    slotMorning: 'Morning', slotLunch: 'Lunch', slotAfternoon: 'Afternoon', slotDinner: 'Dinner / evening',
+    addPlan: 'Add to plan', removePlan: 'Remove', saved: 'Added to today\'s plan', unsaved: 'Removed from saved', loved: 'Saved',
+    takeMe: 'Take me', moreNearby: 'What else nearby',
+    offline: '📴 Offline: local tips still work; weather unavailable',
+    weatherLoading: '⛅ Loading weather…', weatherFail: '⛅ Weather unavailable', weatherRain: 'Rain possible', weatherOk: 'OK',
+    wxWhyRain: 'Prioritising indoor — rain possible now',
+    followMore: 'What else nearby', followGo: 'Take me to the first', followPlan: 'Add to plan', followFav: 'Save the first'
   }
 };
 
@@ -701,6 +783,65 @@ let prefs = loadPrefs();
 let ateUntil = Number(localStorage.getItem(LS_ATE) || 0);
 let nudged = loadNudged();
 let recognizing = false, recognition = null;
+let lastPlaces = [];
+let lastIntent = null;
+let weather = { ok:false, code:null, temp:null, precip:0, rainish:false, fetchedAt:0, source:'none' };
+const LS_FAVS = 'cocoGuideFavs_v1';
+const LS_DAY = 'cocoGuideDayPlan_v1';
+const LS_WX = 'cocoGuideWeather_v1';
+const WX_TTL_MS = 30 * 60 * 1000;
+const HELP_HOSPITALS = [
+  { nameZh: 'The Royal Melbourne Hospital', nameEn: 'The Royal Melbourne Hospital', query: 'The Royal Melbourne Hospital' },
+  { nameZh: 'The Alfred Hospital', nameEn: 'The Alfred Hospital', query: 'The Alfred Hospital' },
+  { nameZh: "St Vincent's Hospital Melbourne", nameEn: "St Vincent's Hospital Melbourne", query: "St Vincent's Hospital Melbourne" }
+];
+function loadFavs(){ try { return JSON.parse(localStorage.getItem(LS_FAVS)||'[]'); } catch { return []; } }
+function saveFavs(){ localStorage.setItem(LS_FAVS, JSON.stringify(favs)); }
+function loadDayPlan(){
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_DAY)||'{}');
+    return Object.assign({ morning:[], lunch:[], afternoon:[], dinner:[] }, d);
+  } catch { return { morning:[], lunch:[], afternoon:[], dinner:[] }; }
+}
+function saveDayPlan(){ localStorage.setItem(LS_DAY, JSON.stringify(dayPlan)); }
+let favs = loadFavs();
+let dayPlan = loadDayPlan();
+function isFav(id){ return favs.includes(id); }
+function toggleFav(id){
+  if (isFav(id)) favs = favs.filter(x => x !== id);
+  else favs.push(id);
+  saveFavs();
+}
+function suggestSlot(){
+  const p = mealPeriod();
+  if (p === 'breakfast' || p === 'general') return 'morning';
+  if (p === 'lunch') return 'lunch';
+  if (p === 'tea') return 'afternoon';
+  return 'dinner';
+}
+function addToPlan(placeId, slot){
+  slot = slot || suggestSlot();
+  const arr = dayPlan[slot] || (dayPlan[slot]=[]);
+  if (!arr.includes(placeId)) arr.push(placeId);
+  saveDayPlan();
+}
+function removeFromPlan(placeId, slot){
+  if (!dayPlan[slot]) return;
+  dayPlan[slot] = dayPlan[slot].filter(x => x !== placeId);
+  saveDayPlan();
+}
+function findPlace(id){ return PLACES.find(p => p.id === id); }
+function weatherIsRainy(){
+  if (typeof window.__COCO_MOCK_RAIN === 'boolean') return window.__COCO_MOCK_RAIN;
+  return !!(weather && weather.rainish);
+}
+function applyWeatherToScore(p, score){
+  if (!weatherIsRainy()) return score;
+  const tags = (p.tags||[]).map(x => x.toLowerCase());
+  if (tags.includes('indoor') || tags.includes('rain') || tags.includes('室内') || tags.includes('下雨')) score += 4;
+  if (tags.includes('outdoor') || tags.includes('beach') || tags.includes('park') || tags.includes('海滩') || tags.includes('公园')) score -= 1;
+  return score;
+}
 
 function loadPrefs() {
   try {
@@ -743,6 +884,8 @@ function placeReason(p) {
     r = lang === 'zh' ? '因为你偏好预算友好' : 'Because you prefer budget-friendly picks';
   else if (prefs.noSpicy && tags.includes('spicy'))
     r = lang === 'zh' ? '注意：可能偏辣（你设了不吃辣）' : 'Note: may be spicy (you set no-spicy)';
+  if (weatherIsRainy() && (tags.includes('indoor') || tags.includes('rain') || tags.includes('室内') || tags.includes('下雨')))
+    r = t.wxWhyRain + ' · ' + r;
   return `${t.whyPrefix} ${r}`;
 }
 function mapsUrl(p) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.nameEn + ', Melbourne')}`; }
@@ -782,7 +925,11 @@ function prefScore(p) {
 }
 function rankedPlaces(filterFn) {
   return PLACES.filter(filterFn || (() => true))
-    .map(p => { const dist = haversineM(userLat, userLng, p.lat, p.lng); return { ...p, dist, score: prefScore(p) - dist / 800 }; })
+    .map(p => {
+      const dist = haversineM(userLat, userLng, p.lat, p.lng);
+      let score = applyWeatherToScore(p, prefScore(p)) - dist / 800;
+      return { ...p, dist, score };
+    })
     .sort((a, b) => b.score - a.score || a.dist - b.dist);
 }
 function mealPeriod() {
@@ -814,6 +961,8 @@ function updateRemind() {
     else if (period === 'latenight') text = `夜深了。唐人街还有夜宵选择；要是想收工，我也可以帮你打车回酒店。`;
     else text = `你在${near}附近。想吃、想逛、想带孩子，随时按住说话或打字问我。`;
     if (prefs.kids && !ate) text += ' 因为你带着孩子，我会优先提亲子友好的地方。';
+    if (weatherIsRainy()) text += ' 看天气可能有雨，室内的 NGV、州立图书馆、水族馆更稳妥。';
+    if (weather.ok && weather.temp != null) text += ` 现在大约 ${Math.round(weather.temp)}°C。`;
   } else {
     title.textContent = '☕ Coco tip';
     if (ate) text = `You said you just ate — I'll ease off food tips. Near ${near}, maybe sights or souvenirs?`;
@@ -824,6 +973,8 @@ function updateRemind() {
     else if (period === 'latenight') text = `Late night: Chinatown still has options. Or I can help you grab a ride back.`;
     else text = `You're near ${near}. Ask me about food, sights, kids, or a ride anytime.`;
     if (prefs.kids && !ate) text += " Because you're with kids, I'll prioritise family-friendly picks.";
+    if (weatherIsRainy()) text += ' Rain looks possible — indoor picks like NGV, State Library, or the aquarium are safer.';
+    if (weather.ok && weather.temp != null) text += ` About ${Math.round(weather.temp)}°C now.`;
   }
   body.textContent = text;
   document.getElementById('justAteBtn').textContent = I18N[lang].justAte;
@@ -904,20 +1055,31 @@ function renderChrome() {
   document.getElementById('prefShopL').textContent = t.prefShop;
   document.getElementById('prefNatureL').textContent = t.prefNature;
   document.getElementById('listeningLabel').textContent = t.listening;
+  const dayBtn = document.getElementById('dayPlanBtn'); if (dayBtn) dayBtn.textContent = t.dayPlan;
+  const favBtn = document.getElementById('favsBtn'); if (favBtn) favBtn.textContent = t.favs;
+  const sosBtnEl = document.getElementById('sosBtn'); if (sosBtnEl) sosBtnEl.textContent = t.sos;
+  const trBtn = document.getElementById('transitBtn'); if (trBtn) trBtn.textContent = t.transit;
+  const dayTitle = document.getElementById('dayTitle'); if (dayTitle) dayTitle.textContent = t.dayTitle;
+  const daySub = document.getElementById('daySub'); if (daySub) daySub.textContent = t.daySub;
+  const dayClose = document.getElementById('dayClose'); if (dayClose) dayClose.textContent = t.dayClose;
+  renderWeatherPill();
+  updateOfflineBanner();
   const sel = document.getElementById('pretendSelect');
   const cur = sel.value || pretendId || '';
   sel.innerHTML = `<option value="">${t.pretend}</option>` + PRETEND_SPOTS.map(s =>
     `<option value="${s.id}">${lang === 'zh' ? s.nameZh : s.nameEn}</option>`).join('');
   if (cur) sel.value = cur;
   document.getElementById('chips').innerHTML = t.chips.map(c => `<button type="button" class="chip">${c}</button>`).join('');
-  const order = ['sight', 'food', 'buy', 'kids'];
+  const order = ['sight', 'food', 'buy', 'kids', 'fav'];
   document.getElementById('tabs').innerHTML = order.map(k =>
     `<button type="button" class="tab${activeTab === k ? ' active' : ''}" data-tab="${k}">${t.tabs[k]}</button>`).join('');
 }
 
 function renderCards() {
   const t = I18N[lang];
-  const list = rankedPlaces(p => p.cat === activeTab);
+  let list;
+  if (activeTab === 'fav') list = rankedPlaces(p => isFav(p.id));
+  else list = rankedPlaces(p => p.cat === activeTab);
   const box = document.getElementById('cards');
   if (!list.length) { box.innerHTML = `<div class="empty">${t.empty}</div>`; return; }
   box.innerHTML = list.map(p => `
@@ -928,7 +1090,11 @@ function renderCards() {
         <div class="card-why">${placeWhy(p)}</div>
         <div class="card-reason">${placeReason(p)}</div>
         <div class="card-meta"><span class="dist">${distLabel(p.dist)}</span><span class="pill">${p.area}</span></div>
-        <a class="maps-btn" href="${mapsUrl(p)}" target="_blank" rel="noopener noreferrer">🗺️ ${t.maps}</a>
+        <div class="card-actions">
+          <a class="maps-btn" href="${mapsUrl(p)}" target="_blank" rel="noopener noreferrer">🗺️ ${t.maps}</a>
+          <button type="button" class="icon-mini${isFav(p.id)?' loved':''}" data-act="fav" data-id="${p.id}">${isFav(p.id)?'❤️':'🤍'} ${isFav(p.id)?t.loved:t.favs}</button>
+          <button type="button" class="icon-mini" data-act="plan" data-id="${p.id}">➕ ${t.addPlan}</button>
+        </div>
       </div>
     </article>`).join('');
 }
@@ -1004,6 +1170,95 @@ function hotelsCardHtml() {
 <div class="action-row"><a class="action-btn" href="${url}" target="_blank" rel="noopener">🏨 Search hotels nearby</a></div>`;
 }
 
+function followChipsHtml(places) {
+  if (!places || !places.length) return '';
+  const t = I18N[lang];
+  return `<div class="follow-chips">
+    <button type="button" class="follow-chip" data-fq="${escapeHtml(t.followMore)}">${t.followMore}</button>
+    <button type="button" class="follow-chip" data-fq="${escapeHtml(t.followGo)}">${t.followGo}</button>
+    <button type="button" class="follow-chip" data-fq="${escapeHtml(t.followPlan)}">${t.followPlan}</button>
+    <button type="button" class="follow-chip" data-fq="${escapeHtml(t.followFav)}">${t.followFav}</button>
+  </div>`;
+}
+
+function emergencyHtml() {
+  const hosp = HELP_HOSPITALS.map(h => {
+    const label = lang === 'zh' ? h.nameZh : h.nameEn;
+    return `<a class="action-btn" href="${mapsSearch(h.query)}" target="_blank" rel="noopener">🏥 ${label}</a>`;
+  }).join('');
+  const embassy = mapsSearch('Chinese Consulate-General Melbourne');
+  const smart = 'https://www.smartraveller.gov.au/';
+  if (lang === 'zh') {
+    return `<div class="sos-card"><strong>🆘 紧急求助（真实公共信息）</strong>
+<p>生命危险或紧急医疗：先拨打 <a href="tel:000"><strong>000</strong></a>（澳洲紧急电话）。我不会替你报警，请你亲自拨打。</p>
+<div class="action-row"><a class="action-btn" href="tel:000">📞 拨打 000</a></div>
+<p>附近大型医院（打开地图核对，不编造急诊等待时间）：</p>
+<div class="action-row">${hosp}</div>
+<p>护照丢失：尽快联系你的使领馆，并考虑向维多利亚警方报失。中国驻墨尔本总领事馆请用地图搜索确认地址与开放时间。</p>
+<div class="action-row">
+  <a class="action-btn" href="${embassy}" target="_blank" rel="noopener">🏛️ 地图搜中国总领馆</a>
+  <a class="action-btn" href="${smart}" target="_blank" rel="noopener">🇦🇺 Smartraveller</a>
+</div></div>`;
+  }
+  return `<div class="sos-card"><strong>🆘 Emergency help (public info)</strong>
+<p>Life-threatening emergency: call <a href="tel:000"><strong>000</strong></a> in Australia. I cannot place the call for you.</p>
+<div class="action-row"><a class="action-btn" href="tel:000">📞 Call 000</a></div>
+<p>Major nearby hospitals (open Maps to verify — no invented wait times):</p>
+<div class="action-row">${hosp}</div>
+<p>Lost passport: contact your consulate/embassy and consider a police report. Search Maps for the Chinese Consulate-General Melbourne for address/hours.</p>
+<div class="action-row">
+  <a class="action-btn" href="${embassy}" target="_blank" rel="noopener">🏛️ Maps: Chinese Consulate-General</a>
+  <a class="action-btn" href="${smart}" target="_blank" rel="noopener">🇦🇺 Smartraveller</a>
+</div></div>`;
+}
+
+function transportHtml() {
+  const ptv = mapsSearch('PTV Melbourne Free Tram Zone');
+  const myki = 'https://www.ptv.vic.gov.au/tickets/myki/';
+  if (lang === 'zh') {
+    return `<div class="transport-note"><strong>🚋 墨尔本交通小贴士（公开信息）</strong>
+<p>· CBD 有 <strong>Free Tram Zone（免费电车区）</strong>：在划定区域内搭电车可不刷卡；出区需要有效 Myki。</p>
+<p>· 游客可了解 Myki Visitor Pass / 普通 Myki；具体价格与范围请以 PTV 官网为准（我不会编造票价）。</p>
+<p>· 火车与多数公交需要 Myki；Google 地图可查换乘。</p>
+<div class="action-row">
+  <a class="action-btn" href="${ptv}" target="_blank" rel="noopener">🗺️ 地图：Free Tram Zone</a>
+  <a class="action-btn" href="${myki}" target="_blank" rel="noopener">🎫 PTV Myki 说明</a>
+  <a class="action-btn" href="${mapsSearch('tram stop near me')}" target="_blank" rel="noopener">🚏 附近电车站</a>
+</div></div>`;
+  }
+  return `<div class="transport-note"><strong>🚋 Melbourne transit tips (public info)</strong>
+<p>· CBD has a <strong>Free Tram Zone</strong>: trams are free inside the marked zone; you need a valid Myki outside it.</p>
+<p>· Visitors can look up the Myki Visitor Pass / standard Myki — check PTV for current prices (I won't invent fares).</p>
+<p>· Trains and most buses need Myki; Google Maps helps with transfers.</p>
+<div class="action-row">
+  <a class="action-btn" href="${ptv}" target="_blank" rel="noopener">🗺️ Maps: Free Tram Zone</a>
+  <a class="action-btn" href="${myki}" target="_blank" rel="noopener">🎫 PTV Myki info</a>
+  <a class="action-btn" href="${mapsSearch('tram stop near me')}" target="_blank" rel="noopener">🚏 Nearby tram stop</a>
+</div></div>`;
+}
+
+function dayPlanHtml() {
+  const t = I18N[lang];
+  const slots = [['morning', t.slotMorning],['lunch', t.slotLunch],['afternoon', t.slotAfternoon],['dinner', t.slotDinner]];
+  let any = false;
+  let body = slots.map(([key, label]) => {
+    const ids = dayPlan[key] || [];
+    if (ids.length) any = true;
+    const items = ids.length ? ids.map(id => {
+      const p = findPlace(id);
+      if (!p) return '';
+      return `<div class="day-item"><span>${p.emoji} ${placeName(p)}</span>
+        <span><a href="${mapsUrl(p)}" target="_blank" rel="noopener">🗺️</a>
+        <button type="button" data-rm-slot="${key}" data-rm-id="${id}">${t.removePlan}</button></span></div>`;
+    }).join('') : `<div class="empty-day">${t.dayEmpty}</div>`;
+    return `<div class="day-slot"><h3>${label}</h3>${items}</div>`;
+  }).join('');
+  const intro = lang === 'zh'
+    ? (any ? '这是你今天大致的安排（可随时改）：' : '行程还空着，先从附近推荐里加几个吧。')
+    : (any ? "Here's today's rough plan (edit anytime):" : 'Plan is empty — add a few nearby picks.');
+  return intro + body;
+}
+
 function detectIntents(lower) {
   const intents = [];
   if (/打车|叫车|uber|didi|taxi|ride|cab|13cabs|网约车/.test(lower)) intents.push('taxi');
@@ -1016,50 +1271,198 @@ function detectIntents(lower) {
   if (/特产|买|伴手礼|souvenir|honey|ugg|vegemite|tim\s*tam|jellycat|买什么/.test(lower)) intents.push('buy');
   if (/免费|free/.test(lower)) intents.push('free');
   if (/景点|看|逛|sight|see|visit|去哪|去哪儿|where/.test(lower)) intents.push('sight');
+  if (/紧急|急救|求助|报警|000|emergency|sos|hospital|医院|护照|passport|领事馆|使馆|embassy|consulate|lost passport/.test(lower)) intents.push('emergency');
+  if (/myki|电车|tram|火车|train|公交|巴士|bus|free tram|免费电车|交通|transit|ptv/.test(lower)) intents.push('transit');
+  if (/天气|下雨吗|weather|forecast|温度|几度/.test(lower)) intents.push('weather');
+  if (/行程|安排|plan my day|day plan|今天怎么|一日游|行程单/.test(lower)) intents.push('dayplan');
+  if (/收藏|喜欢的|saved|favourites?|favorites?|我的收藏/.test(lower)) intents.push('favs');
   return intents;
+}
+
+function isFollowup(lower) {
+  return /还有|再来|别的|其他|换一个|更多|more|another|else|what else|anything else|附近还有|那附近/.test(lower)
+    || /带我去|带我走|导航过去|怎么走|take me|navigate|directions to|带路/.test(lower)
+    || /第一个|第二个|第三个|第1|第2|第3|first one|second|third/.test(lower)
+    || /加入行程|加到行程|收藏它|收藏第一个|add to (my )?plan|save (it|the first)/.test(lower);
+}
+
+function handleFollowup(raw, lower) {
+  const t = I18N[lang];
+  if (!lastPlaces.length && !/带我去|take me|加入|收藏|add to|save/.test(lower)) return null;
+
+  if (/带我去|带我走|导航|take me|navigate|directions/.test(lower)) {
+    const p = lastPlaces[0];
+    if (!p) {
+      const msg = lang === 'zh' ? '还没有可导航的地点，先问我「附近好吃的」之类吧。' : 'No place to navigate yet — ask me for food or sights first.';
+      return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg, places: [] };
+    }
+    const intro = lang === 'zh' ? `好，带你去 ${placeName(p)}（打开地图导航，我不会替你叫车）：` : `OK — directions to ${placeName(p)} (Maps opens; I won't call a ride):`;
+    const html = intro + `<div class="action-row"><a class="action-btn" href="${mapsUrl(p)}" target="_blank" rel="noopener">🗺️ ${t.takeMe}</a></div>` + followChipsHtml(lastPlaces) + `<span class="note">${t.askNote}</span>`;
+    return { html, speakText: intro, places: lastPlaces };
+  }
+
+  if ((/第一个|第1|first/.test(lower) && /收藏|save|fav/.test(lower)) || /收藏第一个|save the first/.test(lower)) {
+    const p = lastPlaces[0];
+    if (!p) return null;
+    if (!isFav(p.id)) toggleFav(p.id);
+    const msg = lang === 'zh' ? `已收藏：${placeName(p)}` : `Saved: ${placeName(p)}`;
+    return { html: msg + followChipsHtml(lastPlaces) + `<span class="note">${t.askNote}</span>`, speakText: msg, places: lastPlaces };
+  }
+
+  if (/加入行程|加到行程|add to (my )?plan|加入/.test(lower)) {
+    const p = lastPlaces[0];
+    if (!p) {
+      const msg = lang === 'zh' ? '先选出一个地方，再说「加入行程」。' : 'Pick a place first, then say “add to plan”.';
+      return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg, places: [] };
+    }
+    addToPlan(p.id);
+    const msg = lang === 'zh' ? `已把 ${placeName(p)} 加入今日行程。` : `Added ${placeName(p)} to today's plan.`;
+    return { html: msg + dayPlanHtml() + followChipsHtml(lastPlaces) + `<span class="note">${t.askNote}</span>`, speakText: msg, places: lastPlaces };
+  }
+
+  if (/还有|再来|别的|其他|更多|more|another|else|what else|附近还有/.test(lower)) {
+    const exclude = new Set(lastPlaces.map(p => p.id));
+    let pool = rankedPlaces(p => !exclude.has(p.id));
+    if (lastIntent === 'food') pool = rankedPlaces(p => p.cat === 'food' && !exclude.has(p.id));
+    else if (lastIntent === 'kids') pool = rankedPlaces(p => (p.cat === 'kids' || (p.tags||[]).includes('kids') || (p.tags||[]).includes('带孩子')) && !exclude.has(p.id));
+    else if (lastIntent === 'buy') pool = rankedPlaces(p => p.cat === 'buy' && !exclude.has(p.id));
+    else if (lastIntent === 'swim') pool = rankedPlaces(p => (p.tags||[]).some(x => /swim|pool|游泳/.test(x)) && !exclude.has(p.id));
+    else if (lastIntent === 'sight' || lastIntent === 'rain' || lastIntent === 'free') pool = rankedPlaces(p => p.cat === 'sight' && !exclude.has(p.id));
+    const more = pool.slice(0, 4);
+    if (!more.length) {
+      const msg = lang === 'zh' ? '附近暂时没有更多同类推荐了，换个问题试试？' : 'No more similar picks nearby — try another question?';
+      return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg, places: [] };
+    }
+    const intro = lang === 'zh' ? '那再看看这些：' : 'Here are some more:';
+    return { html: intro + miniCardsHtml(more) + followChipsHtml(more) + `<span class="note">${t.askNote}</span>`, speakText: intro + ' ' + more.map(placeName).join('、'), places: more };
+  }
+
+  const ordinal = /第二个|第2|second/.test(lower) ? 1 : /第三个|第3|third/.test(lower) ? 2 : /第一个|第1|first/.test(lower) ? 0 : -1;
+  if (ordinal >= 0 && lastPlaces[ordinal]) {
+    const p = lastPlaces[ordinal];
+    const intro = lang === 'zh' ? `说的是 ${placeName(p)}：` : `You mean ${placeName(p)}:`;
+    return { html: intro + miniCardsHtml([p]) + followChipsHtml([p]) + `<span class="note">${t.askNote}</span>`, speakText: intro, places: [p] };
+  }
+  return null;
+}
+
+function weatherAnswer() {
+  const t = I18N[lang];
+  if (!weather.ok) {
+    const msg = lang === 'zh'
+      ? '我暂时拿不到天气（可能离线）。若你看到外面在下雨，优先选室内的 NGV、州立图书馆、水族馆。'
+      : "I can't fetch weather right now (maybe offline). If it's raining, favour indoor picks like NGV, State Library, or the aquarium.";
+    return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg, places: [] };
+  }
+  const rain = weatherIsRainy();
+  const temp = weather.temp != null ? Math.round(weather.temp) : '?';
+  let intro = lang === 'zh'
+    ? `墨尔本现在大约 ${temp}°C${rain ? '，可能有雨或阴湿' : ''}（Open-Meteo，非官方预报）。`
+    : `Around ${temp}°C in Melbourne${rain ? ', rain possible' : ''} (Open-Meteo, not an official forecast).`;
+  let places = [];
+  if (rain) {
+    places = rankedPlaces(p => (p.tags||[]).some(x => /indoor|rain|室内|下雨/.test(x))).slice(0, 4);
+    intro += lang === 'zh' ? ' 建议这些室内去处：' : ' Try these indoor spots:';
+  } else {
+    places = rankedPlaces(p => p.cat === 'sight').slice(0, 3);
+    intro += lang === 'zh' ? ' 适合出门逛逛：' : ' Nice time to wander:';
+  }
+  return { html: intro + miniCardsHtml(places) + followChipsHtml(places) + `<span class="note">${t.askNote}</span>`, speakText: intro, places };
 }
 
 function askAnswer(q) {
   const raw = (q || '').trim();
   if (!raw) return null;
   const lower = raw.toLowerCase();
-  const intents = detectIntents(lower);
   const t = I18N[lang];
+
+  if (isFollowup(lower)) {
+    const fu = handleFollowup(raw, lower);
+    if (fu) {
+      if (fu.places) lastPlaces = fu.places;
+      return fu;
+    }
+  }
+
+  const intents = detectIntents(lower);
   let html = '', speakText = '', places = [];
 
+  if (intents.includes('emergency')) {
+    lastIntent = 'emergency'; lastPlaces = [];
+    const intro = lang === 'zh' ? '需要帮助的话，先看这些（公共信息，请你亲自确认）：' : 'If you need help, start here (public info — please verify yourself):';
+    return { html: intro + emergencyHtml() + `<span class="note">${t.askNote}</span>`, speakText: intro, places: [] };
+  }
+  if (intents.includes('transit')) {
+    lastIntent = 'transit'; lastPlaces = [];
+    const intro = lang === 'zh' ? '交通这样看比较清楚：' : 'Transit, simply:';
+    return { html: intro + transportHtml() + `<span class="note">${t.askNote}</span>`, speakText: intro, places: [] };
+  }
+  if (intents.includes('weather')) {
+    lastIntent = 'weather';
+    const ans = weatherAnswer();
+    lastPlaces = ans.places || [];
+    return ans;
+  }
+  if (intents.includes('dayplan')) {
+    lastIntent = 'dayplan';
+    const intro = lang === 'zh' ? '今日行程：' : "Today's plan:";
+    return { html: intro + dayPlanHtml() + `<span class="note">${t.askNote}</span>`, speakText: intro, places: [] };
+  }
+  if (intents.includes('favs')) {
+    lastIntent = 'favs';
+    places = rankedPlaces(p => isFav(p.id)).slice(0, 8);
+    lastPlaces = places;
+    if (!places.length) {
+      const msg = lang === 'zh' ? '收藏夹还是空的，看中了就点爱心，或跟我说「收藏第一个」。' : 'No saved places yet — tap the heart, or say “save the first”.';
+      return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg, places: [] };
+    }
+    const intro = lang === 'zh' ? '你收藏过的：' : 'Your saved places:';
+    return { html: intro + miniCardsHtml(places) + followChipsHtml(places) + `<span class="note">${t.askNote}</span>`, speakText: intro, places };
+  }
   if (intents.includes('taxi')) {
+    lastIntent = 'taxi'; lastPlaces = [];
     const intro = lang === 'zh' ? '好的，要打车对吧？' : 'Sure — looking for a ride?';
     html = intro + '\n' + taxiCardHtml() + `<span class="note">${t.askNote}</span>`;
-    return { html, speakText: intro };
+    return { html, speakText: intro, places: [] };
   }
   if (intents.includes('hotel')) {
+    lastIntent = 'hotel'; lastPlaces = [];
     const intro = lang === 'zh' ? '找附近酒店的话：' : 'For hotels nearby:';
     html = intro + '\n' + hotelsCardHtml() + `<span class="note">${t.askNote}</span>`;
-    return { html, speakText: intro };
+    return { html, speakText: intro, places: [] };
   }
   if (intents.includes('pharmacy')) {
+    lastIntent = 'pharmacy';
     places = rankedPlaces(p => (p.tags || []).some(x => /chemist|pharmacy|药房|honey|lanolin/.test(x))).slice(0, 4);
+    lastPlaces = places;
     const intro = lang === 'zh'
       ? (prefs.kids ? '附近药房这些比较方便（带着孩子出门买药也省事）：' : '附近药房可以看这些：')
       : (prefs.kids ? 'Handy chemists nearby (easy with kids in tow):' : 'Chemists nearby:');
-    html = intro + miniCardsHtml(places) + `<span class="note">${t.askNote}</span>`;
-    return { html, speakText: intro + ' ' + places.map(p => placeName(p)).join('、') };
+    html = intro + miniCardsHtml(places) + followChipsHtml(places) + `<span class="note">${t.askNote}</span>`;
+    return { html, speakText: intro + ' ' + places.map(p => placeName(p)).join('、'), places };
   }
   if (intents.includes('swim')) {
+    lastIntent = 'swim';
     places = rankedPlaces(p => (p.tags || []).some(x => /swim|pool|游泳|泳池/.test(x))).slice(0, 4);
+    lastPlaces = places;
     const intro = lang === 'zh' ? '想游泳的话，这些是墨尔本真实的公共泳池：' : 'For a swim, these are real public pools in Melbourne:';
-    html = intro + miniCardsHtml(places) + `<span class="note">${t.askNote}</span>`;
-    return { html, speakText: intro + ' ' + places.map(p => placeName(p)).join(', ') };
+    html = intro + miniCardsHtml(places) + followChipsHtml(places) + `<span class="note">${t.askNote}</span>`;
+    return { html, speakText: intro + ' ' + places.map(p => placeName(p)).join(', '), places };
   }
   if (intents.includes('food') && foodSuppressed() && !intents.includes('kids')) {
+    lastIntent = 'food';
     const msg = lang === 'zh'
       ? '你刚说吃过了，我先少推餐厅～要不要改看景点、特产，还是去游泳？'
       : "You said you just ate — I'll hold the restaurant tips. Sights, souvenirs, or a swim instead?";
-    return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg };
+    return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg, places: [] };
+  }
+
+  if (weatherIsRainy() && intents.includes('sight') && !intents.includes('rain') && /去哪|去哪儿|where|ideas/.test(lower)) {
+    intents.push('rain');
   }
 
   const scored = PLACES.map(p => {
-    let score = prefScore(p);
+    let score = applyWeatherToScore(p, prefScore(p));
     const tags = (p.tags || []).map(x => x.toLowerCase());
     const blob = (p.nameZh + p.nameEn + p.whyZh + p.whyEn + tags.join(' ')).toLowerCase();
     if (intents.includes('kids') && (p.cat === 'kids' || tags.includes('kids') || tags.includes('带孩子'))) score += 6;
@@ -1078,22 +1481,25 @@ function askAnswer(q) {
 
   if (!scored.length) {
     const msg = lang === 'zh'
-      ? `嗯，我暂时没太听懂「${raw}」。可以试试：带孩子、下雨天、好吃的、特产、免费景点、打车、药房、游泳、酒店。`
-      : `Hmm, not sure about “${raw}”. Try: kids, rainy day, food, souvenirs, free sights, ride, pharmacy, swim, hotels.`;
-    return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg };
+      ? `嗯，我暂时没太听懂「${raw}」。可以试试：带孩子、下雨天、好吃的、特产、免费景点、打车、药房、游泳、酒店、紧急求助、电车、行程、天气。`
+      : `Hmm, not sure about “${raw}”. Try: kids, rainy day, food, souvenirs, free sights, ride, pharmacy, swim, hotels, emergency, trams, day plan, weather.`;
+    return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg, places: [] };
   }
+
+  lastIntent = intents[0] || 'sight';
+  lastPlaces = scored;
 
   let opener;
   if (intents.includes('kids')) opener = lang === 'zh' ? (prefs.kids ? '因为你带着孩子，这些很合适：' : '带孩子的话，这几个很合适：') : (prefs.kids ? "Because you're with kids, I'd suggest:" : "With kids, I'd suggest:");
-  else if (intents.includes('rain')) opener = lang === 'zh' ? '下雨天就躲进这些室内好去处：' : 'On a rainy day, duck into these indoor spots:';
+  else if (intents.includes('rain') || (weatherIsRainy() && intents.includes('sight'))) opener = lang === 'zh' ? '下雨或可能有雨，就躲进这些室内好去处：' : 'Rainy / rain possible — duck into these indoor spots:';
   else if (intents.includes('food')) opener = lang === 'zh' ? '想吃点好的？附近可以考虑：' : 'Hungry? Nearby favourites:';
   else if (intents.includes('buy')) opener = lang === 'zh' ? '买特产可以看这些：' : 'For Aussie specialties, try:';
   else if (intents.includes('free')) opener = lang === 'zh' ? '不想花钱也有好去处：' : 'Great free options:';
   else opener = lang === 'zh' ? '按你的问题，我推荐：' : "Based on that, I'd recommend:";
 
-  html = opener + miniCardsHtml(scored) + `<span class="note">${t.askNote}</span>`;
+  html = opener + miniCardsHtml(scored) + followChipsHtml(scored) + `<span class="note">${t.askNote}</span>`;
   speakText = opener + ' ' + scored.map(p => placeName(p)).join(lang === 'zh' ? '、' : ', ');
-  return { html, speakText };
+  return { html, speakText, places: scored };
 }
 
 function doAsk(q) {
@@ -1102,6 +1508,7 @@ function doAsk(q) {
   appendBubble('user', escapeHtml(raw));
   const ans = askAnswer(raw);
   if (!ans) return;
+  if (ans.places) lastPlaces = ans.places;
   appendBubble('bot', ans.html, ans.speakText);
 }
 function escapeHtml(s) {
@@ -1280,12 +1687,16 @@ function closePrefs() {
   prefs.shopping = document.getElementById('prefShop').checked;
   prefs.nature = document.getElementById('prefNature').checked;
   savePrefs();
-  document.getElementById('sheetBackdrop').classList.remove('show');
   document.getElementById('prefsSheet').classList.remove('show');
+  document.getElementById('daySheet').classList.remove('show');
+  document.getElementById('sheetBackdrop').classList.remove('show');
   refresh();
 }
 document.getElementById('prefsClose').addEventListener('click', closePrefs);
-document.getElementById('sheetBackdrop').addEventListener('click', closePrefs);
+document.getElementById('sheetBackdrop').addEventListener('click', () => {
+  if (document.getElementById('daySheet').classList.contains('show')) closeDaySheet();
+  else closePrefs();
+});
 
 const holdBtn = document.getElementById('holdBtn');
 holdBtn.addEventListener('pointerdown', (e) => {
@@ -1297,9 +1708,120 @@ holdBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopListening
 holdBtn.addEventListener('pointercancel', () => stopListening());
 holdBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
+function renderWeatherPill() {
+  const el = document.getElementById('weatherPill');
+  if (!el) return;
+  const t = I18N[lang];
+  if (!navigator.onLine && !weather.ok) {
+    el.textContent = t.weatherFail;
+    el.classList.remove('rain');
+    return;
+  }
+  if (!weather.ok) { el.textContent = t.weatherLoading; return; }
+  const icon = weatherIsRainy() ? '🌧' : (weather.code === 0 ? '☀️' : '⛅');
+  const temp = weather.temp != null ? Math.round(weather.temp) + '°C' : '';
+  el.textContent = `${icon} ${temp} · ${weatherIsRainy() ? t.weatherRain : t.weatherOk}`;
+  el.classList.toggle('rain', weatherIsRainy());
+}
+function updateOfflineBanner() {
+  const el = document.getElementById('offlineBanner');
+  if (!el) return;
+  el.textContent = I18N[lang].offline;
+  el.classList.toggle('show', !navigator.onLine);
+}
+function loadCachedWeather() {
+  try {
+    const raw = localStorage.getItem(LS_WX);
+    if (!raw) return;
+    const w = JSON.parse(raw);
+    if (w && w.fetchedAt && Date.now() - w.fetchedAt < WX_TTL_MS * 4) weather = w;
+  } catch (_) {}
+}
+async function fetchWeather() {
+  loadCachedWeather();
+  renderWeatherPill();
+  if (typeof window.__COCO_MOCK_RAIN === 'boolean') {
+    weather = { ok:true, code: window.__COCO_MOCK_RAIN ? 61 : 0, temp: window.__COCO_MOCK_TEMP ?? 18, precip: window.__COCO_MOCK_RAIN ? 1 : 0, rainish: !!window.__COCO_MOCK_RAIN, fetchedAt: Date.now(), source:'mock' };
+    renderWeatherPill(); updateRemind(); renderCards();
+    return;
+  }
+  if (!navigator.onLine) { renderWeatherPill(); return; }
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${userLat}&longitude=${userLng}&current=temperature_2m,weather_code,precipitation&timezone=Australia%2FMelbourne`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('wx');
+    const data = await res.json();
+    if (typeof window.__COCO_MOCK_RAIN === 'boolean') return; // test mock wins over in-flight fetch
+    const cur = data.current || {};
+    const code = cur.weather_code;
+    const precip = cur.precipitation || 0;
+    const rainish = precip > 0 || [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(code);
+    weather = { ok:true, code, temp: cur.temperature_2m, precip, rainish, fetchedAt: Date.now(), source:'open-meteo' };
+    localStorage.setItem(LS_WX, JSON.stringify(weather));
+  } catch (_) {
+    if (typeof window.__COCO_MOCK_RAIN === 'boolean') return;
+    if (!weather.ok) weather = { ok:false, code:null, temp:null, precip:0, rainish:false, fetchedAt:Date.now(), source:'fail' };
+  }
+  renderWeatherPill(); updateRemind(); renderCards();
+}
+
+function openDaySheet() {
+  document.getElementById('daySlots').innerHTML = dayPlanHtml();
+  document.getElementById('dayTitle').textContent = I18N[lang].dayTitle;
+  document.getElementById('daySub').textContent = I18N[lang].daySub;
+  document.getElementById('dayClose').textContent = I18N[lang].dayClose;
+  document.getElementById('sheetBackdrop').classList.add('show');
+  document.getElementById('daySheet').classList.add('show');
+  document.getElementById('prefsSheet').classList.remove('show');
+}
+function closeDaySheet() {
+  document.getElementById('daySheet').classList.remove('show');
+  if (!document.getElementById('prefsSheet').classList.contains('show'))
+    document.getElementById('sheetBackdrop').classList.remove('show');
+}
+
+document.getElementById('cards').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === 'fav') {
+    toggleFav(id);
+    toast(isFav(id) ? I18N[lang].loved : I18N[lang].unsaved);
+    renderCards();
+  } else if (btn.dataset.act === 'plan') {
+    addToPlan(id);
+    toast(I18N[lang].saved);
+  }
+});
+document.getElementById('chatThread').addEventListener('click', (e) => {
+  const chip = e.target.closest('.follow-chip');
+  if (chip && chip.dataset.fq) {
+    document.getElementById('askInput').value = chip.dataset.fq;
+    doAsk(chip.dataset.fq);
+  }
+});
+document.getElementById('daySlots').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-rm-id]');
+  if (!btn) return;
+  removeFromPlan(btn.dataset.rmId, btn.dataset.rmSlot);
+  document.getElementById('daySlots').innerHTML = dayPlanHtml();
+});
+document.getElementById('dayPlanBtn').addEventListener('click', openDaySheet);
+document.getElementById('dayClose').addEventListener('click', closeDaySheet);
+document.getElementById('favsBtn').addEventListener('click', () => { activeTab = 'fav'; refresh(); });
+document.getElementById('sosBtn').addEventListener('click', () => doAsk(lang === 'zh' ? '紧急求助' : 'Emergency help'));
+document.getElementById('transitBtn').addEventListener('click', () => doAsk(lang === 'zh' ? 'Myki/电车' : 'Myki / trams'));
+window.addEventListener('online', () => { updateOfflineBanner(); fetchWeather(); });
+window.addEventListener('offline', updateOfflineBanner);
+
 locName = PRETEND_SPOTS[0].nameZh;
 setLocation(PRETEND_SPOTS[0].lat, PRETEND_SPOTS[0].lng, locName, 'flinders');
 locate();
+fetchWeather();
+
 
 window.__cocoAsk = doAsk;
 window.__cocoAskAnswer = askAnswer;
@@ -1307,6 +1829,14 @@ window.__cocoSetHour = (h) => { window.__COCO_MOCK_HOUR = h; updateRemind(); };
 window.__cocoSetPrefs = (p) => { Object.assign(prefs, p); savePrefs(); refresh(); };
 window.__cocoJustAte = () => { ateUntil = Date.now() + 2*3600*1000; localStorage.setItem(LS_ATE, String(ateUntil)); updateRemind(); };
 window.__cocoForceNudgeClear = () => { nudged = {}; saveNudged(); };
+window.__cocoPlaces = PLACES;
+window.__cocoSetRain = (v, temp) => { window.__COCO_MOCK_RAIN = !!v; if (temp != null) window.__COCO_MOCK_TEMP = temp; return fetchWeather(); };
+window.__cocoGetWeather = () => weather;
+window.__cocoGetLastPlaces = () => lastPlaces;
+window.__cocoGetFavs = () => favs.slice();
+window.__cocoGetDayPlan = () => JSON.parse(JSON.stringify(dayPlan));
+window.__cocoAddFav = (id) => { if (!isFav(id)) toggleFav(id); };
+window.__cocoAddPlan = (id, slot) => addToPlan(id, slot);
 </script>
 </body>
 </html>
