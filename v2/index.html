@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v37 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v38 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -1886,7 +1886,7 @@ function resetMsgChimeKnown() {
   _knownMsgIds = null;
 }
 
-/* ===== Medication reminders (presok-meds-v37) ===== */
+/* ===== Medication reminders (presok-meds-v37 / sync-v38) ===== */
 const MED_MISS_MS = 30 * 60 * 1000;
 const MED_RECHIME_MS = 60 * 1000;
 let _medOverlayDoseId = null;
@@ -2249,6 +2249,57 @@ async function maybeEnsureMedDoses() {
   try { await cloud.ensureMedicationDoses(1); } catch (e) {}
 }
 
+/* Fallback sync when realtime drops (presok-meds-sync-v38): poll + focus/visibility */
+const CLOUD_MED_POLL_MS = 60 * 1000;
+let _cloudMedPollTimer = null;
+
+async function refreshMedsFromCloud(reason) {
+  if (!cloud || !cloudReady) return;
+  try {
+    await pullCloudState({ silent: true });
+  } catch (e) {
+    console.warn('med refresh pull', reason, e);
+    return;
+  }
+  try { await maybeEnsureMedDoses(); } catch (e) {}
+  try { updateMedOverlay(); } catch (e) {}
+  if (role === 'family' && familyTab === 'medicine') {
+    try { renderMedicineTab(); } catch (e) {}
+  }
+}
+
+function startCloudMedSync() {
+  if (_cloudMedPollTimer) { clearInterval(_cloudMedPollTimer); _cloudMedPollTimer = null; }
+  if (!cloud || !cloudReady) return;
+  _cloudMedPollTimer = setInterval(() => {
+    if (!_bootDone || document.visibilityState === 'hidden') return;
+    refreshMedsFromCloud('poll').catch(() => {});
+  }, CLOUD_MED_POLL_MS);
+}
+
+function onCloudRealtimeEvent(type, payload) {
+  // Always pull. Re-ensure doses only when the reminder schedule changes
+  // (not on every dose event — that can stack a second pending row after force/edit).
+  const p = pullCloudState({ silent: true });
+  if (type === 'medication_reminder') {
+    Promise.resolve(p).then(() => maybeEnsureMedDoses())
+      .then(() => { try { updateMedOverlay(); } catch (e) {} })
+      .then(() => {
+        if (role === 'family' && familyTab === 'medicine') {
+          try { renderMedicineTab(); } catch (e) {}
+        }
+      })
+      .catch(() => {});
+  } else if (type === 'medication_dose') {
+    Promise.resolve(p).then(() => { try { updateMedOverlay(); } catch (e) {} })
+      .then(() => {
+        if (role === 'family' && familyTab === 'medicine') {
+          try { renderMedicineTab(); } catch (e) {}
+        }
+      })
+      .catch(() => {});
+  }
+}
 
 function applyI18n() {
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
@@ -3563,6 +3614,15 @@ document.addEventListener('visibilitychange', () => {
     try { mediaStream.getTracks().forEach(tr => tr.stop()); } catch (e) {}
     mediaStream = null;
   }
+  // Senior/family: refetch meds when returning to the tab (presok-meds-sync-v38)
+  if (_bootDone && cloudReady) {
+    refreshMedsFromCloud('visibility').catch(() => {});
+  }
+});
+window.addEventListener('focus', () => {
+  if (_bootDone && cloudReady) {
+    refreshMedsFromCloud('focus').catch(() => {});
+  }
 });
 
 function bindVoiceControls() {
@@ -4066,6 +4126,9 @@ window.PresokApp = {
   considerNewMedNotifications,
   resetMedNotifKnown,
   get medOverlayDoseId() { return _medOverlayDoseId; },
+  refreshMedsFromCloud,
+  startCloudMedSync,
+  onCloudRealtimeEvent,
 };
 async function bootCloud() {
   cloud = PresokCloud.createCloud(PRESK_CONFIG);
@@ -4083,7 +4146,8 @@ async function bootCloud() {
         cloudReady = true;
         hidePairGate();
         if (cloudUnsub) cloudUnsub();
-        cloudUnsub = cloud.subscribe(() => { pullCloudState({ silent: true }); });
+        cloudUnsub = cloud.subscribe((type, payload) => { onCloudRealtimeEvent(type, payload); });
+        startCloudMedSync();
         maybeBrowserNotifySetup();
         finishBootUi();
         return;
@@ -4106,7 +4170,8 @@ async function startAsFamily() {
     await pullCloudState();
     cloudReady = true;
     if (cloudUnsub) cloudUnsub();
-    cloudUnsub = cloud.subscribe(() => { pullCloudState({ silent: true }); });
+    cloudUnsub = cloud.subscribe((type, payload) => { onCloudRealtimeEvent(type, payload); });
+    startCloudMedSync();
     hidePairGate();
     maybeBrowserNotifySetup();
     toast(t('pairConnected'));
@@ -4131,7 +4196,8 @@ async function startAsSeniorWithCode() {
     await pullCloudState();
     cloudReady = true;
     if (cloudUnsub) cloudUnsub();
-    cloudUnsub = cloud.subscribe(() => { pullCloudState({ silent: true }); });
+    cloudUnsub = cloud.subscribe((type, payload) => { onCloudRealtimeEvent(type, payload); });
+    startCloudMedSync();
     hidePairGate();
     maybeBrowserNotifySetup();
     toast(t('pairConnected'));
@@ -4206,6 +4272,7 @@ function finishBootUi() {
   try { if (role === 'elder') warmMicForSenior(); } catch (e) {}
   try { maybeSweepMissedForFamily(); } catch (e) {}
   try { maybeEnsureMedDoses().then(() => { try { updateMedOverlay(); } catch (e) {} }); } catch (e) {}
+  try { startCloudMedSync(); } catch (e) {}
 }
 
 function maybeBrowserNotifySetup() {
