@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v39 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v40 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -365,6 +365,23 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 .notif.warn { border-left-color: var(--warn); background: #fffbeb; }
 .notif.alert { border-left-color: var(--alert); background: #fef2f2; }
 .notif .n-time { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+/* presok-alerts-badge-v40 */
+.notif.unread {
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25), var(--shadow);
+  background: #fff7ed;
+}
+.notif.unread .n-time::before {
+  content: '';
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--alert); margin-right: 6px; vertical-align: middle;
+}
+/* presok-msg-read-badge-v40 */
+.unread-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--alert); flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+.chat-bubble.unread { outline: 2px solid rgba(220, 38, 38, 0.35); outline-offset: 1px; }
 
 .demo-panel {
   margin-top: 20px; padding: 14px; background: #f8fafc;
@@ -1865,6 +1882,60 @@ function toast(msg) {
   toast._t = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
+
+/* ===== Alerts unread badge (presok-alerts-badge-v40) ===== */
+const ALERTS_SEEN_PREFIX = 'presok_alerts_last_seen_';
+
+function alertsHouseholdKey() {
+  return (state && state.householdId) ? String(state.householdId) : 'local';
+}
+
+function alertsSeenStorageKey() {
+  return ALERTS_SEEN_PREFIX + alertsHouseholdKey();
+}
+
+/** Returns last-seen ms. First call for a household seeds to now so old alerts don't count. */
+function getAlertsLastSeen() {
+  const key = alertsSeenStorageKey();
+  try {
+    const v = localStorage.getItem(key);
+    if (v == null || v === '') {
+      const n = Date.now();
+      localStorage.setItem(key, String(n));
+      return n;
+    }
+    const n = Number(v);
+    return Number.isFinite(n) ? n : Date.now();
+  } catch (e) {
+    return Date.now();
+  }
+}
+
+function markAlertsSeen() {
+  const n = Date.now();
+  try { localStorage.setItem(alertsSeenStorageKey(), String(n)); } catch (e) {}
+  return n;
+}
+
+function notifTimestamp(n) {
+  if (!n) return 0;
+  if (typeof n.at === 'number' && Number.isFinite(n.at)) return n.at;
+  if (n.created_at) {
+    const p = Date.parse(n.created_at);
+    return Number.isFinite(p) ? p : 0;
+  }
+  return 0;
+}
+
+function countUnreadAlerts() {
+  const last = getAlertsLastSeen();
+  return (state.notifications || []).filter(n => notifTimestamp(n) > last).length;
+}
+
+function refreshFamilyTabBadges() {
+  try { applyI18n(); } catch (e) {}
+}
+
 /* ===== Incoming message chime (presok-msg-chime-v35) ===== */
 const MSG_CHIME_KEY = 'presok_msg_chime';
 let _audioCtx = null;
@@ -2458,6 +2529,10 @@ function applyI18n() {
       const unread = countUnreadForFamily();
       if (unread > 0) label += ' · ' + unread;
     }
+    if (key === 'tabAlerts') {
+      const unreadA = countUnreadAlerts();
+      if (unreadA > 0) label += ' · ' + unreadA;
+    }
     el.textContent = label;
   });
   const langSel = document.getElementById('languageSelect');
@@ -2630,11 +2705,15 @@ function renderFamily() {
   if (!state.notifications.length) {
     nl.innerHTML = `<div class="empty"><div class="emoji">🔔</div>${escapeHtml(t('noNotifs'))}</div>`;
   } else {
-    nl.innerHTML = state.notifications.map(n => `
-      <div class="notif ${n.level}">
+    const alertsLast = getAlertsLastSeen();
+    nl.innerHTML = state.notifications.map(n => {
+      const isUnread = notifTimestamp(n) > alertsLast;
+      return `
+      <div class="notif ${n.level}${isUnread ? ' unread' : ''}">
         <div>${escapeHtml(sanitizeAlertText(n.message))}</div>
         <div class="n-time">${formatTime(n.at)} · ${relativeTime(n.at)}</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   document.getElementById('thresholdSelect').value = String(state.thresholdHours || 24);
@@ -2705,6 +2784,7 @@ function toggleRole() {
 }
 
 function switchTab(name) {
+  const prevTab = familyTab;
   familyTab = name;
   ['elders', 'messages', 'contacts', 'medicine', 'alerts', 'settings'].forEach(tname => {
     const pane = document.getElementById('tab' + tname.charAt(0).toUpperCase() + tname.slice(1));
@@ -2715,11 +2795,19 @@ function switchTab(name) {
   });
   if (name === 'messages') {
     if (familyMsgPane !== 'thread') familyMsgPane = 'list';
-    if (familyMsgPane === 'thread') markMessagesRead('family');
+    /* presok-msg-read-badge-v40: unread clears on play, not on open */
     renderFamilyMessages();
     if (familyMsgPane === 'thread') {
       const thread = document.getElementById('chatThread');
       if (thread) thread.scrollTop = thread.scrollHeight;
+    }
+  }
+  if (name === 'alerts') {
+    /* presok-alerts-badge-v40: paint unread highlights; clear badge only on enter */
+    try { renderFamily(); } catch (e) {}
+    if (prevTab !== 'alerts') {
+      markAlertsSeen();
+      refreshFamilyTabBadges();
     }
   }
   if (name === 'medicine') {
@@ -3240,12 +3328,22 @@ function stopPlaying() {
 }
 
 async function playVoice(id, btn) {
+  /* presok-msg-read-badge-v40 */
   if (playingId === id) { stopPlaying(); return; }
   stopPlaying();
   const msg = (state.messages || []).find(m => m.id === id);
+  let marked = false;
   if (msg) {
-    if (role === 'elder' && !msg.readByElder) { msg.readByElder = true; saveState(); }
-    if (role === 'family' && !msg.readByFamily) { msg.readByFamily = true; saveState(); }
+    if (role === 'elder' && msg.from === 'family' && !msg.readByElder) {
+      msg.readByElder = true; marked = true;
+    }
+    if (role === 'family' && msg.from === 'elder' && !msg.readByFamily) {
+      msg.readByFamily = true; marked = true;
+    }
+    if (marked) {
+      saveState();
+      try { refreshFamilyTabBadges(); } catch (e) {}
+    }
   }
   const dataUrl = await idbGetAudio(id);
   if (!dataUrl) { toast(t('toastVoiceFailed')); return; }
@@ -3255,7 +3353,10 @@ async function playVoice(id, btn) {
   } catch (e) { return; }
   // Re-render may rebuild list after mark-read; restore playing chrome
   if (role === 'elder') renderElderVoice();
-  else if (role === 'family') syncPlaybackUi();
+  else if (role === 'family') {
+    try { renderFamilyMessages(); } catch (e) { syncPlaybackUi(); }
+    try { refreshFamilyTabBadges(); } catch (e) {}
+  }
 }
 
 function renderElderVoice() {
@@ -3273,6 +3374,7 @@ function renderElderVoice() {
   } else {
     inbox.innerHTML = msgs.map(m => `
       <div class="voice-row ${m.readByElder ? '' : 'unread'}" data-voice-id="${m.id}">
+        ${m.readByElder ? '' : '<span class="unread-dot" aria-hidden="true" title="Unread"></span>'}
         <button type="button" class="voice-play" data-icon="▶" aria-label="${escapeHtml(t('voicePlay'))}" onclick="playVoice('${m.id}', this)">▶</button>
         <div class="voice-meta">
           <div class="who">${escapeHtml(t('voiceFromFamily'))}</div>
@@ -3305,7 +3407,7 @@ function openFamilyThread(elderId) {
   role = 'family';
   saveState();
   render();
-  markMessagesRead('family');
+  /* presok-msg-read-badge-v40: mark read when played, not when thread opens */
   renderFamilyMessages();
   const thread = document.getElementById('chatThread');
   if (thread) thread.scrollTop = thread.scrollHeight;
@@ -3365,7 +3467,8 @@ function renderFamilyThread() {
     thread.innerHTML = `<div class="chat-empty"><div class="emoji" style="font-size:2.5rem">💬</div>${escapeHtml(t('voiceEmptyFamily'))}</div>`;
   } else {
     thread.innerHTML = msgs.map(m => `
-      <div class="chat-bubble from-${m.from}" data-voice-id="${m.id}">
+      <div class="chat-bubble from-${m.from}${m.from === 'elder' && !m.readByFamily ? ' unread' : ''}" data-voice-id="${m.id}">
+        ${m.from === 'elder' && !m.readByFamily ? '<span class="unread-dot" aria-hidden="true" title="Unread"></span>' : ''}
         <button type="button" class="play" data-icon="▶" aria-label="${escapeHtml(t('voicePlay'))}" onclick="playVoice('${m.id}', this)">▶</button>
         <div class="info">
           <div class="voice-playback">
@@ -4225,6 +4328,22 @@ window.PresokApp = {
   refreshMedsFromCloud,
   startCloudMedSync,
   onCloudRealtimeEvent,
+  /* presok-alerts-badge-v40 */
+  getAlertsLastSeen,
+  markAlertsSeen,
+  countUnreadAlerts,
+  notifTimestamp,
+  /* presok-msg-read-badge-v40 */
+  countUnreadForElder,
+  countUnreadForFamily,
+  countUnreadForFamilyElder,
+  playVoice,
+  markMessagesRead,
+  renderElderVoice,
+  renderFamilyMessages,
+  applyI18n,
+  setRole,
+  switchTab,
 };
 async function bootCloud() {
   cloud = PresokCloud.createCloud(PRESK_CONFIG);
@@ -4579,14 +4698,31 @@ markMessagesRead = function(viewer) {
 
 const _playVoiceLocal = playVoice;
 playVoice = async function(id, btn) {
-  /* presok-playback-ui-v34 */
+  /* presok-playback-ui-v34 / presok-msg-read-badge-v40 */
   if (!cloud || !cloudReady) return _playVoiceLocal(id, btn);
   if (playingId === id) { stopPlaying(); return; }
   const msg = (state.messages || []).find(m => m.id === id);
   if (!msg) return;
   stopPlaying();
-  if (role === 'elder' && !msg.readByElder) { msg.readByElder = true; saveState(); }
-  if (role === 'family' && !msg.readByFamily) { msg.readByFamily = true; saveState(); }
+  let marked = false;
+  let viewer = null;
+  if (role === 'elder' && msg.from === 'family' && !msg.readByElder) {
+    msg.readByElder = true; marked = true; viewer = 'elder';
+  }
+  if (role === 'family' && msg.from === 'elder' && !msg.readByFamily) {
+    msg.readByFamily = true; marked = true; viewer = 'family';
+  }
+  if (marked) {
+    saveState();
+    try { refreshFamilyTabBadges(); } catch (e) {}
+    try {
+      if (typeof cloud.markMessageRead === 'function') {
+        cloud.markMessageRead(id, viewer).catch(() => {});
+      } else if (viewer && msg.elderId) {
+        cloud.markMessagesRead(msg.elderId, viewer).catch(() => {});
+      }
+    } catch (e) {}
+  }
   try {
     let url = null;
     if (msg.storagePath) url = await cloud.voiceUrl(msg.storagePath);
@@ -4596,7 +4732,10 @@ playVoice = async function(id, btn) {
       await beginPlayback(audio, id, msg.durationMs);
     } catch (e) { return; }
     if (role === 'elder') renderElderVoice();
-    else syncPlaybackUi();
+    else {
+      try { renderFamilyMessages(); } catch (e) { syncPlaybackUi(); }
+      try { refreshFamilyTabBadges(); } catch (e) {}
+    }
   } catch (e) {
     console.warn(e);
     stopPlaying();

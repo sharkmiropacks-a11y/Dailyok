@@ -73,6 +73,10 @@
     async markMessagesRead(elderId, viewer) {
       return this._fetch('/rpc/mark_messages_read', { method: 'POST', body: JSON.stringify({ elder_id: elderId, viewer }) });
     }
+    async markMessageRead(messageId, viewer) {
+      /* presok-msg-read-badge-v40 — single-message read flag (guard allows) */
+      return this._fetch('/messages/mark_read', { method: 'POST', body: JSON.stringify({ id: messageId, viewer }) });
+    }
     async updateHousehold(patch) {
       return this._fetch('/household', { method: 'PATCH', body: JSON.stringify(patch) });
     }
@@ -286,6 +290,12 @@
     }
     async markMessagesRead(elderId, viewer) {
       const { error } = await this.client.rpc('mark_messages_read', { p_elder_id: elderId, p_viewer: viewer });
+      if (error) throw error;
+    }
+    async markMessageRead(messageId, viewer) {
+      /* presok-msg-read-badge-v40 — direct update of read flag (messages_guard_update allows) */
+      const patch = viewer === 'elder' ? { read_by_elder: true } : { read_by_family: true };
+      const { error } = await this.client.from('messages').update(patch).eq('id', messageId);
       if (error) throw error;
     }
     async updateHousehold(patch) {
