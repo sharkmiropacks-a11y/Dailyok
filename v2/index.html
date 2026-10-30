@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
+<!-- presok-v34 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -441,6 +442,27 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 .voice-meta { flex: 1; min-width: 0; }
 .voice-meta .who { font-weight: 700; font-size: 0.95rem; }
 .voice-meta .dur { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+/* presok-playback-ui-v34 */
+.voice-playback { margin-top: 6px; }
+.voice-bar {
+  height: 12px; border-radius: 999px; background: #ccfbf1;
+  overflow: hidden; margin-bottom: 4px;
+  box-shadow: inset 0 1px 2px rgba(15,118,110,0.12);
+}
+.voice-bar-fill {
+  height: 100%; width: 0%; background: var(--primary);
+  border-radius: 999px;
+}
+.voice-row.is-playing .voice-bar-fill,
+.chat-bubble.is-playing .voice-bar-fill { background: #ca8a04; }
+.voice-clock {
+  font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: var(--text); letter-spacing: 0.02em; line-height: 1.2;
+}
+.voice-row:not(.is-playing) .voice-bar,
+.chat-bubble:not(.is-playing) .voice-bar { opacity: 0.4; }
+.chat-bubble .voice-playback { margin-top: 4px; min-width: 120px; }
+.chat-bubble .voice-clock { font-size: 1.1rem; }
 
 .hold-talk {
   width: 100%; padding: 22px 16px; border-radius: 18px;
@@ -475,12 +497,13 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
   align-self: flex-start; background: #fff; border-bottom-left-radius: 4px;
 }
 .chat-bubble .play {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: var(--primary); color: #fff; font-size: 1.1rem; font-weight: 800;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--primary); color: #fff; font-size: 1.25rem; font-weight: 800;
   flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
 .chat-bubble .play.playing { background: #ca8a04; }
-.chat-bubble .info { min-width: 0; }
+.chat-bubble .info { min-width: 0; flex: 1; }
 .chat-bubble .dur { font-weight: 800; font-size: 1.05rem; }
 .chat-bubble .when { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 .chat-empty { text-align: center; padding: 32px 12px; color: var(--muted); }
@@ -2131,6 +2154,8 @@ const VOICE_IDB = 'presok_voice_v2';
 const VOICE_STORE = 'clips';
 const MAX_VOICE_MSGS = 40;
 /* presok-hold-fix-v31 */
+/* presok-pair-fix-v33 */
+/* presok-playback-ui-v34 */
 const MIN_REC_MS = 500;
 const MIN_HOLD_ACCEPT_MS = 600;
 const MIN_BLOB_BYTES = 64;
@@ -2145,8 +2170,11 @@ let recStartedAt = 0;
 let holdPressedAt = 0;
 let recFrom = null; // 'elder' | 'family'
 let recMaxTimer = null;
+/* presok-playback-ui-v34 */
 let playingAudio = null;
 let playingId = null;
+let playingFallbackMs = 0;
+let playingRaf = null;
 let holdBound = false;
 let recArming = null; // Promise while getUserMedia / MediaRecorder starts
 let recCancelled = false;
@@ -2270,6 +2298,108 @@ function formatDuration(ms) {
   return sec + t('voiceSec');
 }
 
+/* presok-playback-ui-v34 */
+function formatClock(sec) {
+  const s = Math.max(0, Math.floor(Number(sec) || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ':' + String(r).padStart(2, '0');
+}
+function formatClockMs(ms) {
+  return formatClock(Math.max(0, Math.round((ms || 0) / 1000)));
+}
+function audioDurationSec(audio, fallbackMs) {
+  const d = audio && audio.duration;
+  if (typeof d === 'number' && Number.isFinite(d) && d > 0) return d;
+  if (fallbackMs && fallbackMs > 0) return fallbackMs / 1000;
+  return 0;
+}
+function voiceCardsFor(id) {
+  if (!id) return [];
+  try {
+    return Array.from(document.querySelectorAll(
+      '.voice-row[data-voice-id="' + CSS.escape(id) + '"], .chat-bubble[data-voice-id="' + CSS.escape(id) + '"]'
+    ));
+  } catch (e) {
+    return Array.from(document.querySelectorAll('.voice-row[data-voice-id="' + id + '"], .chat-bubble[data-voice-id="' + id + '"]'));
+  }
+}
+function resetAllPlaybackUi() {
+  document.querySelectorAll('.voice-row.is-playing, .chat-bubble.is-playing').forEach(el => {
+    el.classList.remove('is-playing');
+    const fill = el.querySelector('.voice-bar-fill');
+    if (fill) fill.style.width = '0%';
+    const clock = el.querySelector('.voice-clock');
+    if (clock && clock.dataset.total != null) clock.textContent = clock.dataset.total;
+  });
+  document.querySelectorAll('.voice-play.playing, .chat-bubble .play.playing').forEach(el => {
+    el.classList.remove('playing');
+    if (el.dataset.icon) el.textContent = el.dataset.icon;
+  });
+}
+function markCardPlaying(card) {
+  if (!card) return;
+  card.classList.add('is-playing');
+  const btn = card.querySelector('.voice-play, button.play');
+  if (btn) {
+    btn.classList.add('playing');
+    btn.dataset.icon = btn.dataset.icon || '▶';
+    btn.textContent = t('voicePlaying');
+  }
+}
+function updatePlaybackProgress() {
+  if (!playingAudio || !playingId) return;
+  const cur = playingAudio.currentTime || 0;
+  const total = audioDurationSec(playingAudio, playingFallbackMs);
+  const pct = total > 0 ? Math.min(100, (cur / total) * 100) : 0;
+  const label = total > 0
+    ? (formatClock(cur) + ' / ' + formatClock(total))
+    : formatClock(cur);
+  voiceCardsFor(playingId).forEach(card => {
+    markCardPlaying(card);
+    const fill = card.querySelector('.voice-bar-fill');
+    if (fill) fill.style.width = pct + '%';
+    const clock = card.querySelector('.voice-clock');
+    if (clock) clock.textContent = label;
+  });
+}
+function syncPlaybackUi() {
+  if (!playingId || !playingAudio) return;
+  updatePlaybackProgress();
+}
+function startPlaybackLoop() {
+  const tick = () => {
+    if (!playingAudio || !playingId) { playingRaf = null; return; }
+    updatePlaybackProgress();
+    playingRaf = requestAnimationFrame(tick);
+  };
+  if (playingRaf) cancelAnimationFrame(playingRaf);
+  playingRaf = requestAnimationFrame(tick);
+}
+async function beginPlayback(audio, id, fallbackMs) {
+  /* presok-playback-ui-v34 — only one clip at a time */
+  if (playingRaf) { cancelAnimationFrame(playingRaf); playingRaf = null; }
+  if (playingAudio && playingAudio !== audio) {
+    try { playingAudio.onended = null; playingAudio.onerror = null; } catch (e) {}
+    try { playingAudio.pause(); } catch (e) {}
+  }
+  playingAudio = null;
+  playingId = null;
+  playingFallbackMs = 0;
+  resetAllPlaybackUi();
+  playingAudio = audio;
+  playingId = id;
+  playingFallbackMs = fallbackMs || 0;
+  audio.ontimeupdate = () => updatePlaybackProgress();
+  audio.onloadedmetadata = () => updatePlaybackProgress();
+  audio.ondurationchange = () => updatePlaybackProgress();
+  audio.onended = () => { stopPlaying(); };
+  audio.onerror = () => { stopPlaying(); toast(t('toastVoiceFailed')); };
+  startPlaybackLoop();
+  syncPlaybackUi();
+  try { await audio.play(); } catch (e) { stopPlaying(); toast(t('toastVoiceFailed')); throw e; }
+}
+
 function messagesForElderId(elderId) {
   return (state.messages || []).filter(m => m.elderId === elderId);
 }
@@ -2319,15 +2449,15 @@ function trimMessages() {
 }
 
 function stopPlaying() {
+  if (playingRaf) { cancelAnimationFrame(playingRaf); playingRaf = null; }
   if (playingAudio) {
+    try { playingAudio.onended = null; playingAudio.onerror = null; } catch (e) {}
     try { playingAudio.pause(); } catch (e) {}
     playingAudio = null;
   }
   playingId = null;
-  document.querySelectorAll('.voice-play.playing, .chat-bubble .play.playing').forEach(el => {
-    el.classList.remove('playing');
-    if (el.dataset.icon) el.textContent = el.dataset.icon;
-  });
+  playingFallbackMs = 0;
+  resetAllPlaybackUi();
 }
 
 async function playVoice(id, btn) {
@@ -2341,17 +2471,12 @@ async function playVoice(id, btn) {
   const dataUrl = await idbGetAudio(id);
   if (!dataUrl) { toast(t('toastVoiceFailed')); return; }
   const audio = new Audio(dataUrl);
-  playingAudio = audio;
-  playingId = id;
-  if (btn) {
-    btn.classList.add('playing');
-    btn.dataset.icon = btn.dataset.icon || btn.textContent;
-    btn.textContent = t('voicePlaying');
-  }
-  audio.onended = () => { stopPlaying(); if (role === 'elder') renderElderVoice(); };
-  audio.onerror = () => { stopPlaying(); toast(t('toastVoiceFailed')); };
-  try { await audio.play(); } catch (e) { stopPlaying(); toast(t('toastVoiceFailed')); }
+  try {
+    await beginPlayback(audio, id, msg && msg.durationMs);
+  } catch (e) { return; }
+  // Re-render may rebuild list after mark-read; restore playing chrome
   if (role === 'elder') renderElderVoice();
+  else if (role === 'family') syncPlaybackUi();
 }
 
 function renderElderVoice() {
@@ -2368,14 +2493,19 @@ function renderElderVoice() {
     inbox.innerHTML = `<div class="empty" style="padding:8px"><div class="emoji">🎙️</div>${escapeHtml(t('voiceEmptyElder'))}</div>`;
   } else {
     inbox.innerHTML = msgs.map(m => `
-      <div class="voice-row ${m.readByElder ? '' : 'unread'}">
-        <button type="button" class="voice-play" data-icon="▶" onclick="playVoice('${m.id}', this)">▶</button>
+      <div class="voice-row ${m.readByElder ? '' : 'unread'}" data-voice-id="${m.id}">
+        <button type="button" class="voice-play" data-icon="▶" aria-label="${escapeHtml(t('voicePlay'))}" onclick="playVoice('${m.id}', this)">▶</button>
         <div class="voice-meta">
           <div class="who">${escapeHtml(t('voiceFromFamily'))}</div>
-          <div class="dur">${formatDuration(m.durationMs)} · ${relativeTime(m.at)}</div>
+          <div class="voice-playback">
+            <div class="voice-bar" aria-hidden="true"><div class="voice-bar-fill"></div></div>
+            <div class="voice-clock" data-total="${formatClockMs(m.durationMs)}">${formatClockMs(m.durationMs)}</div>
+          </div>
+          <div class="dur">${relativeTime(m.at)}</div>
         </div>
       </div>`).join('');
   }
+  syncPlaybackUi();
 }
 
 function syncMessagesPane() {
@@ -2456,14 +2586,18 @@ function renderFamilyThread() {
     thread.innerHTML = `<div class="chat-empty"><div class="emoji" style="font-size:2.5rem">💬</div>${escapeHtml(t('voiceEmptyFamily'))}</div>`;
   } else {
     thread.innerHTML = msgs.map(m => `
-      <div class="chat-bubble from-${m.from}">
-        <button type="button" class="play" data-icon="▶" onclick="playVoice('${m.id}', this)">▶</button>
+      <div class="chat-bubble from-${m.from}" data-voice-id="${m.id}">
+        <button type="button" class="play" data-icon="▶" aria-label="${escapeHtml(t('voicePlay'))}" onclick="playVoice('${m.id}', this)">▶</button>
         <div class="info">
-          <div class="dur">${formatDuration(m.durationMs)}</div>
+          <div class="voice-playback">
+            <div class="voice-bar" aria-hidden="true"><div class="voice-bar-fill"></div></div>
+            <div class="voice-clock" data-total="${formatClockMs(m.durationMs)}">${formatClockMs(m.durationMs)}</div>
+          </div>
           <div class="when">${escapeHtml(m.from === 'family' ? t('voiceFromFamily') : t('voiceFromElder'))} · ${formatTime(m.at)}</div>
         </div>
       </div>`).join('');
   }
+  syncPlaybackUi();
 }
 
 function renderFamilyMessages() {
@@ -3354,7 +3488,17 @@ async function startAsSeniorWithCode() {
     finishBootUi();
   } catch (e) {
     console.error(e);
-    status.textContent = t('pairInvalid');
+    const msg = (e && (e.message || e.error_description || e.details)) || '';
+    // Map known server errors; keep a clear fallback for anything else
+    if (/invalid or expired code/i.test(msg) || /code must be 6/i.test(msg)) {
+      status.textContent = t('pairInvalid');
+    } else if (/too many pairing attempts/i.test(msg)) {
+      status.textContent = msg;
+    } else if (msg) {
+      status.textContent = t('pairInvalid') + ' (' + msg + ')';
+    } else {
+      status.textContent = t('pairInvalid');
+    }
   }
 }
 
@@ -3617,19 +3761,24 @@ markMessagesRead = function(viewer) {
 
 const _playVoiceLocal = playVoice;
 playVoice = async function(id, btn) {
+  /* presok-playback-ui-v34 */
   if (!cloud || !cloudReady) return _playVoiceLocal(id, btn);
+  if (playingId === id) { stopPlaying(); return; }
   const msg = (state.messages || []).find(m => m.id === id);
   if (!msg) return;
   stopPlaying();
+  if (role === 'elder' && !msg.readByElder) { msg.readByElder = true; saveState(); }
+  if (role === 'family' && !msg.readByFamily) { msg.readByFamily = true; saveState(); }
   try {
     let url = null;
     if (msg.storagePath) url = await cloud.voiceUrl(msg.storagePath);
     if (!url) return _playVoiceLocal(id, btn);
-    playingAudio = new Audio(url);
-    playingId = id;
-    if (btn) { btn.classList.add('playing'); btn.textContent = t('voicePlaying'); }
-    playingAudio.onended = () => stopPlaying();
-    await playingAudio.play();
+    const audio = new Audio(url);
+    try {
+      await beginPlayback(audio, id, msg.durationMs);
+    } catch (e) { return; }
+    if (role === 'elder') renderElderVoice();
+    else syncPlaybackUi();
   } catch (e) {
     console.warn(e);
     stopPlaying();
