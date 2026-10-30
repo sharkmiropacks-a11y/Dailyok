@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v46 / presok-senior-exit-v46 / presok-v45 / presok-webrtc / presok-v44 / presok-simple-senior / presok-v43 / presok-escalation / presok-v42 / presok-med-preview-family-v42 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v47 / presok-med-elder-guard-v47 / presok-v46 / presok-senior-exit-v46 / presok-v45 / presok-webrtc / presok-v44 / presok-simple-senior / presok-v43 / presok-escalation / presok-v42 / presok-med-preview-family-v42 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -1491,6 +1491,8 @@ const i18n = {
     toastMedTakenFamily: 'Senior took their medicine',
     toastMedMissedFamily: 'Medicine not confirmed',
     toastMedFailed: 'Could not save medicine. Try again.',
+    toastMedElderDevice: 'This phone is linked as the senior. Unlink it in Settings to use it as family.',
+    medElderDeviceHint: 'This phone is linked as the senior, so medicine reminders cannot be saved here. Unlink it in Settings (or hold the gear), then open the family phone.',
 toastCheckin: "Checked in — family can see you're OK.",
     toastAdded: 'Added',
     toastDeleted: 'Removed',
@@ -1751,6 +1753,8 @@ toastCheckin: "Checked in — family can see you're OK.",
     toastMedTakenFamily: '长辈已确认吃药',
     toastMedMissedFamily: '吃药未确认',
     toastMedFailed: '保存失败，请重试。',
+    toastMedElderDevice: '这部手机已配对为老人端。请先在设置里解除配对，再用家属手机设置吃药提醒。',
+    medElderDeviceHint: '这部手机是老人端，不能在这里保存吃药提醒。请在设置里解除配对（或长按右下角齿轮），改用家属手机操作。',
 toastCheckin: '签到成功！家人会看到您一切正常。',
     toastAdded: '已添加',
     toastDeleted: '已删除',
@@ -2621,11 +2625,16 @@ function renderMedicineTab() {
   ensureMedStateArrays();
   const root = document.getElementById('medList');
   const hint = document.getElementById('medHint');
-  if (hint) hint.textContent = t('medHint');
+  const elderBlocked = !!(typeof isPairedAsElder === 'function' && isPairedAsElder());
+  if (hint) hint.textContent = elderBlocked ? t('medElderDeviceHint') : t('medHint');
   const title = document.getElementById('medTitle');
   if (title) title.textContent = t('medTitle');
   const btnAdd = document.getElementById('btnAddMed');
-  if (btnAdd) btnAdd.textContent = t('btnAddMed');
+  if (btnAdd) {
+    btnAdd.textContent = t('btnAddMed');
+    btnAdd.disabled = elderBlocked;
+    btnAdd.style.opacity = elderBlocked ? '0.55' : '';
+  }
   const elderSel = document.getElementById('medElderSelect');
   if (elderSel) {
     const cur = elderSel.value;
@@ -2721,8 +2730,16 @@ function openMedForm(editId) {
     </div>`;
 }
 
-function editMedication(id) { openMedForm(id); }
-function startAddMedication() { openMedForm(''); }
+function editMedication(id) {
+  const blocked = familyWriteBlockedMessage();
+  if (blocked) { toast(blocked); return; }
+  openMedForm(id);
+}
+function startAddMedication() {
+  const blocked = familyWriteBlockedMessage();
+  if (blocked) { toast(blocked); return; }
+  openMedForm('');
+}
 
 function parseTimesInput(raw) {
   return String(raw || '').split(/[,;\s]+/).map(s => s.trim()).filter(Boolean).map(s => {
@@ -2734,7 +2751,43 @@ function parseTimesInput(raw) {
   });
 }
 
+
+function familyWriteBlockedMessage() {
+  try {
+    if (typeof isPairedAsElder === 'function' && isPairedAsElder()) {
+      return t('toastMedElderDevice');
+    }
+  } catch (e) {}
+  return null;
+}
+
+function toastMedSaveError(err) {
+  const blocked = familyWriteBlockedMessage();
+  if (blocked) { toast(blocked); return; }
+  let detail = '';
+  try {
+    if (err && typeof err === 'object') {
+      detail = err.message || err.error || err.details || '';
+      if (!detail && err.error_description) detail = err.error_description;
+    } else if (err) {
+      detail = String(err);
+    }
+  } catch (e2) {}
+  detail = String(detail || '').trim();
+  if (/not a family member/i.test(detail)) {
+    toast(t('toastMedElderDevice'));
+    return;
+  }
+  if (detail && detail.length < 160 && !/^HTTP\s*\d/i.test(detail) && detail !== '[object Object]') {
+    toast(t('toastMedFailed') + ' ' + detail);
+  } else {
+    toast(t('toastMedFailed'));
+  }
+}
+
 async function saveMedicationForm(editId) {
+  const blocked = familyWriteBlockedMessage();
+  if (blocked) { toast(blocked); return; }
   const elderId = document.getElementById('medFormElder').value;
   const name = document.getElementById('medFormName').value.trim();
   const doseNote = document.getElementById('medFormDose').value.trim();
@@ -2769,12 +2822,14 @@ async function saveMedicationForm(editId) {
     renderMedicineTab();
   } catch (e) {
     console.warn(e);
-    toast(t('toastMedFailed'));
+    toastMedSaveError(e);
   }
 }
 
 async function deleteMedication(id) {
   if (!id) return;
+  const blocked = familyWriteBlockedMessage();
+  if (blocked) { toast(blocked); return; }
   if (!confirm(t('medDeleteConfirm'))) return;
   try {
     if (cloud && cloudReady) {
@@ -2790,7 +2845,7 @@ async function deleteMedication(id) {
     renderMedicineTab();
   } catch (e) {
     console.warn(e);
-    toast(t('toastMedFailed'));
+    toastMedSaveError(e);
   }
 }
 
@@ -4736,6 +4791,8 @@ window.PresokApp = {
   updateMedOverlay,
   confirmMedTaken,
   renderMedicineTab,
+  familyWriteBlockedMessage,
+  toastMedSaveError,
   considerNewMedNotifications,
   resetMedNotifKnown,
   get medOverlayDoseId() { return _medOverlayDoseId; },
