@@ -160,6 +160,28 @@
     async sweepMyHouseholdMissedMeds() {
       return this._fetch('/rpc/sweep_my_household_missed_meds', { method: 'POST', body: '{}' });
     }
+    async sweepMyHouseholdEscalations() {
+      return this._fetch('/rpc/sweep_my_household_escalations', { method: 'POST', body: '{}' });
+    }
+
+    async acknowledgeAlert(notificationId) {
+      return this._fetch('/rpc/acknowledge_alert', { method: 'POST', body: JSON.stringify({ p_notification_id: notificationId }) });
+    }
+    async reorderMemberPriority(memberId, dir) {
+      return this._fetch('/rpc/reorder_member_priority', { method: 'POST', body: JSON.stringify({ p_member_id: memberId, p_dir: dir }) });
+    }
+    async setMemberDisplayName(memberId, name) {
+      return this._fetch('/rpc/set_member_display_name', { method: 'POST', body: JSON.stringify({ p_member_id: memberId, p_name: name }) });
+    }
+    async joinHouseholdAsFamily(householdId, displayName) {
+      return this._fetch('/rpc/join_household_as_family', { method: 'POST', body: JSON.stringify({ household_id: householdId, display_name: displayName }) });
+    }
+    async testForceEscalationAge(escalationId, minutesAgo) {
+      return this._fetch('/rpc/test_force_escalation_age', { method: 'POST', body: JSON.stringify({ escalation_id: escalationId, minutes_ago: minutesAgo }) });
+    }
+    async sendRtcSignal(payload) {
+      return this._fetch('/rtc/signal', { method: 'POST', body: JSON.stringify(payload) });
+    }
     async testForceMedicationDose(reminderId, dueAt, timeLocal, status) {
       return this._fetch('/rpc/test_force_medication_dose', {
         method: 'POST',
@@ -182,7 +204,7 @@
           try { h(type, payload); } catch (e) { console.warn(e); }
         }
       };
-      ['elder', 'message', 'notification', 'household', 'contact', 'messages', 'contacts', 'elder_deleted', 'notifications_cleared', 'contact_deleted', 'medication_reminder', 'medication_dose']
+      ['elder', 'message', 'notification', 'household', 'contact', 'messages', 'contacts', 'elder_deleted', 'notifications_cleared', 'contact_deleted', 'medication_reminder', 'medication_dose', 'escalation_case', 'member', 'rtc']
         .forEach(t => this._es.addEventListener(t, forward(t)));
       this._es.onerror = () => { /* browser will retry */ };
       return () => this._handlers.delete(handler);
@@ -240,20 +262,26 @@
         .from('household_members').select('*').eq('user_id', user.id);
       if (mErr) throw mErr;
       if (!memberships || !memberships.length) {
-        return { memberships: [], membership: null, household: null, elders: [], contacts: [], messages: [], notifications: [], medication_reminders: [], medication_doses: [] };
+        return { memberships: [], membership: null, household: null, elders: [], contacts: [], messages: [], notifications: [], medication_reminders: [], medication_doses: [], members: [] };
       }
       const membership = memberships.find(m => m.role === 'family') || memberships[0];
       const hid = membership.household_id;
-      const [hRes, eRes, cRes, msgRes, nRes, mrRes, mdRes] = await Promise.all([
+      const [hRes, eRes, cRes, msgRes, nRes, mrRes, mdRes, memRes] = await Promise.all([
         this.client.from('households').select('*').eq('id', hid).single(),
         this.client.from('elders').select('*').eq('household_id', hid).order('created_at'),
         this.client.from('contacts').select('*').eq('household_id', hid).order('sort_order'),
         this.client.from('messages').select('*').eq('household_id', hid).order('created_at', { ascending: false }),
-        this.client.from('notifications').select('*').eq('household_id', hid).order('created_at', { ascending: false }).limit(50),
+        this.client.from('notifications').select('*').eq('household_id', hid).order('created_at', { ascending: false }).limit(80),
         this.client.from('medication_reminders').select('*').eq('household_id', hid).order('created_at'),
         this.client.from('medication_doses').select('*').eq('household_id', hid).order('due_at', { ascending: false }).limit(200),
+        this.client.from('household_members').select('*').eq('household_id', hid).order('notify_priority'),
       ]);
       if (hRes.error) throw hRes.error;
+      const myMid = membership && membership.id;
+      const notifs = (nRes.data || []).filter(n => {
+        if (!n.recipient_member_id) return true;
+        return myMid && n.recipient_member_id === myMid;
+      });
       return {
         memberships,
         membership,
@@ -261,9 +289,10 @@
         elders: eRes.data || [],
         contacts: cRes.data || [],
         messages: msgRes.data || [],
-        notifications: nRes.data || [],
+        notifications: notifs,
         medication_reminders: mrRes.data || [],
         medication_doses: mdRes.data || [],
+        members: memRes.data || [],
       };
     }
     async addElder(householdId, name, nick) {
@@ -299,11 +328,12 @@
       if (error) throw error;
     }
     async updateHousehold(patch) {
-      const { data, error } = await this.client.from('households').update({
-        threshold_hours: patch.threshold_hours,
-        care_reply_hours: patch.care_reply_hours,
-        auto_answer_calls: patch.auto_answer_calls,
-      }).eq('id', patch.id).select().single();
+      const row = {};
+      if (patch.threshold_hours != null) row.threshold_hours = patch.threshold_hours;
+      if (patch.care_reply_hours != null) row.care_reply_hours = patch.care_reply_hours;
+      if (patch.auto_answer_calls != null) row.auto_answer_calls = patch.auto_answer_calls;
+      if (patch.escalation_minutes != null) row.escalation_minutes = patch.escalation_minutes;
+      const { data, error } = await this.client.from('households').update(row).eq('id', patch.id).select().single();
       if (error) throw error;
       return data;
     }
@@ -355,18 +385,48 @@
       if (error) throw error;
     }
     async sos(elderId) {
-      const st = await this.getState();
-      const elder = (st.elders || []).find(e => e.id === elderId);
-      if (!elder) throw new Error('Elder not found');
-      const { data, error } = await this.client.from('notifications').insert({
-        household_id: elder.household_id,
-        elder_id: elderId,
-        level: 'alert',
-        kind: 'sos',
-        message: `🆘 ${elder.name} pressed SOS! Contact them or call 000 now`,
-      }).select().single();
+      const { data, error } = await this.client.rpc('raise_sos', { p_elder_id: elderId });
       if (error) throw error;
       return data;
+    }
+    async acknowledgeAlert(notificationId) {
+      const { data, error } = await this.client.rpc('acknowledge_alert', { p_notification_id: notificationId });
+      if (error) throw error;
+      return data;
+    }
+    async reorderMemberPriority(memberId, dir) {
+      const { error } = await this.client.rpc('reorder_member_priority', { p_member_id: memberId, p_dir: dir });
+      if (error) throw error;
+    }
+    async setMemberDisplayName(memberId, name) {
+      const { data, error } = await this.client.rpc('set_member_display_name', { p_member_id: memberId, p_name: name });
+      if (error) throw error;
+      return data;
+    }
+    async sendRtcSignal(payload) {
+      const hid = payload && payload.household_id;
+      if (!hid) throw new Error('household_id required');
+      const chName = 'presok-rtc-' + hid;
+      let ch = this._rtcChannels && this._rtcChannels[hid];
+      if (!ch) {
+        if (!this._rtcChannels) this._rtcChannels = {};
+        ch = this.client.channel(chName, { config: { broadcast: { self: false } } });
+        ch.on('broadcast', { event: 'signal' }, ({ payload: p }) => {
+          for (const h of this._handlers) {
+            try { h('rtc', p); } catch (e) { console.warn(e); }
+          }
+        });
+        await new Promise((resolve) => { ch.subscribe((status) => { if (status === 'SUBSCRIBED') resolve(); }); });
+        this._rtcChannels[hid] = ch;
+        this.channels.push(ch);
+      }
+      const { data: { user } } = await this.client.auth.getUser();
+      await ch.send({
+        type: 'broadcast',
+        event: 'signal',
+        payload: Object.assign({}, payload, { from_user_id: user && user.id, at: new Date().toISOString() }),
+      });
+      return { ok: true };
     }
     async sendVoice(elderId, fromRole, blob, durationMs) {
       const st = await this.getState();
@@ -434,6 +494,11 @@
       if (error) throw error;
       return data;
     }
+    async sweepMyHouseholdEscalations() {
+      const { data, error } = await this.client.rpc('sweep_my_household_escalations');
+      if (error) throw error;
+      return data;
+    }
     subscribe(handler) {
       this._handlers.add(handler);
       const notify = (type, payload) => {
@@ -449,6 +514,8 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'households' }, (p) => notify('household', p.new || p.old))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'medication_reminders' }, (p) => notify('medication_reminder', p.new || p.old))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'medication_doses' }, (p) => notify('medication_dose', p.new || p.old))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'escalation_cases' }, (p) => notify('escalation_case', p.new || p.old))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'household_members' }, (p) => notify('member', p.new || p.old))
         .subscribe();
       this.channels.push(ch);
       return () => this._handlers.delete(handler);
@@ -509,6 +576,21 @@
       elderId: n.elder_id,
       message: n.message,
       at: n.created_at ? Date.parse(n.created_at) : Date.now(),
+      recipientMemberId: n.recipient_member_id || null,
+      escalationTier: n.escalation_tier != null ? Number(n.escalation_tier) : null,
+      escalationId: n.escalation_id || null,
+      ackedAt: n.acked_at ? Date.parse(n.acked_at) : null,
+      ackedByMemberId: n.acked_by_member_id || null,
+      handlingName: n.handling_name || null,
+    }));
+    const rawMembers = remote.members || remote.household_members || [];
+    const members = rawMembers.map(m => ({
+      id: m.id,
+      userId: m.user_id,
+      role: m.role,
+      elderId: m.elder_id || null,
+      displayName: m.display_name || '',
+      notifyPriority: m.notify_priority != null ? Number(m.notify_priority) : 99,
     }));
     const medicationReminders = (remote.medication_reminders || []).map(r => ({
       id: r.id,
@@ -531,16 +613,18 @@
     }));
     const membership = remote.membership;
     return {
-      schemaVersion: 5,
+      schemaVersion: 6,
       cloud: true,
       householdId: h.id || null,
       membershipRole: membership ? membership.role : null,
+      membershipId: membership ? membership.id : null,
       membershipElderId: membership && membership.elder_id ? membership.elder_id : null,
       lang: (prev && prev.lang) || 'en',
       role: membership && membership.role === 'elder' ? 'elder' : 'family',
       thresholdHours: h.threshold_hours || 24,
       careReplyHours: h.care_reply_hours != null ? Number(h.care_reply_hours) : 12,
       autoAnswerCalls: !!h.auto_answer_calls,
+      escalationMinutes: h.escalation_minutes != null ? Number(h.escalation_minutes) : 15,
       timeOffsetMs: (prev && prev.timeOffsetMs) || 0,
       activeElderId: (membership && membership.elder_id)
         || (prev && prev.activeElderId && elders.some(e => e.id === prev.activeElderId) && prev.activeElderId)
@@ -549,10 +633,12 @@
       activeCall: null,
       elders,
       contacts,
+      members,
       notifications,
       messages,
       medicationReminders,
       medicationDoses,
+      alertsSeenAt: (prev && prev.alertsSeenAt) || 0,
     };
   }
 

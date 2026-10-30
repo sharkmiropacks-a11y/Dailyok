@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v42 / presok-med-preview-family-v42 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v45 / presok-webrtc / presok-v44 / presok-simple-senior / presok-v43 / presok-escalation / presok-v42 / presok-med-preview-family-v42 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -604,7 +604,7 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 .care-ladder .muted { margin-top: 8px; }
 
 .call-overlay {
-  position: fixed; inset: 0; z-index: 400; background: #0f172a; color: #fff;
+  position: fixed; inset: 0; z-index: 560; background: #0f172a; color: #fff;
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
   padding: 48px 24px calc(32px + var(--safe-bottom));
 }
@@ -846,6 +846,56 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
   transform: scale(0.98);
 }
 
+
+/* ===== presok-simple-senior / presok-webrtc / presok-escalation ===== */
+html.presok-simple-senior body.presok-simple-senior,
+body.presok-simple-senior {
+  font-size: 20px;
+}
+body.presok-simple-senior #elderView .elder-name { font-size: 1.75rem; font-weight: 800; }
+body.presok-simple-senior #elderView .checkin-btn {
+  min-height: 120px; font-size: 1.45rem; border-radius: 24px;
+}
+body.presok-simple-senior #elderView .elder-action-btn {
+  min-height: 72px; font-size: 1.15rem; padding: 16px 14px;
+}
+body.presok-simple-senior #elderView .sos-hold { min-width: 120px; min-height: 120px; }
+body.presok-simple-senior #elderView .voice-section h2 { font-size: 1.35rem; }
+body.presok-simple-senior #elderView .voice-inbox .voice-item { min-height: 64px; font-size: 1.05rem; }
+body.presok-simple-senior #whoAmIBar { display: none !important; }
+body.presok-simple-senior #elderView .status-pill { font-size: 1rem; padding: 8px 14px; }
+body.presok-simple-senior #elderView .last-check { font-size: 1.05rem; }
+body.presok-simple-senior .role-switch { opacity: 0.85; }
+.handling-banner {
+  margin-top: 8px; padding: 8px 10px; border-radius: 10px;
+  background: #ecfdf5; color: #065f46; font-weight: 700; font-size: 0.95rem;
+}
+.member-prio .prio { font-weight: 800; color: #0f766e; min-width: 1.5rem; }
+.call-overlay.webrtc-call .webrtc-stage {
+  position: relative; flex: 1; width: 100%; min-height: 55vh;
+  background: #0f172a; border-radius: 16px; overflow: hidden;
+}
+.call-overlay.webrtc-call .remote-video {
+  width: 100%; height: 100%; object-fit: cover; background: #020617;
+  min-height: 50vh;
+}
+.call-overlay.webrtc-call .self {
+  position: absolute; right: 12px; top: 12px; width: 28%; max-width: 140px;
+  aspect-ratio: 3/4; object-fit: cover; border-radius: 12px;
+  border: 2px solid #fff; background: #334155; z-index: 2;
+}
+.call-overlay.webrtc-call .call-peer-label {
+  position: absolute; left: 12px; bottom: 12px; color: #fff; font-weight: 800;
+  text-shadow: 0 1px 4px #000; z-index: 2;
+}
+.call-overlay .call-error {
+  color: #fecaca; background: rgba(127,29,29,0.85); padding: 10px 12px;
+  border-radius: 10px; margin-top: 12px; font-weight: 700; text-align: center;
+}
+.call-overlay .call-error.hidden { display: none !important; }
+.call-btn.flip { background: #334155; }
+#memberPriorityCard h3 { margin: 0 0 8px; color: #0f766e; }
+
 </style>
 </head>
 <body>
@@ -962,6 +1012,11 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
     </div>
 
     <div id="tabContacts" class="hidden">
+      <div class="card" id="memberPriorityCard">
+        <h3 id="memberPriorityTitle">Notify order (family phones)</h3>
+        <p class="muted" id="memberPriorityDesc" style="margin-bottom:12px">Missed check-in or medicine alerts go to priority 1 first. If nobody taps I&apos;m on it, the next person is notified.</p>
+        <div id="memberPriorityList"></div>
+      </div>
       <div class="card">
         <h2 id="contactsTitle"></h2>
         <p class="muted" id="contactsDesc" style="margin-bottom:8px"></p>
@@ -1039,6 +1094,17 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
             </select>
           </div>
           <p class="muted" id="careReplyHelp"></p>
+          <div class="form-group" style="margin-top:12px;margin-bottom:8px">
+            <label id="lblEscalationMinutes">Escalate to next family after</label>
+            <select id="escalationMinutesSelect" onchange="PresokV43.saveEscalationMinutes()">
+              <option value="5">5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15" selected>15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">60 minutes</option>
+            </select>
+          </div>
+          <p class="muted" id="escalationMinutesHelp">If priority 1 does not tap I&apos;m on it, notify priority 2, then 3.</p>
         </div>
 
         <div class="form-group">
@@ -1139,6 +1205,7 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="./cloud.js"></script>
+<script src="presok-v43.js"></script>
 <script>
 /* ===== Presok cloud config — set mode to 'supabase' after SETUP.md ===== */
 const PRESK_CONFIG = window.PRESK_CONFIG = Object.assign({
@@ -1149,7 +1216,7 @@ const PRESK_CONFIG = window.PRESK_CONFIG = Object.assign({
 }, window.PRESK_CONFIG || {});
 
 const STORAGE_KEY = 'presok_v2_ui';
-const DATA_SCHEMA_VERSION = 5; // careReplyHours 12 so +24/+48/+72 demo steps land on ladder 2/3/4
+const DATA_SCHEMA_VERSION = 6; /* +escalationMinutes +members */ // careReplyHours 12 so +24/+48/+72 demo steps land on ladder 2/3/4
 const i18n = {
   en: {
     appTitle: 'Presok',
@@ -1382,7 +1449,19 @@ toastCheckin: "Checked in — family can see you're OK.",
     pairSignOut: 'Unlink this phone',
     voiceDeviceNote: 'Voice messages sync to family phones over the internet.',
     voiceDeviceNoteLocal: 'Demo: voice messages stay on this device only (not sent over the internet).',
-    aboutText: 'Presok syncs check-ins and voice notes between phones (Supabase). Video calls are still a local demo. SMS alerts come later. In an emergency in Australia, call 000.',
+
+    btnOnIt: "I'm on it",
+    handlingBy: 'Handling:',
+    notifyPriority: 'Notify priority',
+    toastAcked: 'You are handling it — others were told',
+    callIceFailed: 'Video blocked on this network (no TURN). Try Wi-Fi.',
+    callFlip: 'Flip',
+    toastSeniorOffline: 'Senior phone is not paired yet',
+    memberPriorityTitle: 'Notify order (family phones)',
+    memberPriorityDesc: 'Missed check-in or medicine alerts go to priority 1 first. If nobody taps I\'m on it, the next person is notified.',
+    lblEscalationMinutes: 'Escalate to next family after',
+    escalationMinutesHelp: 'If priority 1 does not tap I\'m on it, notify priority 2, then 3.',
+    aboutText: 'Presok syncs check-ins and voice notes between phones (Supabase). Video calls use WebRTC (STUN only; some networks need TURN). SMS alerts come later. In an emergency in Australia, call 000.',
     messagesHint: 'Each senior has their own chat. Messages sync live to their phone.',
     whoAmIHelp: 'On a paired senior phone this is locked. Family phones can switch who they are messaging.',
     toastCheckin: "Checked in — family can see you're OK on their phone.",
@@ -1623,7 +1702,18 @@ toastCheckin: '签到成功！家人会看到您一切正常。',
     pairSignOut: '解除这部手机的配对',
     voiceDeviceNote: '语音会通过网络同步到家属手机。',
     voiceDeviceNoteLocal: '演示：语音只保存在本机，不会联网发送。',
-    aboutText: 'Presok 会在手机之间同步签到与语音（Supabase）。视频通话仍为本地演示。短信告警稍后加入。澳洲紧急电话：000。',
+    btnOnIt: '我来处理',
+    handlingBy: '处理中：',
+    notifyPriority: '通知顺序',
+    toastAcked: '你已接手，其他人已看到',
+    callIceFailed: '当前网络无法视频（无 TURN）。请换 Wi-Fi 再试。',
+    callFlip: '翻转',
+    toastSeniorOffline: '老人手机尚未配对',
+    memberPriorityTitle: '通知顺序（家属手机）',
+    memberPriorityDesc: '漏签到或漏吃药先通知第 1 位。若无人点「我来处理」，再通知下一位。',
+    lblEscalationMinutes: '多久后通知下一位家属',
+    escalationMinutesHelp: '第 1 位未点「我来处理」时，再通知第 2、第 3 位。',
+    aboutText: 'Presok 会在手机之间同步签到与语音（Supabase）。视频通话使用 WebRTC（仅 STUN；部分网络需 TURN）。短信告警稍后加入。澳洲紧急电话：000。',
     messagesHint: '每位长辈有独立会话。消息会实时同步到对方手机。',
     whoAmIHelp: '已配对的长辈手机不可切换。家属手机可选择会话对象。',
     toastCheckin: '签到成功！家人手机会看到您一切正常。',
@@ -1645,6 +1735,9 @@ function defaultState() {
     thresholdHours: 24,
     careReplyHours: 12,
     autoAnswerCalls: false,
+    escalationMinutes: 15,
+    membershipId: null,
+    members: [],
     timeOffsetMs: 0,
     activeElderId: 'e1',
     activeCall: null,
@@ -1692,6 +1785,8 @@ function loadState() {
     if (!Array.isArray(merged.messages)) merged.messages = [];
     if (!Array.isArray(merged.medicationReminders)) merged.medicationReminders = [];
     if (!Array.isArray(merged.medicationDoses)) merged.medicationDoses = [];
+    if (!Array.isArray(merged.members)) merged.members = [];
+    if (merged.escalationMinutes == null) merged.escalationMinutes = 15;
     if (!Array.isArray(merged.elders)) merged.elders = defaultState().elders;
     merged.elders = merged.elders.map(e => {
       if (!e.nick) {
@@ -2687,6 +2782,14 @@ function applyI18n() {
   document.getElementById('btnAddElder').textContent = t('btnAddElder');
   document.getElementById('contactsTitle').textContent = t('contactsTitle');
   document.getElementById('contactsDesc').textContent = t('contactsDesc');
+  const mpt = document.getElementById('memberPriorityTitle');
+  if (mpt) mpt.textContent = t('memberPriorityTitle');
+  const mpd = document.getElementById('memberPriorityDesc');
+  if (mpd) mpd.textContent = t('memberPriorityDesc');
+  const lem = document.getElementById('lblEscalationMinutes');
+  if (lem) lem.textContent = t('lblEscalationMinutes');
+  const emh = document.getElementById('escalationMinutesHelp');
+  if (emh) emh.textContent = t('escalationMinutesHelp');
   const cph = document.getElementById('contactsPriorityHelp');
   if (cph) cph.textContent = t('contactsPriorityHelp');
   document.getElementById('lblContactName').textContent = t('lblContactName');
