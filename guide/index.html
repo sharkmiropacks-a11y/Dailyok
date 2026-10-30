@@ -7,399 +7,187 @@
 <title>Coco Guide · Melbourne</title>
 <style>
   :root {
-    --teal: #0d9488;
-    --teal-dark: #0f766e;
-    --coral: #f97316;
-    --bg: #f0fdfa;
-    --card: #ffffff;
-    --text: #134e4a;
-    --muted: #5eead4;
-    --soft: #ccfbf1;
-    --shadow: 0 4px 20px rgba(13, 148, 136, 0.12);
-    --radius: 16px;
+    --teal: #0d9488; --teal-dark: #0f766e; --coral: #f97316;
+    --bg: #f0fdfa; --card: #ffffff; --text: #134e4a; --soft: #ccfbf1;
+    --shadow: 0 4px 20px rgba(13, 148, 136, 0.12); --radius: 16px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100%;
+    background: var(--bg); color: var(--text); min-height: 100%;
     -webkit-tap-highlight-color: transparent;
   }
-  body { padding-bottom: 32px; }
-
+  body { padding-bottom: 120px; }
   .header {
     background: linear-gradient(135deg, #0d9488 0%, #14b8a6 45%, #2dd4bf 100%);
-    color: #fff;
-    padding: 20px 20px 28px;
-    border-radius: 0 0 28px 28px;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    color: #fff; padding: 16px 16px 22px; border-radius: 0 0 28px 28px;
+    box-shadow: var(--shadow); position: sticky; top: 0; z-index: 50;
   }
-  .header-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
+  .header-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo { width: 42px; height: 42px; background: rgba(255,255,255,0.25); border-radius: 14px; display: grid; place-items: center; font-size: 22px; }
+  .brand h1 { font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
+  .brand .tagline { font-size: 0.72rem; opacity: 0.9; }
+  .header-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .lang-btn, .icon-btn {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+    color: #fff; border-radius: 999px; padding: 8px 12px; font-size: 0.78rem;
+    font-weight: 600; cursor: pointer; min-height: 40px;
   }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .badge-fair {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 999px; padding: 5px 10px; font-size: 0.68rem; font-weight: 600; margin-bottom: 10px;
   }
-  .logo {
-    width: 44px; height: 44px;
-    background: rgba(255,255,255,0.25);
-    border-radius: 14px;
-    display: grid; place-items: center;
-    font-size: 24px;
-    backdrop-filter: blur(4px);
-  }
-  .brand h1 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-  .brand .tagline {
-    font-size: 0.75rem;
-    opacity: 0.9;
-    font-weight: 400;
-  }
-  .lang-btn {
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.35);
-    color: #fff;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 40px;
-  }
-  .lang-btn:active { transform: scale(0.97); }
-
-  .loc-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
+  .loc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
   .loc-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    max-width: 100%;
+    display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2);
+    border-radius: 999px; padding: 8px 12px; font-size: 0.82rem; font-weight: 500;
   }
-  .loc-badge .dot {
-    width: 8px; height: 8px;
-    background: #86efac;
-    border-radius: 50%;
-    flex-shrink: 0;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  .loc-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  .loc-badge .dot { width: 8px; height: 8px; background: #86efac; border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .loc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn-ghost {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.3);
-    color: #fff;
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 44px;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: #fff; border-radius: 12px; padding: 10px 12px; font-size: 0.78rem;
+    font-weight: 600; cursor: pointer; min-height: 44px;
   }
   select.pretend {
     appearance: none;
-    background: rgba(255,255,255,0.95);
-    color: var(--teal-dark);
-    border: none;
-    border-radius: 12px;
-    padding: 10px 36px 10px 14px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    min-height: 44px;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%230f766e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    max-width: 100%;
+    background: rgba(255,255,255,0.95) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%230f766e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 12px center;
+    color: var(--teal-dark); border: none; border-radius: 12px;
+    padding: 10px 36px 10px 12px; font-size: 0.82rem; font-weight: 600;
+    min-height: 44px; cursor: pointer; max-width: 100%;
   }
-
-  .main { padding: 16px 16px 0; max-width: 520px; margin: 0 auto; }
-
-  .context-card {
-    background: linear-gradient(135deg, #fff7ed, #ffedd5);
-    border: 1px solid #fed7aa;
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    margin-bottom: 14px;
-    box-shadow: 0 2px 12px rgba(249, 115, 22, 0.1);
-    display: none;
+  .main { padding: 14px 14px 0; max-width: 520px; margin: 0 auto; }
+  .coco-remind, .context-card, .nudge-card {
+    border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(13,148,136,0.1);
   }
+  .coco-remind { background: linear-gradient(135deg, #ecfeff, #cffafe); border: 1px solid #a5f3fc; }
+  .coco-remind .rm-title { font-weight: 700; font-size: 0.95rem; color: var(--teal-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .coco-remind p { font-size: 0.88rem; line-height: 1.5; color: #155e75; }
+  .remind-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .remind-actions button {
+    background: #fff; border: 2px solid var(--teal); color: var(--teal-dark);
+    border-radius: 999px; padding: 8px 14px; font-size: 0.78rem; font-weight: 700; cursor: pointer; min-height: 40px;
+  }
+  .remind-actions button.eaten { background: #fff7ed; border-color: #fdba74; color: #c2410c; }
+  .context-card { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1px solid #fed7aa; display: none; }
   .context-card.show { display: block; }
-  .context-card .ctx-title {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: #c2410c;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .context-card p {
-    font-size: 0.88rem;
-    line-height: 1.5;
-    color: #9a3412;
-  }
-
-  .ask-box {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow);
-  }
-  .ask-box label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--teal-dark);
-    margin-bottom: 8px;
-  }
-  .ask-row {
-    display: flex;
-    gap: 8px;
-  }
+  .context-card .ctx-title { font-weight: 700; font-size: 0.95rem; color: #c2410c; margin-bottom: 6px; }
+  .context-card p { font-size: 0.88rem; line-height: 1.5; color: #9a3412; }
+  .nudge-card { background: linear-gradient(135deg, #fdf4ff, #fae8ff); border: 1px solid #e9d5ff; display: none; }
+  .nudge-card.show { display: block; }
+  .nudge-card .ng-title { font-weight: 700; color: #7e22ce; margin-bottom: 4px; }
+  .nudge-card p { font-size: 0.88rem; color: #6b21a8; line-height: 1.45; }
+  .ask-box { background: var(--card); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .ask-box label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--teal-dark); margin-bottom: 8px; }
+  .ask-row { display: flex; gap: 8px; }
   .ask-row input {
-    flex: 1;
-    border: 2px solid var(--soft);
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 1rem;
-    outline: none;
-    min-height: 48px;
-    color: var(--text);
-    background: #f8fffe;
+    flex: 1; border: 2px solid var(--soft); border-radius: 12px; padding: 12px 14px;
+    font-size: 1rem; outline: none; min-height: 48px; color: var(--text); background: #f8fffe;
   }
   .ask-row input:focus { border-color: var(--teal); }
-  .ask-row button {
-    background: var(--teal);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 0 18px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    min-height: 48px;
-    min-width: 64px;
+  .ask-row button.send {
+    background: var(--teal); color: #fff; border: none; border-radius: 12px;
+    padding: 0 16px; font-weight: 700; font-size: 0.95rem; cursor: pointer; min-height: 48px;
   }
-  .ask-row button:active { background: var(--teal-dark); }
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-  }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .chip {
-    background: var(--soft);
-    color: var(--teal-dark);
-    border: none;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 36px;
+    background: var(--soft); color: var(--teal-dark); border: none; border-radius: 999px;
+    padding: 8px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; min-height: 36px;
   }
-  .chip:active { background: #99f6e4; }
-  .ask-reply {
-    margin-top: 12px;
-    padding: 12px;
-    background: #f0fdfa;
-    border-radius: 12px;
-    border-left: 4px solid var(--teal);
-    font-size: 0.9rem;
-    line-height: 1.55;
-    display: none;
+  .speech-fallback { display: none; margin-top: 10px; padding: 10px 12px; background: #fef3c7; border-radius: 12px; font-size: 0.8rem; color: #92400e; line-height: 1.4; }
+  .speech-fallback.show { display: block; }
+  .live-transcript {
+    display: none; margin-top: 10px; padding: 10px 12px; background: #f0fdfa;
+    border-radius: 12px; border-left: 4px solid var(--teal); font-size: 0.9rem; color: var(--teal-dark);
   }
-  .ask-reply.show { display: block; }
-  .ask-reply .note {
-    font-size: 0.72rem;
-    color: #5eead4;
-    margin-top: 8px;
-    opacity: 0.9;
-    color: #0f766e;
-    opacity: 0.7;
+  .live-transcript.show { display: block; }
+  .live-transcript .listening { color: #ea580c; font-weight: 700; font-size: 0.75rem; }
+  .chat-thread { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; max-height: 420px; overflow-y: auto; }
+  .bubble { max-width: 92%; padding: 12px 14px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; }
+  .bubble.user { align-self: flex-end; background: var(--teal); color: #fff; border-bottom-right-radius: 4px; }
+  .bubble.bot { align-self: flex-start; background: #f0fdfa; color: var(--text); border: 1px solid var(--soft); border-bottom-left-radius: 4px; }
+  .bubble .note { font-size: 0.72rem; opacity: 0.7; margin-top: 6px; display: block; }
+  .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .action-btn {
+    display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 2px solid var(--teal);
+    color: var(--teal-dark); border-radius: 12px; padding: 10px 12px; font-size: 0.8rem;
+    font-weight: 700; text-decoration: none; min-height: 44px; cursor: pointer;
   }
-
-  .tabs {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-    margin-bottom: 14px;
-    scrollbar-width: none;
-  }
+  .mini-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .mini-card { background: #fff; border-radius: 12px; padding: 10px 12px; border: 1px solid var(--soft); font-size: 0.85rem; }
+  .mini-card strong { display: block; margin-bottom: 2px; }
+  .mini-card .why { font-size: 0.78rem; color: #0f766e; opacity: 0.85; margin: 4px 0; }
+  .mini-card a { font-size: 0.78rem; font-weight: 700; color: var(--teal-dark); }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none; }
   .tabs::-webkit-scrollbar { display: none; }
   .tab {
-    flex: 0 0 auto;
-    background: var(--card);
-    border: 2px solid transparent;
-    border-radius: 999px;
-    padding: 10px 16px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: var(--teal-dark);
-    cursor: pointer;
-    min-height: 44px;
-    box-shadow: 0 2px 8px rgba(13,148,136,0.08);
-    white-space: nowrap;
+    flex: 0 0 auto; background: var(--card); border: 2px solid transparent; border-radius: 999px;
+    padding: 10px 14px; font-size: 0.85rem; font-weight: 700; color: var(--teal-dark);
+    cursor: pointer; min-height: 44px; box-shadow: 0 2px 8px rgba(13,148,136,0.08); white-space: nowrap;
   }
-  .tab.active {
-    background: var(--teal);
-    color: #fff;
-    border-color: var(--teal);
-  }
-
-  .section-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #0f766e;
-    opacity: 0.7;
-    margin-bottom: 10px;
-  }
-
+  .tab.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .section-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; color: #0f766e; opacity: 0.7; margin-bottom: 10px; }
   .cards { display: flex; flex-direction: column; gap: 12px; }
-
-  .card {
-    background: var(--card);
-    border-radius: var(--radius);
-    padding: 16px;
-    box-shadow: var(--shadow);
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .card-icon {
-    width: 48px; height: 48px;
-    border-radius: 14px;
-    background: var(--soft);
-    display: grid; place-items: center;
-    font-size: 24px;
-    flex-shrink: 0;
-  }
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; }
+  .card-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--soft); display: grid; place-items: center; font-size: 24px; flex-shrink: 0; }
   .card-body { flex: 1; min-width: 0; }
-  .card-name {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-    line-height: 1.3;
-  }
-  .card-why {
-    font-size: 0.88rem;
-    line-height: 1.45;
-    color: #115e59;
-    opacity: 0.9;
-    margin-bottom: 8px;
-  }
-  .card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .pill {
-    font-size: 0.72rem;
-    font-weight: 600;
-    background: var(--soft);
-    color: var(--teal-dark);
-    padding: 4px 10px;
-    border-radius: 999px;
-  }
-  .dist {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--coral);
-  }
+  .card-name { font-size: 1.02rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+  .card-why { font-size: 0.88rem; line-height: 1.45; color: #115e59; opacity: 0.9; margin-bottom: 6px; }
+  .card-reason { font-size: 0.75rem; color: #0f766e; background: #f0fdfa; border-radius: 8px; padding: 6px 8px; margin-bottom: 8px; line-height: 1.4; }
+  .card-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+  .pill { font-size: 0.72rem; font-weight: 600; background: var(--soft); color: var(--teal-dark); padding: 4px 10px; border-radius: 999px; }
+  .dist { font-size: 0.78rem; font-weight: 600; color: var(--coral); }
   .maps-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #fff;
-    border: 2px solid var(--teal);
-    color: var(--teal-dark);
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    text-decoration: none;
-    min-height: 44px;
+    display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 2px solid var(--teal);
+    color: var(--teal-dark); border-radius: 12px; padding: 10px 14px; font-size: 0.82rem;
+    font-weight: 700; text-decoration: none; min-height: 44px;
   }
-  .maps-btn:active { background: var(--soft); }
-
-  .empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: #0f766e;
-    opacity: 0.7;
-    font-size: 0.95rem;
-  }
-
-  .footer-note {
-    text-align: center;
-    padding: 24px 16px 8px;
-    font-size: 0.75rem;
-    color: #0f766e;
-    opacity: 0.55;
-    line-height: 1.5;
-  }
-
+  .empty { text-align: center; padding: 40px 20px; color: #0f766e; opacity: 0.7; }
+  .footer-note { text-align: center; padding: 24px 16px 8px; font-size: 0.75rem; color: #0f766e; opacity: 0.55; line-height: 1.5; }
   .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #134e4a;
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    z-index: 100;
-    opacity: 0;
-    transition: all 0.3s ease;
-    pointer-events: none;
-    white-space: nowrap;
-    max-width: 90vw;
+    position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #134e4a; color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 0.85rem;
+    font-weight: 600; z-index: 100; opacity: 0; transition: all 0.3s ease; pointer-events: none; max-width: 90vw;
   }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .voice-dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: linear-gradient(180deg, transparent, rgba(240,253,250,0.95) 28%, #f0fdfa);
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
   }
+  .hold-btn {
+    width: min(92vw, 360px); min-height: 64px; border: none; border-radius: 999px;
+    background: linear-gradient(135deg, #0d9488, #14b8a6); color: #fff; font-size: 1.05rem;
+    font-weight: 800; cursor: pointer; box-shadow: 0 8px 28px rgba(13,148,136,0.35);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    user-select: none; -webkit-user-select: none; touch-action: none;
+  }
+  .hold-btn.listening {
+    background: linear-gradient(135deg, #ea580c, #f97316); transform: scale(1.03);
+    box-shadow: 0 8px 32px rgba(234,88,12,0.4);
+  }
+  .hold-btn:disabled { opacity: 0.55; }
+  .voice-hint { font-size: 0.72rem; color: #0f766e; opacity: 0.7; }
+  .sheet-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 80; }
+  .sheet-backdrop.show { display: block; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: #fff;
+    border-radius: 24px 24px 0 0; padding: 20px 18px 28px; transform: translateY(110%);
+    transition: transform 0.25s ease; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+  }
+  .sheet.show { transform: translateY(0); }
+  .sheet h2 { font-size: 1.1rem; margin-bottom: 4px; color: var(--teal-dark); }
+  .sheet .sub { font-size: 0.8rem; color: #64748b; margin-bottom: 14px; }
+  .pref-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; gap: 12px; }
+  .pref-row label { font-size: 0.95rem; font-weight: 600; }
+  .pref-row input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--teal); }
+  .sheet-close { margin-top: 16px; width: 100%; min-height: 48px; border: none; border-radius: 14px; background: var(--teal); color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -412,54 +200,85 @@
         <div class="tagline" id="tagline">墨尔本本地向导</div>
       </div>
     </div>
-    <button type="button" class="lang-btn" id="langBtn" aria-label="Switch language">EN</button>
+    <div class="header-actions">
+      <button type="button" class="icon-btn" id="voiceToggle" title="TTS">🔊</button>
+      <button type="button" class="icon-btn" id="prefsBtn">⚙️</button>
+      <button type="button" class="lang-btn" id="langBtn">EN</button>
+    </div>
   </div>
+  <div class="badge-fair" id="fairBadge">✓ No paid rankings · 不收商家广告费</div>
   <div class="loc-row">
     <div class="loc-badge"><span class="dot"></span><span id="locLabel">正在定位…</span></div>
   </div>
   <div class="loc-actions">
     <button type="button" class="btn-ghost" id="relocateBtn">📍 重新定位</button>
-    <select class="pretend" id="pretendSelect" aria-label="Pretend location">
-      <option value="">假装我在…</option>
-    </select>
+    <select class="pretend" id="pretendSelect" aria-label="Pretend location"><option value="">假装我在…</option></select>
   </div>
 </header>
 
 <main class="main">
+  <div class="coco-remind" id="cocoRemind">
+    <div class="rm-title" id="rmTitle">☕ Coco 提醒你</div>
+    <p id="rmBody"></p>
+    <div class="remind-actions"><button type="button" id="justAteBtn">🍽️ 我刚吃过</button></div>
+  </div>
+  <div class="nudge-card" id="nudgeCard">
+    <div class="ng-title" id="nudgeTitle"></div>
+    <p id="nudgeBody"></p>
+  </div>
   <div class="context-card" id="contextCard">
     <div class="ctx-title" id="ctxTitle"></div>
     <p id="ctxBody"></p>
   </div>
-
   <div class="ask-box">
     <label id="askLabel" for="askInput">问问本地向导</label>
     <div class="ask-row">
       <input type="text" id="askInput" placeholder="今天带孩子去哪儿？" autocomplete="off" />
-      <button type="button" id="askBtn">问</button>
+      <button type="button" class="send" id="askBtn">问</button>
     </div>
+    <div class="speech-fallback" id="speechFallback"></div>
+    <div class="live-transcript" id="liveTranscript"><span class="listening" id="listeningLabel"></span> <span id="transcriptText"></span></div>
+    <div class="chat-thread" id="chatThread" aria-live="polite"></div>
     <div class="chips" id="chips"></div>
-    <div class="ask-reply" id="askReply"></div>
   </div>
-
   <div class="tabs" id="tabs" role="tablist"></div>
   <div class="section-label" id="sectionLabel"></div>
   <div class="cards" id="cards"></div>
 </main>
-
 <p class="footer-note" id="footerNote">原型 · 墨尔本 CBD 及周边 · 内容人工精选</p>
 <div class="toast" id="toast"></div>
-
+<div class="voice-dock">
+  <button type="button" class="hold-btn" id="holdBtn">🎤 按住说话</button>
+  <div class="voice-hint" id="voiceHint">松开后 Coco 会回答你</div>
+</div>
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="prefsSheet" role="dialog" aria-labelledby="prefsTitle">
+  <h2 id="prefsTitle">我的偏好</h2>
+  <p class="sub" id="prefsSub">这些会悄悄影响推荐排序，不会卖给别人。</p>
+  <div class="pref-row"><label id="prefKidsL" for="prefKids">带着孩子</label><input type="checkbox" id="prefKids" /></div>
+  <div class="pref-row"><label id="prefNoSpicyL" for="prefNoSpicy">不吃辣</label><input type="checkbox" id="prefNoSpicy" /></div>
+  <div class="pref-row"><label id="prefBudgetL" for="prefBudget">预算友好</label><input type="checkbox" id="prefBudget" /></div>
+  <div class="pref-row"><label id="prefPhotosL" for="prefPhotos">喜欢拍照打卡</label><input type="checkbox" id="prefPhotos" /></div>
+  <div class="pref-row"><label id="prefShopL" for="prefShop">喜欢购物</label><input type="checkbox" id="prefShop" /></div>
+  <div class="pref-row"><label id="prefNatureL" for="prefNature">喜欢自然绿地</label><input type="checkbox" id="prefNature" /></div>
+  <button type="button" class="sheet-close" id="prefsClose">完成</button>
+</div>
 <script>
-/* ============================================================
-   Coco Guide — Melbourne local-guide prototype
-   Single-file, no backend. Works on GitHub Pages (HTTPS).
-   "Ask" uses simple keyword/tag matching over curated data —
-   NOT a real AI backend. Easy to swap later for an API.
-   ============================================================ */
-
-// Working title — change this one constant to rebrand
+/* Coco Guide v2 — keyword matcher, not real AI. SpeechRecognition + speechSynthesis. */
 const APP_NAME = 'Coco Guide';
-
+const LS_PREFS = 'cocoGuidePrefs_v1';
+const LS_ATE = 'cocoGuideAteUntil';
+const LS_NUDGED = 'cocoGuideNudged';
+const LS_VOICE = 'cocoGuideVoiceOn';
+function nowDate() {
+  if (typeof window.__COCO_MOCK_NOW === 'number') return new Date(window.__COCO_MOCK_NOW);
+  return new Date();
+}
+function currentHourDecimal() {
+  if (typeof window.__COCO_MOCK_HOUR === 'number') return window.__COCO_MOCK_HOUR;
+  const d = nowDate();
+  return d.getHours() + d.getMinutes() / 60;
+}
 const PRETEND_SPOTS = [
   { id: 'flinders', nameZh: 'Flinders Street 车站', nameEn: 'Flinders Street Station', lat: -37.8183, lng: 144.9671 },
   { id: 'qvm', nameZh: '维多利亚女王市场', nameEn: 'Queen Victoria Market', lat: -37.8076, lng: 144.9568 },
@@ -468,439 +287,473 @@ const PRETEND_SPOTS = [
   { id: 'chinatown', nameZh: '唐人街 Chinatown', nameEn: 'Chinatown', lat: -37.8115, lng: 144.9690 },
   { id: 'stkilda', nameZh: '圣基尔达 St Kilda', nameEn: 'St Kilda', lat: -37.8677, lng: 144.9760 }
 ];
-
-// Context zones: when user is near these, show proactive tip cards
 const CONTEXT_ZONES = [
-  {
-    id: 'chemist_cbd',
-    lat: -37.8136, lng: 144.9631, radiusM: 350,
-    kind: 'chemist',
-    nameZh: '药房 / Chemist Warehouse 一带',
-    nameEn: 'a chemist area (Chemist Warehouse CBD)'
-  },
-  {
-    id: 'chemist_stkilda',
-    lat: -37.8670, lng: 144.9780, radiusM: 400,
-    kind: 'chemist',
-    nameZh: '圣基尔达药房一带',
-    nameEn: 'a chemist near St Kilda'
-  },
-  {
-    id: 'qvm_market',
-    lat: -37.8076, lng: 144.9568, radiusM: 250,
-    kind: 'market',
-    nameZh: '维多利亚女王市场',
-    nameEn: 'Queen Victoria Market'
-  },
-  {
-    id: 'dfo_shop',
-    lat: -37.8252, lng: 144.9515, radiusM: 300,
-    kind: 'souvenir',
-    nameZh: 'South Wharf / DFO',
-    nameEn: 'South Wharf / DFO'
-  },
-  {
-    id: 'bourke_shop',
-    lat: -37.8130, lng: 144.9645, radiusM: 280,
-    kind: 'souvenir',
-    nameZh: 'Bourke Street 商场一带',
-    nameEn: 'Bourke Street Mall shopping'
-  }
+  { id: 'chemist_cbd', lat: -37.8136, lng: 144.9631, radiusM: 350, kind: 'chemist' },
+  { id: 'chemist_stkilda', lat: -37.8670, lng: 144.9780, radiusM: 400, kind: 'chemist' },
+  { id: 'qvm_market', lat: -37.8076, lng: 144.9568, radiusM: 250, kind: 'market' },
+  { id: 'dfo_shop', lat: -37.8252, lng: 144.9515, radiusM: 300, kind: 'souvenir' },
+  { id: 'bourke_shop', lat: -37.8130, lng: 144.9645, radiusM: 280, kind: 'souvenir' }
 ];
-
 const BUY_TIPS = {
   chemist: {
-    zh: '你附近有药房！很多游客会在这里买：麦卢卡蜂蜜（Manuka）、绵羊油护手霜（lanolin）、维他命、防晒霜。Chemist Warehouse 常有折扣，记得看看特价货架。',
-    en: 'You\'re near a chemist! Popular tourist buys here: Manuka honey, lanolin cream, vitamins, sunscreen. Chemist Warehouse often has specials — check the bargain shelves.'
+    zh: '你附近有药房！很多游客会在这里买：麦卢卡蜂蜜（Manuka）、绵羊油护手霜（lanolin）、维他命、防晒霜。Chemist Warehouse 常有折扣。',
+    en: "You're near a chemist! Popular buys: Manuka honey, lanolin cream, vitamins, sunscreen. Chemist Warehouse often has specials."
   },
   market: {
-    zh: '你到了市场！可以买新鲜水果、本地奶酪、蜂蜜、澳洲特产点心。Queen Victoria Market 的美食区也很值得逛一逛。',
-    en: 'You\'re at the market! Grab fresh fruit, local cheese, honey, and Aussie treats. The food halls at Queen Victoria Market are worth a wander too.'
+    zh: '你到了市场！可以买新鲜水果、本地奶酪、蜂蜜、澳洲特产点心。美食区也很值得逛。',
+    en: "You're at the market! Grab fresh fruit, local cheese, honey, and Aussie treats. The food halls are worth a wander."
   },
   souvenir: {
-    zh: '附近适合买伴手礼：UGG 鞋/靴、Tim Tams 巧克力饼干、Vegemite、袋鼠玩偶、澳洲美妆。DFO 和商场里的纪念品店选择比较多。',
-    en: 'Good spot for souvenirs: UGG boots, Tim Tams, Vegemite, kangaroo plushies, Aussie beauty. DFO and mall souvenir shops have a wide range.'
+    zh: '附近适合买伴手礼：UGG、Tim Tams、Vegemite、袋鼠玩偶、澳洲美妆。',
+    en: 'Good spot for souvenirs: UGG boots, Tim Tams, Vegemite, kangaroo plush, Aussie beauty.'
   }
 };
-
-/*
-  Curated REAL Melbourne places only.
-  Coordinates are approximate (public landmark locations).
-  No invented prices, ratings, or opening hours.
-  Categories: sight | food | buy | kids
-  Tags drive the Ask keyword matcher.
-*/
 const PLACES = [
-  // —— Sights ——
   { id: 'flinders-st', cat: 'sight', emoji: '🚉',
     nameZh: 'Flinders Street 车站', nameEn: 'Flinders Street Station',
     whyZh: '墨尔本最标志的黄绿钟楼车站，必打卡合影点。', whyEn: 'Melbourne\'s iconic yellow-green clock tower station — classic photo spot.',
+    reasonZh: '地标 · 免费打卡', reasonEn: 'Iconic landmark · free photo stop',
     lat: -37.8183, lng: 144.9671, area: 'CBD',
-    tags: ['landmark', 'photo', 'free', 'iconic', 'station', '景点', '免费', '打卡'] },
+    tags: ["landmark", "photo", "free", "iconic", "station", "景点", "免费", "打卡"] },
   { id: 'fed-square', cat: 'sight', emoji: '🏛️',
     nameZh: '联邦广场 Federation Square', nameEn: 'Federation Square',
     whyZh: '市中心公共广场，常有展览活动，旁边就是亚拉河。', whyEn: 'Central public square with events and galleries, right by the Yarra.',
+    reasonZh: '免费公共空间 · 活动多', reasonEn: 'Free public square · events often on',
     lat: -37.8179, lng: 144.9691, area: 'CBD',
-    tags: ['landmark', 'free', 'event', '广场', '免费', '活动'] },
+    tags: ["landmark", "free", "event", "广场", "免费", "活动"] },
   { id: 'hosier', cat: 'sight', emoji: '🎨',
     nameZh: 'Hosier Lane 涂鸦巷', nameEn: 'Hosier Lane',
     whyZh: '世界闻名的街头涂鸦巷，色彩爆炸，拍照绝佳。', whyEn: 'World-famous street-art laneway — colourful and Instagram-ready.',
+    reasonZh: '因为你喜欢拍照打卡', reasonEn: 'Great if you love photo spots',
     lat: -37.8167, lng: 144.9691, area: 'CBD',
-    tags: ['streetart', 'photo', 'free', 'lane', '涂鸦', '免费', '打卡', '巷子'] },
+    tags: ["streetart", "photo", "free", "lane", "涂鸦", "免费", "打卡", "巷子"] },
   { id: 'ngv', cat: 'sight', emoji: '🖼️',
     nameZh: '维多利亚国家美术馆 NGV', nameEn: 'NGV International',
     whyZh: '澳洲顶级美术馆，建筑与展品都很值得一看。', whyEn: 'Australia\'s premier art museum — architecture and collections shine.',
+    reasonZh: '下雨天室内好去处', reasonEn: 'Solid rainy-day indoor pick',
     lat: -37.8226, lng: 144.9689, area: 'Southbank',
-    tags: ['museum', 'art', 'indoor', 'rain', '美术馆', '下雨', '室内'] },
+    tags: ["museum", "art", "indoor", "rain", "美术馆", "下雨", "室内"] },
   { id: 'ngv-australia', cat: 'sight', emoji: '🖼️',
     nameZh: 'Ian Potter Centre: NGV Australia', nameEn: 'Ian Potter Centre: NGV Australia',
-    whyZh: '联邦广场内的澳洲艺术馆，免费常设展。', whyEn: 'Australian art at Fed Square — permanent collection often free.',
+    whyZh: '联邦广场内的澳洲艺术馆，常设展常可免费参观。', whyEn: 'Australian art at Fed Square — permanent collection often free.',
+    reasonZh: '免费艺术 · 室内', reasonEn: 'Often-free art · indoors',
     lat: -37.8175, lng: 144.9698, area: 'CBD',
-    tags: ['museum', 'art', 'indoor', 'rain', 'free', '美术馆', '免费', '下雨'] },
+    tags: ["museum", "art", "indoor", "rain", "free", "美术馆", "免费", "下雨"] },
   { id: 'state-library', cat: 'sight', emoji: '📚',
     nameZh: '维多利亚州立图书馆', nameEn: 'State Library Victoria',
     whyZh: '圆顶阅览室超美，免费参观，下雨天的宝藏去处。', whyEn: 'Stunning domed reading room — free to visit, perfect on rainy days.',
+    reasonZh: '免费 · 下雨天宝藏', reasonEn: 'Free · rainy-day gem',
     lat: -37.8098, lng: 144.9643, area: 'CBD',
-    tags: ['library', 'free', 'indoor', 'rain', 'photo', '图书馆', '免费', '下雨', '室内'] },
+    tags: ["library", "free", "indoor", "rain", "photo", "图书馆", "免费", "下雨", "室内"] },
   { id: 'rbg', cat: 'sight', emoji: '🌿',
     nameZh: '皇家植物园', nameEn: 'Royal Botanic Gardens Victoria',
     whyZh: '市中心旁的大片绿地，散步野餐都很舒服。', whyEn: 'Vast green space by the city — lovely for walks and picnics.',
+    reasonZh: '因为你喜欢自然绿地', reasonEn: 'Fits a nature / green preference',
     lat: -37.8304, lng: 144.9803, area: 'South Yarra',
-    tags: ['park', 'nature', 'free', 'kids', 'picnic', '公园', '免费', '带孩子', '散步'] },
+    tags: ["park", "nature", "free", "kids", "picnic", "公园", "免费", "带孩子", "散步"] },
   { id: 'eureka', cat: 'sight', emoji: '🌆',
     nameZh: '尤里卡观景台 Eureka Skydeck', nameEn: 'Eureka Skydeck',
     whyZh: '南半球最高观景台之一，俯瞰整座墨尔本。', whyEn: 'One of the Southern Hemisphere\'s highest decks — city views for days.',
+    reasonZh: '观景体验', reasonEn: 'Viewpoint experience',
     lat: -37.8213, lng: 144.9647, area: 'Southbank',
-    tags: ['viewpoint', 'indoor', 'skydeck', '观景', '夜景'] },
+    tags: ["viewpoint", "indoor", "skydeck", "观景", "夜景"] },
   { id: 'acmi', cat: 'sight', emoji: '🎬',
     nameZh: 'ACMI 电影与数字博物馆', nameEn: 'ACMI',
     whyZh: '电影、游戏与数字文化互动展，很适合宅一天。', whyEn: 'Interactive museum of film, games and digital culture.',
+    reasonZh: '室内互动 · 适合带娃', reasonEn: 'Indoor interactive · kids-friendly',
     lat: -37.8176, lng: 144.9688, area: 'CBD',
-    tags: ['museum', 'indoor', 'rain', 'kids', '电影', '下雨', '室内', '带孩子'] },
+    tags: ["museum", "indoor", "rain", "kids", "电影", "下雨", "室内", "带孩子"] },
   { id: 'aquarium', cat: 'sight', emoji: '🐠',
     nameZh: '墨尔本水族馆 SEA LIFE', nameEn: 'SEA LIFE Melbourne Aquarium',
     whyZh: '市中心水族馆，企鹅和鲨鱼都有，适合带娃。', whyEn: 'City aquarium with penguins and sharks — great with kids.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8209, lng: 144.9583, area: 'CBD',
-    tags: ['aquarium', 'kids', 'indoor', 'rain', '水族馆', '带孩子', '下雨'] },
+    tags: ["aquarium", "kids", "indoor", "rain", "水族馆", "带孩子", "下雨"] },
   { id: 'museum', cat: 'sight', emoji: '🦕',
     nameZh: '墨尔本博物馆', nameEn: 'Melbourne Museum',
     whyZh: '恐龙、自然与维多利亚历史，和 Carlton Gardens 连在一起。', whyEn: 'Dinosaurs, nature and Victorian history next to Carlton Gardens.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8033, lng: 144.9717, area: 'Carlton',
-    tags: ['museum', 'kids', 'indoor', 'rain', '博物馆', '带孩子', '下雨'] },
+    tags: ["museum", "kids", "indoor", "rain", "博物馆", "带孩子", "下雨"] },
   { id: 'carlton-gardens', cat: 'sight', emoji: '🌳',
     nameZh: '卡尔顿花园 Carlton Gardens', nameEn: 'Carlton Gardens',
     whyZh: '世界遗产花园，旁有展览馆与博物馆。', whyEn: 'UNESCO heritage gardens beside the Exhibition Building & museum.',
-    lat: -37.8055, lng: 144.9710, area: 'Carlton',
-    tags: ['park', 'free', 'kids', 'unesco', '公园', '免费', '带孩子'] },
+    reasonZh: '免费绿地 · 亲子友好', reasonEn: 'Free green space · family-friendly',
+    lat: -37.8055, lng: 144.971, area: 'Carlton',
+    tags: ["park", "free", "kids", "unesco", "nature", "公园", "免费", "带孩子"] },
   { id: 'shrine', cat: 'sight', emoji: '🕊️',
     nameZh: '战争纪念堂 Shrine of Remembrance', nameEn: 'Shrine of Remembrance',
     whyZh: '庄严肃穆的纪念堂，登顶可看城市与植物园。', whyEn: 'Solemn memorial with city and gardens views from the top.',
+    reasonZh: '免费 · 可观景', reasonEn: 'Free · viewpoint',
     lat: -37.8305, lng: 144.9734, area: 'Southbank',
-    tags: ['memorial', 'free', 'viewpoint', '纪念堂', '免费'] },
+    tags: ["memorial", "free", "viewpoint", "纪念堂", "免费"] },
   { id: 'queen-victoria-market', cat: 'sight', emoji: '🛍️',
     nameZh: '维多利亚女王市场', nameEn: 'Queen Victoria Market',
     whyZh: '墨尔本最大露天市场，吃喝买特产一站搞定。', whyEn: 'Melbourne\'s biggest open-air market — food, produce and souvenirs.',
+    reasonZh: '吃喝买特产一站式', reasonEn: 'Food + souvenirs in one stop',
     lat: -37.8076, lng: 144.9568, area: 'CBD',
-    tags: ['market', 'food', 'buy', 'souvenir', '市场', '美食', '特产'] },
+    tags: ["market", "food", "buy", "souvenir", "shopping", "市场", "美食", "特产"] },
   { id: 'chinatown', cat: 'sight', emoji: '🏮',
     nameZh: '唐人街 Chinatown', nameEn: 'Chinatown Melbourne',
     whyZh: 'Little Bourke Street 一带，灯笼、点心和夜市氛围。', whyEn: 'Little Bourke St — lanterns, dumplings and night-time buzz.',
-    lat: -37.8115, lng: 144.9690, area: 'CBD',
-    tags: ['food', 'night', 'culture', '唐人街', '美食', '晚上'] },
+    reasonZh: '中餐与夜生活', reasonEn: 'Chinese food & night vibe',
+    lat: -37.8115, lng: 144.969, area: 'CBD',
+    tags: ["food", "night", "culture", "唐人街", "美食", "晚上"] },
   { id: 'hardware-lane', cat: 'sight', emoji: '🍝',
     nameZh: 'Hardware Lane', nameEn: 'Hardware Lane',
     whyZh: '意式餐厅巷，晚上灯光很有气氛。', whyEn: 'Italian restaurant laneway with glowing evening atmosphere.',
+    reasonZh: '晚餐氛围巷', reasonEn: 'Dinner atmosphere laneway',
     lat: -37.8128, lng: 144.9626, area: 'CBD',
-    tags: ['lane', 'food', 'dinner', '巷子', '美食', '晚餐'] },
+    tags: ["lane", "food", "dinner", "巷子", "美食", "晚餐"] },
   { id: 'degraves', cat: 'sight', emoji: '☕',
     nameZh: 'Degraves Street', nameEn: 'Degraves Street',
     whyZh: '咖啡馆与小店巷，典型墨尔本 laneway 体验。', whyEn: 'Cafe and shop laneway — classic Melbourne alley vibes.',
+    reasonZh: '咖啡巷经典体验', reasonEn: 'Classic coffee laneway',
     lat: -37.8172, lng: 144.9658, area: 'CBD',
-    tags: ['lane', 'coffee', 'food', '巷子', '咖啡', '美食'] },
-  { id: 'yarra-cruise', cat: 'sight', emoji: '🚢',
+    tags: ["lane", "coffee", "food", "breakfast", "巷子", "咖啡", "美食"] },
+  { id: 'yarra-promenade', cat: 'sight', emoji: '🚢',
     nameZh: '亚拉河滨步道', nameEn: 'Yarra River promenade',
     whyZh: '南岸河边散步，看城市天际线，傍晚特别美。', whyEn: 'Southbank riverside walk with skyline views — magical at dusk.',
-    lat: -37.8210, lng: 144.9640, area: 'Southbank',
-    tags: ['walk', 'free', 'photo', 'river', '散步', '免费', '打卡'] },
+    reasonZh: '免费散步 · 夜景好', reasonEn: 'Free walk · great dusk views',
+    lat: -37.821, lng: 144.964, area: 'Southbank',
+    tags: ["walk", "free", "photo", "river", "nature", "散步", "免费", "打卡"] },
   { id: 'docklands', cat: 'sight', emoji: '⚓',
     nameZh: 'Docklands 码头区', nameEn: 'Docklands',
     whyZh: '港湾新区，散步、看船、傍晚灯光不错。', whyEn: 'Harbour precinct for walks, boats and evening lights.',
+    reasonZh: '港湾散步', reasonEn: 'Harbour stroll',
     lat: -37.8142, lng: 144.9415, area: 'Docklands',
-    tags: ['harbour', 'walk', 'free', '码头', '散步', '免费'] },
+    tags: ["harbour", "walk", "free", "码头", "散步", "免费"] },
   { id: 'stkilda-pier', cat: 'sight', emoji: '🌅',
     nameZh: '圣基尔达码头 St Kilda Pier', nameEn: 'St Kilda Pier',
     whyZh: '日落胜地，运气好能看到小企鹅归巢。', whyEn: 'Sunset favourite — you may spot little penguins returning at dusk.',
-    lat: -37.8651, lng: 144.9680, area: 'St Kilda',
-    tags: ['beach', 'sunset', 'free', 'penguins', '码头', '日落', '免费', '海滩'] },
+    reasonZh: '日落 · 拍照', reasonEn: 'Sunset · photos',
+    lat: -37.8651, lng: 144.968, area: 'St Kilda',
+    tags: ["beach", "sunset", "free", "penguins", "photo", "码头", "日落", "免费", "海滩"] },
   { id: 'luna-park', cat: 'sight', emoji: '🎢',
     nameZh: 'Luna Park 月亮公园', nameEn: 'Luna Park Melbourne',
     whyZh: '百年历史游乐园，大门笑脸超级经典。', whyEn: 'Historic fun park with the iconic smiling entrance.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8677, lng: 144.9765, area: 'St Kilda',
-    tags: ['kids', 'fun', 'beach', '游乐园', '带孩子'] },
+    tags: ["kids", "fun", "beach", "游乐园", "带孩子"] },
   { id: 'fitzroy-street-art', cat: 'sight', emoji: '🖌️',
     nameZh: '菲茨罗伊街头艺术区', nameEn: 'Fitzroy street art (around Brunswick St)',
     whyZh: '比 CBD 更本地的涂鸦与独立店铺氛围。', whyEn: 'More local street art and indie shops than the CBD lanes.',
+    reasonZh: '拍照 · 独立小店', reasonEn: 'Photos · indie shops',
     lat: -37.7985, lng: 144.9785, area: 'Fitzroy',
-    tags: ['streetart', 'free', 'indie', '涂鸦', '免费', '菲茨罗伊'] },
+    tags: ["streetart", "free", "indie", "photo", "shopping", "涂鸦", "免费"] },
   { id: 'coops-shot-tower', cat: 'sight', emoji: '🗼',
     nameZh: 'Coops Shot Tower（Melbourne Central 内）', nameEn: 'Coops Shot Tower',
     whyZh: '商场里的历史高塔，抬头就能看见。', whyEn: 'Historic shot tower rising inside Melbourne Central mall.',
+    reasonZh: '购物时顺便看', reasonEn: 'See it while shopping',
     lat: -37.8102, lng: 144.9628, area: 'CBD',
-    tags: ['landmark', 'indoor', 'free', '购物', '免费', '室内'] },
+    tags: ["landmark", "indoor", "free", "shopping", "购物", "免费", "室内"] },
   { id: 'brighton-boxes', cat: 'sight', emoji: '🏖️',
     nameZh: 'Brighton 彩色海滩小屋', nameEn: 'Brighton Bathing Boxes',
-    whyZh: '彩色木屋海滩，经典墨尔本明信片景色（稍远一点）。', whyEn: 'Iconic colourful beach boxes — postcard Melbourne (a bit further out).',
-    lat: -37.9183, lng: 144.9860, area: 'Brighton',
-    tags: ['beach', 'photo', 'free', '海滩', '打卡', '免费'] },
-
-  // —— Food ——
+    whyZh: '彩色木屋海滩，经典墨尔本明信片景色（稍远）。', whyEn: 'Iconic colourful beach boxes — postcard Melbourne (further out).',
+    reasonZh: '经典打卡 · 稍远', reasonEn: 'Classic photo spot · further out',
+    lat: -37.9183, lng: 144.986, area: 'Brighton',
+    tags: ["beach", "photo", "free", "海滩", "打卡", "免费"] },
+  { id: 'city-baths', cat: 'sight', emoji: '🏊',
+    nameZh: '墨尔本城市浴场 Melbourne City Baths', nameEn: 'Melbourne City Baths',
+    whyZh: 'CBD 历史公共泳池，室内外都有，适合想游泳的游客。', whyEn: 'Historic CBD public pool complex — indoor/outdoor options for a swim.',
+    reasonZh: '市中心公共泳池', reasonEn: 'CBD public pool',
+    lat: -37.8072, lng: 144.96, area: 'CBD',
+    tags: ["swim", "pool", "indoor", "游泳", "泳池", "运动"] },
+  { id: 'msac', cat: 'sight', emoji: '🏊',
+    nameZh: 'MSAC 墨尔本体育水上中心', nameEn: 'Melbourne Sports and Aquatic Centre (MSAC)',
+    whyZh: '大型公共水上中心（Albert Park），泳道与设施齐全。', whyEn: 'Large public aquatic centre at Albert Park — lanes and facilities.',
+    reasonZh: '大型公共游泳中心', reasonEn: 'Major public swim centre',
+    lat: -37.8425, lng: 144.9635, area: 'Albert Park',
+    tags: ["swim", "pool", "kids", "游泳", "泳池", "运动", "带孩子"] },
+  { id: 'fitzroy-pool', cat: 'sight', emoji: '🏊',
+    nameZh: 'Fitzroy Swimming Pool', nameEn: 'Fitzroy Swimming Pool',
+    whyZh: '菲茨罗伊社区户外泳池，夏天很受欢迎。', whyEn: 'Popular Fitzroy community outdoor pool — busy in summer.',
+    reasonZh: '社区泳池（季节性）', reasonEn: 'Community pool (seasonal)',
+    lat: -37.7945, lng: 144.9795, area: 'Fitzroy',
+    tags: ["swim", "pool", "outdoor", "游泳", "泳池"] },
   { id: 'lune', cat: 'food', emoji: '🥐',
     nameZh: 'Lune Croissanterie', nameEn: 'Lune Croissanterie',
     whyZh: '网红可颂，层次酥脆，建议早点去排队。', whyEn: 'Viral croissants with insane layers — go early for the queue.',
+    reasonZh: '网红早餐/下午茶', reasonEn: 'Viral breakfast / afternoon treat',
     lat: -37.8075, lng: 144.9945, area: 'Fitzroy',
-    tags: ['bakery', 'viral', 'breakfast', '可颂', '网红', '早餐', '美食'] },
+    tags: ["bakery", "viral", "breakfast", "coffee", "可颂", "网红", "早餐", "美食"] },
   { id: 'pellegrinis', cat: 'food', emoji: '☕',
-    nameZh: "Pellegrini's Espresso Bar", nameEn: "Pellegrini's Espresso Bar",
+    nameZh: 'Pellegrini\'s Espresso Bar', nameEn: 'Pellegrini\'s Espresso Bar',
     whyZh: '墨尔本传奇意式咖啡馆，站着喝咖啡吃意面的老味道。', whyEn: 'Legendary Italian espresso bar — classic coffee and pasta standing-room vibe.',
-    lat: -37.8110, lng: 144.9725, area: 'CBD',
-    tags: ['coffee', 'italian', 'iconic', '咖啡', '意面', '美食'] },
+    reasonZh: '传奇咖啡 · 不辣', reasonEn: 'Iconic coffee · not spicy',
+    lat: -37.811, lng: 144.9725, area: 'CBD',
+    tags: ["coffee", "italian", "iconic", "breakfast", "咖啡", "意面", "美食"] },
   { id: 'hardware-food', cat: 'food', emoji: '🍷',
     nameZh: 'Hardware Lane 餐厅街', nameEn: 'Hardware Lane restaurants',
     whyZh: '意式、欧式餐厅扎堆，适合晚餐约会。', whyEn: 'Italian and European restaurants packed for dinner dates.',
+    reasonZh: '晚餐氛围好', reasonEn: 'Great dinner atmosphere',
     lat: -37.8128, lng: 144.9626, area: 'CBD',
-    tags: ['dinner', 'italian', 'lane', '晚餐', '美食', '约会'] },
+    tags: ["dinner", "italian", "lane", "晚餐", "美食", "约会"] },
   { id: 'chinatown-food', cat: 'food', emoji: '🥟',
     nameZh: '唐人街点心与中餐', nameEn: 'Chinatown dumplings & Chinese food',
     whyZh: '想吃中餐、点心、火锅，来 Little Bourke 一带准没错。', whyEn: 'Dumplings, Chinese classics and hotpot along Little Bourke St.',
-    lat: -37.8115, lng: 144.9690, area: 'CBD',
-    tags: ['chinese', 'dumplings', 'dinner', '中餐', '点心', '美食'] },
+    reasonZh: '中餐选择多（部分偏辣）', reasonEn: 'Lots of Chinese options (some spicy)',
+    lat: -37.8115, lng: 144.969, area: 'CBD',
+    tags: ["chinese", "dumplings", "dinner", "spicy", "中餐", "点心", "美食", "辣"] },
   { id: 'qvm-food', cat: 'food', emoji: '🧀',
     nameZh: '女王市场美食区', nameEn: 'Queen Victoria Market food halls',
     whyZh: '新鲜海鲜、熟食、咖啡、本地零食一次逛齐。', whyEn: 'Seafood, delis, coffee and local snacks under one roof.',
+    reasonZh: '预算友好 · 选择多', reasonEn: 'Budget-friendly · lots of choice',
     lat: -37.8076, lng: 144.9568, area: 'CBD',
-    tags: ['market', 'casual', 'local', '市场', '美食', '小吃'] },
+    tags: ["market", "casual", "local", "budget", "breakfast", "市场", "美食", "小吃"] },
   { id: 'southbank-dining', cat: 'food', emoji: '🌃',
     nameZh: '南岸河边餐厅', nameEn: 'Southbank riverside dining',
     whyZh: '河边用餐看夜景，选择很多，氛围轻松。', whyEn: 'Riverside dining with night views — plenty of casual options.',
-    lat: -37.8220, lng: 144.9635, area: 'Southbank',
-    tags: ['dinner', 'view', 'riverside', '晚餐', '夜景', '美食'] },
+    reasonZh: '晚餐看夜景', reasonEn: 'Dinner with night views',
+    lat: -37.822, lng: 144.9635, area: 'Southbank',
+    tags: ["dinner", "view", "riverside", "晚餐", "夜景", "美食"] },
   { id: 'stkilda-food', cat: 'food', emoji: '🍦',
     nameZh: 'Acland Street 蛋糕街', nameEn: 'Acland Street cake shops',
     whyZh: '圣基尔达经典蛋糕与欧洲点心一条街。', whyEn: 'St Kilda\'s famous strip of European cakes and sweets.',
-    lat: -37.8685, lng: 144.9790, area: 'St Kilda',
-    tags: ['dessert', 'cake', 'casual', '蛋糕', '甜品', '美食'] },
+    reasonZh: '下午茶甜点', reasonEn: 'Afternoon tea sweets',
+    lat: -37.8685, lng: 144.979, area: 'St Kilda',
+    tags: ["dessert", "cake", "casual", "afternoon", "蛋糕", "甜品", "美食"] },
   { id: 'fitzroy-cafes', cat: 'food', emoji: '🥛',
     nameZh: '菲茨罗伊 / 卡尔顿咖啡馆一带', nameEn: 'Fitzroy & Carlton cafe streets',
     whyZh: 'Brunswick St、Lygon St 一带精品咖啡馆很多，brunch 很强。', whyEn: 'Brunswick St and Lygon St are packed with specialty cafes and brunch spots.',
-    lat: -37.7980, lng: 144.9780, area: 'Fitzroy',
-    tags: ['coffee', 'brunch', 'cafe', '咖啡', '早午餐', '美食'] },
+    reasonZh: 'Brunch / 咖啡文化', reasonEn: 'Brunch / coffee culture',
+    lat: -37.798, lng: 144.978, area: 'Fitzroy',
+    tags: ["coffee", "brunch", "cafe", "breakfast", "咖啡", "早午餐", "美食"] },
   { id: 'block-arcade', cat: 'food', emoji: '🏛️',
     nameZh: 'The Block Arcade 咖啡馆', nameEn: 'The Block Arcade cafes',
     whyZh: '百年拱廊商场，咖啡与甜品环境很优雅。', whyEn: 'Historic arcade with elegant cafes and sweets.',
-    lat: -37.8155, lng: 144.9640, area: 'CBD',
-    tags: ['coffee', 'historic', 'indoor', '咖啡', '室内', '美食'] },
+    reasonZh: '优雅下午茶环境', reasonEn: 'Elegant afternoon tea setting',
+    lat: -37.8155, lng: 144.964, area: 'CBD',
+    tags: ["coffee", "historic", "indoor", "afternoon", "咖啡", "室内", "美食"] },
   { id: 'hopetoun', cat: 'food', emoji: '🧁',
     nameZh: 'Hopetoun Tea Rooms', nameEn: 'Hopetoun Tea Rooms',
     whyZh: 'Block Arcade 里的经典茶室，橱窗蛋糕很有名。', whyEn: 'Classic tearoom in Block Arcade — famous window cakes.',
+    reasonZh: '经典下午茶', reasonEn: 'Classic afternoon tea',
     lat: -37.8156, lng: 144.9641, area: 'CBD',
-    tags: ['tea', 'cake', 'historic', '下午茶', '蛋糕', '美食'] },
+    tags: ["tea", "cake", "historic", "afternoon", "下午茶", "蛋糕", "美食"] },
   { id: 'southwharf-eats', cat: 'food', emoji: '🥙',
     nameZh: 'South Wharf 轻松用餐', nameEn: 'Casual eats around South Wharf',
     whyZh: 'DFO 和会展中心一带有很多轻松用餐选择。', whyEn: 'Plenty of casual dining around DFO and the convention centre.',
-    lat: -37.8250, lng: 144.9520, area: 'South Wharf',
-    tags: ['casual', 'shopping', 'lunch', '午餐', '美食'] },
-
-  // —— Buy / specialties ——
+    reasonZh: '购物顺便吃', reasonEn: 'Easy eats while shopping',
+    lat: -37.825, lng: 144.952, area: 'South Wharf',
+    tags: ["casual", "shopping", "lunch", "budget", "午餐", "美食"] },
   { id: 'chemist-warehouse-bourke', cat: 'buy', emoji: '💊',
     nameZh: 'Chemist Warehouse（CBD）', nameEn: 'Chemist Warehouse (CBD)',
     whyZh: '买麦卢卡蜂蜜、绵羊油、维他命的热门药房连锁。', whyEn: 'Go-to chemist chain for Manuka honey, lanolin cream and vitamins.',
-    lat: -37.8136, lng: 144.9640, area: 'CBD',
-    tags: ['chemist', 'honey', 'lanolin', 'souvenir', '药房', '蜂蜜', '绵羊油', '特产'] },
+    reasonZh: '游客药房特产首选', reasonEn: 'Top chemist for tourist staples',
+    lat: -37.8136, lng: 144.964, area: 'CBD',
+    tags: ["chemist", "pharmacy", "honey", "lanolin", "souvenir", "药房", "蜂蜜", "绵羊油", "特产"] },
   { id: 'qvm-souvenirs', cat: 'buy', emoji: '🎁',
     nameZh: '女王市场特产摊', nameEn: 'Queen Victoria Market souvenir stalls',
     whyZh: '蜂蜜、油、零食、手工艺品，边逛边买。', whyEn: 'Honey, oils, snacks and crafts — browse while you snack.',
+    reasonZh: '市场边逛边买', reasonEn: 'Browse-and-buy at the market',
     lat: -37.8076, lng: 144.9568, area: 'CBD',
-    tags: ['market', 'honey', 'souvenir', '特产', '市场', '伴手礼'] },
+    tags: ["market", "honey", "souvenir", "shopping", "特产", "市场", "伴手礼"] },
   { id: 'ugg-shops', cat: 'buy', emoji: '🥾',
     nameZh: 'UGG 专卖 / 商场店', nameEn: 'UGG stores (malls & outlets)',
     whyZh: '澳洲经典羊毛靴，DFO 和市中心商场常有店。', whyEn: 'Classic Aussie sheepskin boots — find them in malls and DFO.',
+    reasonZh: '因为你喜欢购物', reasonEn: 'Fits a shopping preference',
     lat: -37.8252, lng: 144.9515, area: 'South Wharf',
-    tags: ['ugg', 'fashion', 'souvenir', 'UGG', '特产', '鞋子'] },
+    tags: ["ugg", "fashion", "souvenir", "shopping", "UGG", "特产", "鞋子"] },
   { id: 'dfo-south-wharf', cat: 'buy', emoji: '🏬',
     nameZh: 'DFO South Wharf', nameEn: 'DFO South Wharf',
     whyZh: '奥特莱斯购物村，品牌折扣，也有伴手礼选择。', whyEn: 'Outlet shopping village with brand discounts and gift options.',
+    reasonZh: '因为你喜欢购物', reasonEn: 'Fits a shopping preference',
     lat: -37.8252, lng: 144.9515, area: 'South Wharf',
-    tags: ['shopping', 'outlet', 'souvenir', '购物', '奥特莱斯', '特产'] },
+    tags: ["shopping", "outlet", "souvenir", "budget", "购物", "奥特莱斯", "特产"] },
   { id: 'melbourne-central', cat: 'buy', emoji: '🛍️',
     nameZh: 'Melbourne Central', nameEn: 'Melbourne Central',
     whyZh: '市中心大商场，买 Tim Tams、Vegemite、小礼品方便。', whyEn: 'Major CBD mall — easy for Tim Tams, Vegemite and small gifts.',
+    reasonZh: '市中心一站式购物', reasonEn: 'One-stop CBD shopping',
     lat: -37.8105, lng: 144.9627, area: 'CBD',
-    tags: ['shopping', 'timtams', 'vegemite', '购物', '特产', '饼干'] },
+    tags: ["shopping", "timtams", "vegemite", "购物", "特产", "饼干"] },
   { id: 'myer-bourke', cat: 'buy', emoji: '🎀',
     nameZh: 'Myer / Bourke Street Mall', nameEn: 'Myer & Bourke Street Mall',
     whyZh: '步行街商场，美妆、Jellycat 等礼品选择多。', whyEn: 'Mall strip for beauty, Jellycat plush and gift shopping.',
+    reasonZh: '礼品与美妆', reasonEn: 'Gifts & beauty',
     lat: -37.8132, lng: 144.9645, area: 'CBD',
-    tags: ['shopping', 'jellycat', 'beauty', '购物', 'Jellycat', '特产'] },
+    tags: ["shopping", "jellycat", "beauty", "购物", "Jellycat", "特产"] },
   { id: 'souvenir-fed', cat: 'buy', emoji: '🦘',
     nameZh: '联邦广场纪念品店', nameEn: 'Federation Square gift shops',
     whyZh: '袋鼠玩偶、澳洲主题小物，游客友好。', whyEn: 'Kangaroo plush and Aussie-themed gifts — tourist-friendly.',
+    reasonZh: '游客伴手礼方便', reasonEn: 'Easy tourist souvenirs',
     lat: -37.8179, lng: 144.9691, area: 'CBD',
-    tags: ['souvenir', 'gifts', '伴手礼', '特产', '玩偶'] },
+    tags: ["souvenir", "gifts", "伴手礼", "特产", "玩偶"] },
   { id: 'buy-tips-card', cat: 'buy', emoji: '🍯',
     nameZh: '特产购物清单（参考）', nameEn: 'Aussie specialty shopping list',
     whyZh: '麦卢卡蜂蜜、绵羊油、Tim Tams、Vegemite、UGG、防晒霜——药房和超市最方便。', whyEn: 'Manuka honey, lanolin, Tim Tams, Vegemite, UGG, sunscreen — chemists & supermarkets are easiest.',
+    reasonZh: '实用购物备忘', reasonEn: 'Practical shopping checklist',
     lat: -37.8136, lng: 144.9631, area: 'CBD',
-    tags: ['honey', 'lanolin', 'timtams', 'vegemite', 'list', '蜂蜜', '特产', '清单'] },
-
-  // —— Kids ——
+    tags: ["honey", "lanolin", "timtams", "vegemite", "list", "蜂蜜", "特产", "清单"] },
   { id: 'kids-aquarium', cat: 'kids', emoji: '🐠',
     nameZh: '墨尔本水族馆', nameEn: 'SEA LIFE Melbourne Aquarium',
     whyZh: '室内看海洋生物，下雨天带娃首选之一。', whyEn: 'Indoor ocean life — one of the best rainy-day kids options.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8209, lng: 144.9583, area: 'CBD',
-    tags: ['kids', 'indoor', 'rain', 'aquarium', '带孩子', '下雨', '室内'] },
+    tags: ["kids", "indoor", "rain", "aquarium", "带孩子", "下雨", "室内"] },
   { id: 'kids-museum', cat: 'kids', emoji: '🦕',
     nameZh: '墨尔本博物馆', nameEn: 'Melbourne Museum',
     whyZh: '恐龙厅和儿童互动区很受欢迎。', whyEn: 'Dinosaur gallery and kids\' interactive zones are a hit.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8033, lng: 144.9717, area: 'Carlton',
-    tags: ['kids', 'indoor', 'rain', 'museum', '带孩子', '下雨'] },
+    tags: ["kids", "indoor", "rain", "museum", "带孩子", "下雨"] },
   { id: 'kids-acmi', cat: 'kids', emoji: '🎮',
     nameZh: 'ACMI', nameEn: 'ACMI',
     whyZh: '互动数字展，大一点的孩子会很喜欢。', whyEn: 'Hands-on digital exhibits older kids love.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8176, lng: 144.9688, area: 'CBD',
-    tags: ['kids', 'indoor', 'rain', '带孩子', '下雨', '室内'] },
+    tags: ["kids", "indoor", "rain", "带孩子", "下雨", "室内"] },
   { id: 'kids-luna', cat: 'kids', emoji: '🎠',
     nameZh: 'Luna Park', nameEn: 'Luna Park Melbourne',
     whyZh: '摩天轮和游乐设施，圣基尔达海边玩一天。', whyEn: 'Rides by the beach — a full St Kilda fun day.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8677, lng: 144.9765, area: 'St Kilda',
-    tags: ['kids', 'fun', 'outdoor', '带孩子', '游乐园'] },
+    tags: ["kids", "fun", "outdoor", "带孩子", "游乐园"] },
   { id: 'kids-rbg', cat: 'kids', emoji: '🦆',
     nameZh: '皇家植物园散步', nameEn: 'Royal Botanic Gardens (family walk)',
     whyZh: '喂鸭子、野餐、跑步，免费又开阔。', whyEn: 'Ducks, picnics and open space — free and spacious.',
+    reasonZh: '免费 · 自然 · 亲子', reasonEn: 'Free · nature · family',
     lat: -37.8304, lng: 144.9803, area: 'South Yarra',
-    tags: ['kids', 'park', 'free', 'outdoor', '带孩子', '免费', '公园'] },
+    tags: ["kids", "park", "free", "outdoor", "nature", "带孩子", "免费", "公园"] },
   { id: 'kids-zoo', cat: 'kids', emoji: '🦘',
     nameZh: '墨尔本动物园', nameEn: 'Melbourne Zoo',
     whyZh: '袋鼠、考拉和热带动物，经典亲子行程（需交通）。', whyEn: 'Kangaroos, koalas and more — classic family day (short trip from CBD).',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.7842, lng: 144.9514, area: 'Parkville',
-    tags: ['kids', 'zoo', 'animals', '带孩子', '动物园'] },
+    tags: ["kids", "zoo", "animals", "带孩子", "动物园"] },
   { id: 'kids-scienceworks', cat: 'kids', emoji: '🔬',
     nameZh: 'Scienceworks 科学馆', nameEn: 'Scienceworks',
     whyZh: '互动科学馆，动手实验超多（在 Spotswood，稍远）。', whyEn: 'Hands-on science museum in Spotswood — a bit further out.',
+    reasonZh: '因为你带着孩子 · 稍远', reasonEn: 'Because you\'re with kids · further out',
     lat: -37.8315, lng: 144.8935, area: 'Spotswood',
-    tags: ['kids', 'indoor', 'science', 'rain', '带孩子', '科学', '下雨'] },
+    tags: ["kids", "indoor", "science", "rain", "带孩子", "科学", "下雨"] },
   { id: 'kids-ian-potter', cat: 'kids', emoji: '🧒',
     nameZh: 'Ian Potter Foundation Children\'s Garden', nameEn: 'Ian Potter Foundation Children\'s Garden',
     whyZh: '植物园内的儿童花园，专为小朋友设计。', whyEn: 'Kids\' garden inside the Botanic Gardens — built for little explorers.',
+    reasonZh: '因为你带着孩子 · 免费', reasonEn: 'Because you\'re with kids · free',
     lat: -37.8315, lng: 144.9795, area: 'South Yarra',
-    tags: ['kids', 'park', 'free', 'garden', '带孩子', '免费', '花园'] },
+    tags: ["kids", "park", "free", "garden", "nature", "带孩子", "免费", "花园"] },
   { id: 'kids-artplay', cat: 'kids', emoji: '🎨',
     nameZh: 'ArtPlay（联邦广场旁）', nameEn: 'ArtPlay',
     whyZh: '河边儿童艺术创作空间，常有工作坊。', whyEn: 'Kids\' creative arts space by the river with workshops.',
+    reasonZh: '因为你带着孩子', reasonEn: 'Because you\'re with kids',
     lat: -37.8188, lng: 144.9705, area: 'CBD',
-    tags: ['kids', 'art', 'workshop', '带孩子', '艺术'] },
+    tags: ["kids", "art", "workshop", "带孩子", "艺术"] },
   { id: 'kids-flagstaff', cat: 'kids', emoji: '🏞️',
     nameZh: 'Flagstaff Gardens', nameEn: 'Flagstaff Gardens',
     whyZh: 'CBD 西侧公园，有游乐设施，走路就到。', whyEn: 'West-CBD park with playgrounds — easy walk from the city.',
+    reasonZh: '免费游乐 · CBD 近', reasonEn: 'Free playground · close to CBD',
     lat: -37.8105, lng: 144.9545, area: 'CBD',
-    tags: ['kids', 'park', 'free', 'playground', '带孩子', '免费', '公园'] }
+    tags: ["kids", "park", "free", "playground", "带孩子", "免费", "公园"] },
 ];
 
-// —— i18n ——
 const I18N = {
   zh: {
-    tagline: '墨尔本本地向导',
-    locating: '正在定位…',
-    youNear: '你在',
-    nearby: '附近',
-    relocate: '📍 重新定位',
-    pretend: '假装我在…',
-    askLabel: '问问本地向导',
-    askPlaceholder: '今天带孩子去哪儿？',
-    askBtn: '问',
-    chips: ['带孩子去哪', '下雨天去哪', '附近好吃的', '买什么特产', '免费的景点'],
+    tagline: '墨尔本本地向导', locating: '正在定位…', youNear: '你在', relocate: '📍 重新定位', pretend: '假装我在…',
+    askLabel: '问问本地向导', askPlaceholder: '今天带孩子去哪儿？打车？游泳？', askBtn: '问',
+    chips: ['带孩子去哪','下雨天去哪','附近好吃的','买什么特产','免费的景点','打车','附近药房','想游泳','附近酒店'],
     tabs: { sight: '景点', food: '美食', buy: '特产', kids: '带孩子' },
-    sectionNear: '按距离排序 · 附近推荐',
-    walk: '步行约',
-    walkFar: '稍远',
-    maps: '在 Google 地图打开',
+    sectionNear: '按距离+偏好排序 · 附近推荐', walk: '步行约', walkFar: '稍远', maps: '在 Google 地图打开',
     empty: '这一类暂时没有更近的推荐，换个分类或位置试试。',
-    footer: '原型 · 墨尔本 CBD 及周边 · 内容人工精选 · 非实时营业信息',
-    locFail: '定位未开，请选一个「假装我在」地点',
-    locOk: '定位成功',
-    askNote: '（原型用关键词匹配回答，还不是真正的 AI）',
-    ctxChemistTitle: '💡 你附近有药房',
-    ctxMarketTitle: '💡 你到了市场附近',
-    ctxSouvenirTitle: '💡 附近适合买伴手礼'
+    footer: '原型 · 墨尔本 CBD 及周边 · 内容人工精选 · 不收商家广告费 · 非实时营业信息',
+    locFail: '定位未开，请选一个「假装我在」地点', locOk: '定位成功',
+    askNote: '（原型用关键词匹配，还不是真正的 AI）',
+    ctxChemistTitle: '💡 你附近有药房', ctxMarketTitle: '💡 你到了市场附近', ctxSouvenirTitle: '💡 附近适合买伴手礼',
+    hold: '🎤 按住说话', holding: '🎧 正在听…松开结束', voiceHint: '松开后 Coco 会回答你',
+    fairBadge: '✓ No paid rankings · 不收商家广告费', justAte: '🍽️ 我刚吃过', justAteDone: '好的，两小时内少提吃饭～',
+    prefsTitle: '我的偏好', prefsSub: '这些会悄悄影响推荐排序，不会卖给别人。', prefsClose: '完成',
+    prefKids: '带着孩子', prefNoSpicy: '不吃辣', prefBudget: '预算友好', prefPhotos: '喜欢拍照打卡', prefShop: '喜欢购物', prefNature: '喜欢自然绿地',
+    listening: '正在听：',
+    speechNo: '这个浏览器暂不支持语音输入（微信内置浏览器或部分旧版 iOS 可能不行）。请用上面的文字框，或用 Safari / Chrome 打开。',
+    speechDenied: '麦克风权限被拒绝了，请在系统设置里打开，或改用文字输入。',
+    speechErr: '语音识别出了点问题，请再说一次，或改用文字。',
+    whyPrefix: '推荐理由：', nudgeTitle: '📍 你快到了', ttsOn: '🔊 朗读开', ttsOff: '🔇 朗读关'
   },
   en: {
-    tagline: 'Your Melbourne local guide',
-    locating: 'Finding you…',
-    youNear: 'You are near',
-    nearby: 'Nearby',
-    relocate: '📍 Relocate',
-    pretend: 'Pretend I\'m at…',
-    askLabel: 'Ask your local guide',
-    askPlaceholder: 'Where to take the kids today?',
-    askBtn: 'Ask',
-    chips: ['Kids activities', 'Rainy day ideas', 'Good food nearby', 'What souvenirs', 'Free sights'],
+    tagline: 'Your Melbourne local guide', locating: 'Finding you…', youNear: 'You are near', relocate: '📍 Relocate', pretend: "Pretend I'm at…",
+    askLabel: 'Ask your local guide', askPlaceholder: 'Kids? Taxi? Swim? Food nearby?', askBtn: 'Ask',
+    chips: ['Kids activities','Rainy day ideas','Good food nearby','What souvenirs','Free sights','Need a ride','Pharmacy nearby','Want to swim','Hotels nearby'],
     tabs: { sight: 'Sights', food: 'Food', buy: 'To buy', kids: 'Kids' },
-    sectionNear: 'Sorted by distance · nearby picks',
-    walk: '~',
-    walkFar: 'a bit further',
-    walkUnit: ' min walk',
-    maps: 'Open in Google Maps',
+    sectionNear: 'Sorted by distance + prefs · nearby', walk: '~', walkFar: 'a bit further', walkUnit: ' min walk', maps: 'Open in Google Maps',
     empty: 'Nothing closer in this tab — try another category or location.',
-    footer: 'Prototype · Melbourne CBD & nearby · Curated picks · Not live opening hours',
-    locFail: 'Location off — pick a “Pretend I\'m at” spot',
-    locOk: 'Location found',
-    askNote: '(Prototype answers with keyword matching — not a real AI yet)',
-    ctxChemistTitle: '💡 You\'re near a chemist',
-    ctxMarketTitle: '💡 You\'re near a market',
-    ctxSouvenirTitle: '💡 Good spot for souvenirs'
+    footer: 'Prototype · Melbourne CBD & nearby · Curated · No paid rankings · Not live hours',
+    locFail: 'Location off — pick a “Pretend I\'m at” spot', locOk: 'Location found',
+    askNote: '(Keyword matching prototype — not a real AI yet)',
+    ctxChemistTitle: "💡 You're near a chemist", ctxMarketTitle: "💡 You're near a market", ctxSouvenirTitle: '💡 Good spot for souvenirs',
+    hold: '🎤 Hold to talk', holding: '🎧 Listening… release to send', voiceHint: 'Release and Coco will answer',
+    fairBadge: '✓ No paid rankings · 不收商家广告费', justAte: '🍽️ I just ate', justAteDone: 'Got it — fewer food nudges for 2 hours',
+    prefsTitle: 'My preferences', prefsSub: 'These quietly re-rank suggestions. Never sold.', prefsClose: 'Done',
+    prefKids: 'With kids', prefNoSpicy: 'No spicy food', prefBudget: 'Budget-friendly', prefPhotos: 'Love photo spots', prefShop: 'Love shopping', prefNature: 'Love nature / parks',
+    listening: 'Listening:',
+    speechNo: "Voice input isn't supported in this browser (WeChat in-app or some older iOS builds). Use the text box, or open in Safari / Chrome.",
+    speechDenied: 'Microphone permission denied. Enable it in Settings, or type instead.',
+    speechErr: 'Speech recognition hiccup — try again or type.',
+    whyPrefix: 'Why:', nudgeTitle: "📍 You're almost there", ttsOn: '🔊 Voice on', ttsOff: '🔇 Voice off'
   }
 };
 
-// —— State ——
 let lang = 'zh';
-let userLat = PRETEND_SPOTS[0].lat;
-let userLng = PRETEND_SPOTS[0].lng;
-let activeTab = 'sight';
-let locName = '';
-let pretendId = 'flinders'; // when set via picker; null if GPS
+let userLat = PRETEND_SPOTS[0].lat, userLng = PRETEND_SPOTS[0].lng;
+let activeTab = 'sight', locName = '', pretendId = 'flinders';
+let watchId = null;
+let voiceOn = localStorage.getItem(LS_VOICE) !== '0';
+let prefs = loadPrefs();
+let ateUntil = Number(localStorage.getItem(LS_ATE) || 0);
+let nudged = loadNudged();
+let recognizing = false, recognition = null;
 
-// —— Utils ——
+function loadPrefs() {
+  try {
+    return Object.assign({ kids:false, noSpicy:false, budget:false, photos:false, shopping:false, nature:false },
+      JSON.parse(localStorage.getItem(LS_PREFS) || '{}'));
+  } catch { return { kids:false, noSpicy:false, budget:false, photos:false, shopping:false, nature:false }; }
+}
+function savePrefs() { localStorage.setItem(LS_PREFS, JSON.stringify(prefs)); }
+function loadNudged() { try { return JSON.parse(localStorage.getItem(LS_NUDGED) || '{}'); } catch { return {}; } }
+function saveNudged() { localStorage.setItem(LS_NUDGED, JSON.stringify(nudged)); }
+
 function toRad(d) { return d * Math.PI / 180; }
 function haversineM(lat1, lng1, lat2, lng2) {
-  const R = 6371000;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
+  const R = 6371000, dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
   const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
-function walkMins(meters) {
-  // ~80 m/min casual walk
-  return Math.max(1, Math.round(meters / 80));
-}
-function distLabel(meters) {
+function walkMins(m) { return Math.max(1, Math.round(m / 80)); }
+function distLabel(m) {
   const t = I18N[lang];
-  if (meters > 8000) return t.walkFar;
-  const mins = walkMins(meters);
-  if (lang === 'zh') return `${t.walk} ${mins} 分钟`;
-  return `${t.walk}${mins}${t.walkUnit}`;
+  if (m > 8000) return t.walkFar;
+  const mins = walkMins(m);
+  return lang === 'zh' ? `${t.walk} ${mins} 分钟` : `${t.walk}${mins}${t.walkUnit}`;
 }
 function placeName(p) { return lang === 'zh' ? p.nameZh : p.nameEn; }
 function placeWhy(p) { return lang === 'zh' ? p.whyZh : p.whyEn; }
-function mapsUrl(p) {
-  const q = encodeURIComponent(p.nameEn + ', Melbourne');
-  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+function placeReason(p) {
+  const t = I18N[lang];
+  let r = lang === 'zh' ? p.reasonZh : p.reasonEn;
+  const tags = (p.tags || []).map(x => x.toLowerCase());
+  if (prefs.kids && (p.cat === 'kids' || tags.includes('kids') || tags.includes('带孩子')))
+    r = lang === 'zh' ? '因为你带着孩子' : "Because you're with kids";
+  else if (prefs.photos && tags.includes('photo'))
+    r = lang === 'zh' ? '因为你喜欢拍照打卡' : 'Because you love photo spots';
+  else if (prefs.shopping && (tags.includes('shopping') || p.cat === 'buy'))
+    r = lang === 'zh' ? '因为你喜欢购物' : 'Because you love shopping';
+  else if (prefs.nature && (tags.includes('nature') || tags.includes('park') || tags.includes('公园')))
+    r = lang === 'zh' ? '因为你喜欢自然绿地' : 'Because you love nature / parks';
+  else if (prefs.budget && (tags.includes('free') || tags.includes('budget') || tags.includes('免费')))
+    r = lang === 'zh' ? '因为你偏好预算友好' : 'Because you prefer budget-friendly picks';
+  else if (prefs.noSpicy && tags.includes('spicy'))
+    r = lang === 'zh' ? '注意：可能偏辣（你设了不吃辣）' : 'Note: may be spicy (you set no-spicy)';
+  return `${t.whyPrefix} ${r}`;
 }
+function mapsUrl(p) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.nameEn + ', Melbourne')}`; }
+function mapsSearch(q) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`; }
+function mapsDirections() { return `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&travelmode=driving`; }
 function toast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 2200);
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2200);
 }
+function foodSuppressed() { return Date.now() < ateUntil; }
 
 function nearestLandmarkName() {
   let best = null, bestD = Infinity;
@@ -908,41 +761,111 @@ function nearestLandmarkName() {
     const d = haversineM(userLat, userLng, p.lat, p.lng);
     if (d < bestD) { bestD = d; best = p; }
   }
-  // Also check pretend spots
   for (const s of PRETEND_SPOTS) {
     const d = haversineM(userLat, userLng, s.lat, s.lng);
     if (d < bestD) { bestD = d; best = s; }
   }
   if (!best) return lang === 'zh' ? '墨尔本' : 'Melbourne';
-  if (best.nameZh) return lang === 'zh' ? best.nameZh : best.nameEn;
-  return placeName(best);
+  return best.nameZh ? (lang === 'zh' ? best.nameZh : best.nameEn) : placeName(best);
 }
 
-// —— Context tips ——
+function prefScore(p) {
+  let s = 0;
+  const tags = (p.tags || []).map(x => x.toLowerCase());
+  if (prefs.kids && (p.cat === 'kids' || tags.includes('kids') || tags.includes('带孩子'))) s += 4;
+  if (prefs.photos && tags.includes('photo')) s += 3;
+  if (prefs.shopping && (tags.includes('shopping') || p.cat === 'buy')) s += 3;
+  if (prefs.nature && (tags.includes('nature') || tags.includes('park') || tags.includes('公园'))) s += 3;
+  if (prefs.budget && (tags.includes('free') || tags.includes('budget') || tags.includes('免费'))) s += 3;
+  if (prefs.noSpicy && tags.includes('spicy')) s -= 5;
+  return s;
+}
+function rankedPlaces(filterFn) {
+  return PLACES.filter(filterFn || (() => true))
+    .map(p => { const dist = haversineM(userLat, userLng, p.lat, p.lng); return { ...p, dist, score: prefScore(p) - dist / 800 }; })
+    .sort((a, b) => b.score - a.score || a.dist - b.dist);
+}
+function mealPeriod() {
+  const h = currentHourDecimal();
+  if (h >= 7 && h < 10) return 'breakfast';
+  if (h >= 11.5 && h < 14) return 'lunch';
+  if (h >= 14 && h < 17) return 'tea';
+  if (h >= 17.5 && h < 21) return 'dinner';
+  if (h >= 21 || h < 7) return 'latenight';
+  return 'general';
+}
+
+function updateRemind() {
+  const period = mealPeriod();
+  const title = document.getElementById('rmTitle');
+  const body = document.getElementById('rmBody');
+  const near = pretendId
+    ? (lang === 'zh' ? (PRETEND_SPOTS.find(s => s.id === pretendId) || {}).nameZh : (PRETEND_SPOTS.find(s => s.id === pretendId) || {}).nameEn)
+    : nearestLandmarkName();
+  const ate = foodSuppressed();
+  let text = '';
+  if (lang === 'zh') {
+    title.textContent = '☕ Coco 提醒你';
+    if (ate) text = `你刚说过吃过了，我先少提吃饭。在${near}附近，要不要逛逛景点或买点特产？`;
+    else if (period === 'breakfast') text = `早上好！你在${near}一带，适合来杯咖啡或可颂。Degraves Street、Pellegrini's 或女王市场早餐区都不错。`;
+    else if (period === 'lunch') text = `午饭时间到了～${near}附近可以考虑女王市场美食区、唐人街点心，或南岸轻松用餐。`;
+    else if (period === 'tea') text = `下午茶时光！Block Arcade 的 Hopetoun Tea Rooms，或圣基尔达 Acland Street 蛋糕街很有气氛。`;
+    else if (period === 'dinner') text = `晚餐时间～Hardware Lane 意式餐厅巷，或南岸河边餐厅看夜景，都很适合。`;
+    else if (period === 'latenight') text = `夜深了。唐人街还有夜宵选择；要是想收工，我也可以帮你打车回酒店。`;
+    else text = `你在${near}附近。想吃、想逛、想带孩子，随时按住说话或打字问我。`;
+    if (prefs.kids && !ate) text += ' 因为你带着孩子，我会优先提亲子友好的地方。';
+  } else {
+    title.textContent = '☕ Coco tip';
+    if (ate) text = `You said you just ate — I'll ease off food tips. Near ${near}, maybe sights or souvenirs?`;
+    else if (period === 'breakfast') text = `Good morning near ${near}! Coffee or croissants? Try Degraves Street, Pellegrini's, or QVM breakfast stalls.`;
+    else if (period === 'lunch') text = `Lunchtime near ${near}: QVM food halls, Chinatown dumplings, or casual South Wharf eats.`;
+    else if (period === 'tea') text = `Afternoon tea vibes: Hopetoun Tea Rooms in Block Arcade, or Acland Street cakes in St Kilda.`;
+    else if (period === 'dinner') text = `Dinner time: Hardware Lane for Italian atmosphere, or Southbank riverside dining with views.`;
+    else if (period === 'latenight') text = `Late night: Chinatown still has options. Or I can help you grab a ride back.`;
+    else text = `You're near ${near}. Ask me about food, sights, kids, or a ride anytime.`;
+    if (prefs.kids && !ate) text += " Because you're with kids, I'll prioritise family-friendly picks.";
+  }
+  body.textContent = text;
+  document.getElementById('justAteBtn').textContent = I18N[lang].justAte;
+  document.getElementById('justAteBtn').classList.toggle('eaten', ate);
+}
+
 function updateContext() {
   const card = document.getElementById('contextCard');
   const title = document.getElementById('ctxTitle');
   const body = document.getElementById('ctxBody');
-  let hit = null;
-  let hitD = Infinity;
+  let hit = null, hitD = Infinity;
   for (const z of CONTEXT_ZONES) {
     const d = haversineM(userLat, userLng, z.lat, z.lng);
     if (d <= z.radiusM && d < hitD) { hit = z; hitD = d; }
   }
-  if (!hit) {
-    card.classList.remove('show');
-    return;
-  }
+  if (!hit) { card.classList.remove('show'); return; }
   const tip = BUY_TIPS[hit.kind];
   const t = I18N[lang];
-  if (hit.kind === 'chemist') title.textContent = t.ctxChemistTitle;
-  else if (hit.kind === 'market') title.textContent = t.ctxMarketTitle;
-  else title.textContent = t.ctxSouvenirTitle;
+  title.textContent = hit.kind === 'chemist' ? t.ctxChemistTitle : hit.kind === 'market' ? t.ctxMarketTitle : t.ctxSouvenirTitle;
   body.textContent = tip[lang];
   card.classList.add('show');
 }
 
-// —— Render ——
+function checkProximityNudge() {
+  const card = document.getElementById('nudgeCard');
+  let hit = null, hitD = Infinity;
+  for (const p of PLACES) {
+    if (nudged[p.id]) continue;
+    const d = haversineM(userLat, userLng, p.lat, p.lng);
+    if (d <= 150 && d < hitD) { hit = p; hitD = d; }
+  }
+  if (!hit) return;
+  nudged[hit.id] = Date.now(); saveNudged();
+  const t = I18N[lang];
+  document.getElementById('nudgeTitle').textContent = t.nudgeTitle;
+  document.getElementById('nudgeBody').textContent = lang === 'zh'
+    ? `你快到 ${placeName(hit)} 了——${placeWhy(hit)}`
+    : `You're nearly at ${placeName(hit)} — ${placeWhy(hit)}`;
+  card.classList.add('show');
+  setTimeout(() => card.classList.remove('show'), 8000);
+}
+
 function renderLoc() {
   const t = I18N[lang];
   let near = '';
@@ -966,167 +889,231 @@ function renderChrome() {
   document.getElementById('askBtn').textContent = t.askBtn;
   document.getElementById('footerNote').textContent = t.footer;
   document.getElementById('sectionLabel').textContent = t.sectionNear;
-
+  document.getElementById('fairBadge').textContent = t.fairBadge;
+  document.getElementById('holdBtn').textContent = recognizing ? t.holding : t.hold;
+  document.getElementById('voiceHint').textContent = t.voiceHint;
+  document.getElementById('voiceToggle').textContent = voiceOn ? '🔊' : '🔇';
+  document.getElementById('voiceToggle').title = voiceOn ? t.ttsOn : t.ttsOff;
+  document.getElementById('prefsTitle').textContent = t.prefsTitle;
+  document.getElementById('prefsSub').textContent = t.prefsSub;
+  document.getElementById('prefsClose').textContent = t.prefsClose;
+  document.getElementById('prefKidsL').textContent = t.prefKids;
+  document.getElementById('prefNoSpicyL').textContent = t.prefNoSpicy;
+  document.getElementById('prefBudgetL').textContent = t.prefBudget;
+  document.getElementById('prefPhotosL').textContent = t.prefPhotos;
+  document.getElementById('prefShopL').textContent = t.prefShop;
+  document.getElementById('prefNatureL').textContent = t.prefNature;
+  document.getElementById('listeningLabel').textContent = t.listening;
   const sel = document.getElementById('pretendSelect');
-  const cur = sel.value;
-  sel.innerHTML = `<option value="">${t.pretend}</option>` +
-    PRETEND_SPOTS.map(s =>
-      `<option value="${s.id}">${lang === 'zh' ? s.nameZh : s.nameEn}</option>`
-    ).join('');
+  const cur = sel.value || pretendId || '';
+  sel.innerHTML = `<option value="">${t.pretend}</option>` + PRETEND_SPOTS.map(s =>
+    `<option value="${s.id}">${lang === 'zh' ? s.nameZh : s.nameEn}</option>`).join('');
   if (cur) sel.value = cur;
-
-  const chips = document.getElementById('chips');
-  chips.innerHTML = t.chips.map((c, i) =>
-    `<button type="button" class="chip" data-i="${i}">${c}</button>`
-  ).join('');
-
-  const tabs = document.getElementById('tabs');
+  document.getElementById('chips').innerHTML = t.chips.map(c => `<button type="button" class="chip">${c}</button>`).join('');
   const order = ['sight', 'food', 'buy', 'kids'];
-  tabs.innerHTML = order.map(k =>
-    `<button type="button" class="tab${activeTab === k ? ' active' : ''}" data-tab="${k}" role="tab">${t.tabs[k]}</button>`
-  ).join('');
+  document.getElementById('tabs').innerHTML = order.map(k =>
+    `<button type="button" class="tab${activeTab === k ? ' active' : ''}" data-tab="${k}">${t.tabs[k]}</button>`).join('');
 }
 
 function renderCards() {
   const t = I18N[lang];
-  const list = PLACES
-    .filter(p => p.cat === activeTab)
-    .map(p => ({ ...p, dist: haversineM(userLat, userLng, p.lat, p.lng) }))
-    .sort((a, b) => a.dist - b.dist);
-
+  const list = rankedPlaces(p => p.cat === activeTab);
   const box = document.getElementById('cards');
-  if (!list.length) {
-    box.innerHTML = `<div class="empty">${t.empty}</div>`;
-    return;
-  }
+  if (!list.length) { box.innerHTML = `<div class="empty">${t.empty}</div>`; return; }
   box.innerHTML = list.map(p => `
-    <article class="card">
+    <article class="card" data-id="${p.id}">
       <div class="card-icon">${p.emoji}</div>
       <div class="card-body">
         <div class="card-name">${placeName(p)}</div>
         <div class="card-why">${placeWhy(p)}</div>
-        <div class="card-meta">
-          <span class="dist">${distLabel(p.dist)}</span>
-          <span class="pill">${p.area}</span>
-        </div>
+        <div class="card-reason">${placeReason(p)}</div>
+        <div class="card-meta"><span class="dist">${distLabel(p.dist)}</span><span class="pill">${p.area}</span></div>
         <a class="maps-btn" href="${mapsUrl(p)}" target="_blank" rel="noopener noreferrer">🗺️ ${t.maps}</a>
       </div>
-    </article>
-  `).join('');
+    </article>`).join('');
 }
 
 function refresh() {
   renderChrome();
-  if (pretendId) {
-    const sel = document.getElementById('pretendSelect');
-    if (sel) sel.value = pretendId;
-  }
-  renderLoc();
-  updateContext();
-  renderCards();
+  if (pretendId) { const sel = document.getElementById('pretendSelect'); if (sel) sel.value = pretendId; }
+  renderLoc(); updateRemind(); updateContext(); renderCards(); checkSpeechSupport();
 }
 
-// —— Ask: keyword / tag matching (NOT real AI) ——
+function speak(text) {
+  if (!voiceOn || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\n+/g, ' ').slice(0, 400));
+    u.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
+    u.rate = 1.0;
+    window.speechSynthesis.speak(u);
+  } catch (_) {}
+}
+
+function appendBubble(role, html, speakText) {
+  const thread = document.getElementById('chatThread');
+  const div = document.createElement('div');
+  div.className = `bubble ${role}`;
+  div.innerHTML = html;
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+  if (role === 'bot' && speakText) speak(speakText);
+}
+
+function miniCardsHtml(places) {
+  if (!places || !places.length) return '';
+  return `<div class="mini-cards">${places.map(p => `
+    <div class="mini-card">
+      <strong>${p.emoji || ''} ${placeName(p)}</strong>
+      <div>${placeWhy(p)}</div>
+      <div class="why">${placeReason(p)} · ${distLabel(p.dist)}</div>
+      <a href="${mapsUrl(p)}" target="_blank" rel="noopener noreferrer">🗺️ ${I18N[lang].maps}</a>
+    </div>`).join('')}</div>`;
+}
+
+function taxiCardHtml() {
+  const uber = 'https://m.uber.com/ul/';
+  const didi = mapsSearch('DiDi Melbourne');
+  const cabs = mapsSearch('13cabs Melbourne');
+  const dirs = mapsDirections();
+  if (lang === 'zh') {
+    return `需要打车的话，我帮你打开打车应用或导航～（不会替你叫车，你自己确认上车点）
+<div class="action-row">
+  <a class="action-btn" href="${uber}" target="_blank" rel="noopener">🚗 打开 Uber</a>
+  <a class="action-btn" href="${didi}" target="_blank" rel="noopener">🚕 搜 DiDi</a>
+  <a class="action-btn" href="${cabs}" target="_blank" rel="noopener">🚖 搜 13cabs</a>
+  <a class="action-btn" href="${dirs}" target="_blank" rel="noopener">🗺️ Google 导航</a>
+</div>`;
+  }
+  return `Need a ride? I can open ride apps or directions (you confirm the pickup yourself).
+<div class="action-row">
+  <a class="action-btn" href="${uber}" target="_blank" rel="noopener">🚗 Open Uber</a>
+  <a class="action-btn" href="${didi}" target="_blank" rel="noopener">🚕 Search DiDi</a>
+  <a class="action-btn" href="${cabs}" target="_blank" rel="noopener">🚖 Search 13cabs</a>
+  <a class="action-btn" href="${dirs}" target="_blank" rel="noopener">🗺️ Google Maps directions</a>
+</div>`;
+}
+
+function hotelsCardHtml() {
+  const url = mapsSearch(`hotels near ${userLat},${userLng}`);
+  if (lang === 'zh') {
+    return `附近酒店我不会编名字和价格——直接用 Google 地图搜「附近酒店」最靠谱。
+<div class="action-row"><a class="action-btn" href="${url}" target="_blank" rel="noopener">🏨 在地图搜附近酒店</a></div>`;
+  }
+  return `I won't invent hotel names or prices — Google Maps “hotels near me” is the reliable way.
+<div class="action-row"><a class="action-btn" href="${url}" target="_blank" rel="noopener">🏨 Search hotels nearby</a></div>`;
+}
+
+function detectIntents(lower) {
+  const intents = [];
+  if (/打车|叫车|uber|didi|taxi|ride|cab|13cabs|网约车/.test(lower)) intents.push('taxi');
+  if (/药房|药店|chemist|pharmacy|药妆|蜂蜜|绵羊油|manuka|lanolin/.test(lower)) intents.push('pharmacy');
+  if (/游泳|泳池|swim|pool|baths|msac/.test(lower)) intents.push('swim');
+  if (/酒店|旅馆|住宿|hotel|hostel|stay|住哪/.test(lower)) intents.push('hotel');
+  if (/带孩子|孩子|小朋友|kids?|child|family|亲子/.test(lower)) intents.push('kids');
+  if (/下雨|雨天|rain|indoor|室内|wet/.test(lower)) intents.push('rain');
+  if (/吃|美食|好吃|food|eat|restaurant|咖啡|brunch|dumpling|可颂|午饭|晚饭|早餐|下午茶/.test(lower)) intents.push('food');
+  if (/特产|买|伴手礼|souvenir|honey|ugg|vegemite|tim\s*tam|jellycat|买什么/.test(lower)) intents.push('buy');
+  if (/免费|free/.test(lower)) intents.push('free');
+  if (/景点|看|逛|sight|see|visit|去哪|去哪儿|where/.test(lower)) intents.push('sight');
+  return intents;
+}
+
 function askAnswer(q) {
   const raw = (q || '').trim();
   if (!raw) return null;
   const lower = raw.toLowerCase();
+  const intents = detectIntents(lower);
+  const t = I18N[lang];
+  let html = '', speakText = '', places = [];
 
-  // Intent heuristics
-  const intents = [];
-  if (/带孩子|孩子|小朋友|kids?|child|family|亲子/.test(lower)) intents.push('kids');
-  if (/下雨|雨天|rain|indoor|室内|wet/.test(lower)) intents.push('rain');
-  if (/吃|美食|好吃|food|eat|restaurant|咖啡|brunch|dumpling|可颂/.test(lower)) intents.push('food');
-  if (/特产|买|伴手礼|souvenir|honey|蜂蜜|ugg|vegemite|tim\s*tam|绵羊油|jellycat|买什么/.test(lower)) intents.push('buy');
-  if (/免费|free/.test(lower)) intents.push('free');
-  if (/景点|看|逛|sight|see|visit|去哪|去哪儿|where/.test(lower)) intents.push('sight');
+  if (intents.includes('taxi')) {
+    const intro = lang === 'zh' ? '好的，要打车对吧？' : 'Sure — looking for a ride?';
+    html = intro + '\n' + taxiCardHtml() + `<span class="note">${t.askNote}</span>`;
+    return { html, speakText: intro };
+  }
+  if (intents.includes('hotel')) {
+    const intro = lang === 'zh' ? '找附近酒店的话：' : 'For hotels nearby:';
+    html = intro + '\n' + hotelsCardHtml() + `<span class="note">${t.askNote}</span>`;
+    return { html, speakText: intro };
+  }
+  if (intents.includes('pharmacy')) {
+    places = rankedPlaces(p => (p.tags || []).some(x => /chemist|pharmacy|药房|honey|lanolin/.test(x))).slice(0, 4);
+    const intro = lang === 'zh'
+      ? (prefs.kids ? '附近药房这些比较方便（带着孩子出门买药也省事）：' : '附近药房可以看这些：')
+      : (prefs.kids ? 'Handy chemists nearby (easy with kids in tow):' : 'Chemists nearby:');
+    html = intro + miniCardsHtml(places) + `<span class="note">${t.askNote}</span>`;
+    return { html, speakText: intro + ' ' + places.map(p => placeName(p)).join('、') };
+  }
+  if (intents.includes('swim')) {
+    places = rankedPlaces(p => (p.tags || []).some(x => /swim|pool|游泳|泳池/.test(x))).slice(0, 4);
+    const intro = lang === 'zh' ? '想游泳的话，这些是墨尔本真实的公共泳池：' : 'For a swim, these are real public pools in Melbourne:';
+    html = intro + miniCardsHtml(places) + `<span class="note">${t.askNote}</span>`;
+    return { html, speakText: intro + ' ' + places.map(p => placeName(p)).join(', ') };
+  }
+  if (intents.includes('food') && foodSuppressed() && !intents.includes('kids')) {
+    const msg = lang === 'zh'
+      ? '你刚说吃过了，我先少推餐厅～要不要改看景点、特产，还是去游泳？'
+      : "You said you just ate — I'll hold the restaurant tips. Sights, souvenirs, or a swim instead?";
+    return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg };
+  }
 
-  // Score places
   const scored = PLACES.map(p => {
-    let score = 0;
+    let score = prefScore(p);
     const tags = (p.tags || []).map(x => x.toLowerCase());
     const blob = (p.nameZh + p.nameEn + p.whyZh + p.whyEn + tags.join(' ')).toLowerCase();
-
-    if (intents.includes('kids') && (p.cat === 'kids' || tags.includes('kids') || tags.includes('带孩子'))) score += 5;
-    if (intents.includes('rain') && (tags.includes('rain') || tags.includes('indoor') || tags.includes('下雨') || tags.includes('室内'))) score += 5;
-    if (intents.includes('food') && (p.cat === 'food' || tags.includes('food') || tags.includes('美食'))) score += 5;
-    if (intents.includes('buy') && (p.cat === 'buy' || tags.includes('souvenir') || tags.includes('特产'))) score += 5;
-    if (intents.includes('free') && (tags.includes('free') || tags.includes('免费'))) score += 5;
+    if (intents.includes('kids') && (p.cat === 'kids' || tags.includes('kids') || tags.includes('带孩子'))) score += 6;
+    if (intents.includes('rain') && (tags.includes('rain') || tags.includes('indoor') || tags.includes('下雨') || tags.includes('室内'))) score += 6;
+    if (intents.includes('food') && (p.cat === 'food' || tags.includes('food') || tags.includes('美食'))) score += 6;
+    if (intents.includes('buy') && (p.cat === 'buy' || tags.includes('souvenir') || tags.includes('特产'))) score += 6;
+    if (intents.includes('free') && (tags.includes('free') || tags.includes('免费'))) score += 6;
     if (intents.includes('sight') && p.cat === 'sight') score += 2;
-
-    // Direct keyword hits in tags / names
-    for (const tag of tags) {
-      if (lower.includes(tag) || tag.includes(lower.slice(0, 4))) score += 2;
-    }
+    if (prefs.noSpicy && tags.includes('spicy')) score -= 4;
     const words = lower.split(/[\s,，、？?！!]+/).filter(w => w.length >= 2);
-    for (const w of words) {
-      if (blob.includes(w)) score += 1;
-    }
-
+    for (const w of words) { if (blob.includes(w)) score += 1; }
     const dist = haversineM(userLat, userLng, p.lat, p.lng);
-    // slight preference for nearer
     score += Math.max(0, 3 - dist / 2000);
-    return { p, score, dist };
-  }).filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score || a.dist - b.dist)
-    .slice(0, 4);
-
-  const t = I18N[lang];
+    return { ...p, score, dist };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score || a.dist - b.dist).slice(0, 4);
 
   if (!scored.length) {
-    return lang === 'zh'
-      ? `嗯，我暂时没太听懂「${raw}」。你可以试试：「带孩子去哪」「下雨天去哪」「附近好吃的」「买什么特产」或「免费的景点」。`
-      : `Hmm, I\'m not sure about “${raw}” yet. Try: kids activities, rainy day ideas, good food nearby, souvenirs, or free sights.`;
+    const msg = lang === 'zh'
+      ? `嗯，我暂时没太听懂「${raw}」。可以试试：带孩子、下雨天、好吃的、特产、免费景点、打车、药房、游泳、酒店。`
+      : `Hmm, not sure about “${raw}”. Try: kids, rainy day, food, souvenirs, free sights, ride, pharmacy, swim, hotels.`;
+    return { html: msg + `<span class="note">${t.askNote}</span>`, speakText: msg };
   }
-
-  const lines = scored.map((x, i) => {
-    const n = placeName(x.p);
-    const w = placeWhy(x.p);
-    const d = distLabel(x.dist);
-    return lang === 'zh'
-      ? `${i + 1}. ${x.p.emoji} ${n}（${d}）— ${w}`
-      : `${i + 1}. ${x.p.emoji} ${n} (${d}) — ${w}`;
-  });
 
   let opener;
-  if (intents.includes('kids')) {
-    opener = lang === 'zh' ? '带孩子的话，这几个很合适：' : 'With kids, I\'d suggest:';
-  } else if (intents.includes('rain')) {
-    opener = lang === 'zh' ? '下雨天就躲进这些室内好去处：' : 'On a rainy day, duck into these indoor spots:';
-  } else if (intents.includes('food')) {
-    opener = lang === 'zh' ? '想吃点好的？附近可以考虑：' : 'Hungry? Nearby favourites:';
-  } else if (intents.includes('buy')) {
-    opener = lang === 'zh' ? '买特产可以看这些：' : 'For Aussie specialties, try:';
-  } else if (intents.includes('free')) {
-    opener = lang === 'zh' ? '不想花钱也有好去处：' : 'Great free options:';
-  } else {
-    opener = lang === 'zh' ? '按你的问题，我推荐：' : 'Based on that, I\'d recommend:';
-  }
+  if (intents.includes('kids')) opener = lang === 'zh' ? (prefs.kids ? '因为你带着孩子，这些很合适：' : '带孩子的话，这几个很合适：') : (prefs.kids ? "Because you're with kids, I'd suggest:" : "With kids, I'd suggest:");
+  else if (intents.includes('rain')) opener = lang === 'zh' ? '下雨天就躲进这些室内好去处：' : 'On a rainy day, duck into these indoor spots:';
+  else if (intents.includes('food')) opener = lang === 'zh' ? '想吃点好的？附近可以考虑：' : 'Hungry? Nearby favourites:';
+  else if (intents.includes('buy')) opener = lang === 'zh' ? '买特产可以看这些：' : 'For Aussie specialties, try:';
+  else if (intents.includes('free')) opener = lang === 'zh' ? '不想花钱也有好去处：' : 'Great free options:';
+  else opener = lang === 'zh' ? '按你的问题，我推荐：' : "Based on that, I'd recommend:";
 
-  return opener + '\n\n' + lines.join('\n\n') + `\n\n<span class="note">${t.askNote}</span>`;
+  html = opener + miniCardsHtml(scored) + `<span class="note">${t.askNote}</span>`;
+  speakText = opener + ' ' + scored.map(p => placeName(p)).join(lang === 'zh' ? '、' : ', ');
+  return { html, speakText };
 }
 
 function doAsk(q) {
-  const reply = document.getElementById('askReply');
-  const ans = askAnswer(q);
-  if (!ans) {
-    reply.classList.remove('show');
-    return;
-  }
-  reply.innerHTML = ans.replace(/\n/g, '<br>');
-  reply.classList.add('show');
+  const raw = (q || '').trim();
+  if (!raw) return;
+  appendBubble('user', escapeHtml(raw));
+  const ans = askAnswer(raw);
+  if (!ans) return;
+  appendBubble('bot', ans.html, ans.speakText);
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// —— Geolocation ——
 function setLocation(lat, lng, name, fromPretendId) {
-  userLat = lat;
-  userLng = lng;
+  userLat = lat; userLng = lng;
   locName = name || '';
   if (fromPretendId !== undefined) pretendId = fromPretendId;
   refresh();
-  // Refresh Ask reply with new distances if one is showing
-  const q = document.getElementById('askInput').value;
-  if (q && document.getElementById('askReply').classList.contains('show')) doAsk(q);
+  checkProximityNudge();
 }
 
 function locate() {
@@ -1134,74 +1121,192 @@ function locate() {
   document.getElementById('locLabel').textContent = t.locating;
   if (!navigator.geolocation) {
     toast(t.locFail);
-    locName = lang === 'zh' ? PRETEND_SPOTS[0].nameZh : PRETEND_SPOTS[0].nameEn;
-    setLocation(PRETEND_SPOTS[0].lat, PRETEND_SPOTS[0].lng, locName, 'flinders');
+    setLocation(PRETEND_SPOTS[0].lat, PRETEND_SPOTS[0].lng,
+      lang === 'zh' ? PRETEND_SPOTS[0].nameZh : PRETEND_SPOTS[0].nameEn, 'flinders');
     return;
   }
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      setLocation(pos.coords.latitude, pos.coords.longitude, '', null);
-      toast(t.locOk);
-    },
+    (pos) => { setLocation(pos.coords.latitude, pos.coords.longitude, '', null); toast(t.locOk); startWatch(); },
     () => {
       toast(t.locFail);
-      locName = lang === 'zh' ? PRETEND_SPOTS[0].nameZh : PRETEND_SPOTS[0].nameEn;
-      setLocation(PRETEND_SPOTS[0].lat, PRETEND_SPOTS[0].lng, locName, 'flinders');
+      setLocation(PRETEND_SPOTS[0].lat, PRETEND_SPOTS[0].lng,
+        lang === 'zh' ? PRETEND_SPOTS[0].nameZh : PRETEND_SPOTS[0].nameEn, 'flinders');
     },
     { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
   );
 }
 
-// —— Events ——
-document.getElementById('langBtn').addEventListener('click', () => {
-  lang = lang === 'zh' ? 'en' : 'zh';
-  // clear ask reply language mismatch
-  const reply = document.getElementById('askReply');
-  if (reply.classList.contains('show')) {
-    const q = document.getElementById('askInput').value;
-    if (q) doAsk(q);
-    else reply.classList.remove('show');
+function startWatch() {
+  if (watchId != null || !navigator.geolocation) return;
+  watchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      if (pretendId) return;
+      userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+      renderLoc(); updateContext(); updateRemind(); checkProximityNudge(); renderCards();
+    },
+    () => {},
+    { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 }
+  );
+}
+
+function getSpeechRecognition() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function checkSpeechSupport() {
+  const SR = getSpeechRecognition();
+  const fb = document.getElementById('speechFallback');
+  const hold = document.getElementById('holdBtn');
+  if (!SR) {
+    fb.textContent = I18N[lang].speechNo;
+    fb.classList.add('show');
+    hold.disabled = true;
+    return false;
   }
-  refresh();
-});
+  fb.classList.remove('show');
+  hold.disabled = false;
+  return true;
+}
 
+function startListening() {
+  const SR = getSpeechRecognition();
+  if (!SR) { checkSpeechSupport(); return; }
+  if (recognizing) return;
+  try {
+    recognition = new SR();
+    recognition.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognizing = true;
+    document.getElementById('holdBtn').classList.add('listening');
+    document.getElementById('holdBtn').textContent = I18N[lang].holding;
+    document.getElementById('liveTranscript').classList.add('show');
+    document.getElementById('transcriptText').textContent = '…';
+    let finalText = '';
+    recognition.onresult = (ev) => {
+      let interim = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      document.getElementById('transcriptText').textContent = (finalText || interim || '…').trim();
+    };
+    recognition.onerror = (ev) => {
+      recognizing = false;
+      document.getElementById('holdBtn').classList.remove('listening');
+      document.getElementById('holdBtn').textContent = I18N[lang].hold;
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        toast(I18N[lang].speechDenied);
+        document.getElementById('speechFallback').textContent = I18N[lang].speechDenied;
+        document.getElementById('speechFallback').classList.add('show');
+      } else if (ev.error !== 'aborted') {
+        toast(I18N[lang].speechErr);
+      }
+    };
+    recognition.onend = () => {
+      recognizing = false;
+      document.getElementById('holdBtn').classList.remove('listening');
+      document.getElementById('holdBtn').textContent = I18N[lang].hold;
+      const said = (finalText || document.getElementById('transcriptText').textContent || '').trim();
+      if (said && said !== '…') {
+        document.getElementById('askInput').value = said;
+        doAsk(said);
+      }
+      setTimeout(() => document.getElementById('liveTranscript').classList.remove('show'), 1500);
+    };
+    recognition.start();
+  } catch (e) {
+    recognizing = false;
+    toast(I18N[lang].speechErr);
+  }
+}
+
+function stopListening() {
+  if (recognition && recognizing) {
+    try { recognition.stop(); } catch (_) {}
+  }
+}
+
+document.getElementById('langBtn').addEventListener('click', () => { lang = lang === 'zh' ? 'en' : 'zh'; refresh(); });
 document.getElementById('relocateBtn').addEventListener('click', locate);
-
 document.getElementById('pretendSelect').addEventListener('change', (e) => {
   const id = e.target.value;
   const spot = PRETEND_SPOTS.find(s => s.id === id);
   if (!spot) return;
-  const name = lang === 'zh' ? spot.nameZh : spot.nameEn;
-  setLocation(spot.lat, spot.lng, name, id);
+  setLocation(spot.lat, spot.lng, lang === 'zh' ? spot.nameZh : spot.nameEn, id);
 });
-
 document.getElementById('tabs').addEventListener('click', (e) => {
   const btn = e.target.closest('.tab');
   if (!btn) return;
   activeTab = btn.dataset.tab;
   refresh();
 });
-
 document.getElementById('chips').addEventListener('click', (e) => {
   const btn = e.target.closest('.chip');
   if (!btn) return;
-  const q = btn.textContent;
-  document.getElementById('askInput').value = q;
-  doAsk(q);
+  document.getElementById('askInput').value = btn.textContent;
+  doAsk(btn.textContent);
 });
+document.getElementById('askBtn').addEventListener('click', () => doAsk(document.getElementById('askInput').value));
+document.getElementById('askInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doAsk(e.target.value); });
+document.getElementById('justAteBtn').addEventListener('click', () => {
+  ateUntil = Date.now() + 2 * 60 * 60 * 1000;
+  localStorage.setItem(LS_ATE, String(ateUntil));
+  toast(I18N[lang].justAteDone);
+  updateRemind();
+});
+document.getElementById('voiceToggle').addEventListener('click', () => {
+  voiceOn = !voiceOn;
+  localStorage.setItem(LS_VOICE, voiceOn ? '1' : '0');
+  if (!voiceOn && window.speechSynthesis) window.speechSynthesis.cancel();
+  refresh();
+});
+document.getElementById('prefsBtn').addEventListener('click', () => {
+  document.getElementById('prefKids').checked = !!prefs.kids;
+  document.getElementById('prefNoSpicy').checked = !!prefs.noSpicy;
+  document.getElementById('prefBudget').checked = !!prefs.budget;
+  document.getElementById('prefPhotos').checked = !!prefs.photos;
+  document.getElementById('prefShop').checked = !!prefs.shopping;
+  document.getElementById('prefNature').checked = !!prefs.nature;
+  document.getElementById('sheetBackdrop').classList.add('show');
+  document.getElementById('prefsSheet').classList.add('show');
+});
+function closePrefs() {
+  prefs.kids = document.getElementById('prefKids').checked;
+  prefs.noSpicy = document.getElementById('prefNoSpicy').checked;
+  prefs.budget = document.getElementById('prefBudget').checked;
+  prefs.photos = document.getElementById('prefPhotos').checked;
+  prefs.shopping = document.getElementById('prefShop').checked;
+  prefs.nature = document.getElementById('prefNature').checked;
+  savePrefs();
+  document.getElementById('sheetBackdrop').classList.remove('show');
+  document.getElementById('prefsSheet').classList.remove('show');
+  refresh();
+}
+document.getElementById('prefsClose').addEventListener('click', closePrefs);
+document.getElementById('sheetBackdrop').addEventListener('click', closePrefs);
 
-document.getElementById('askBtn').addEventListener('click', () => {
-  doAsk(document.getElementById('askInput').value);
+const holdBtn = document.getElementById('holdBtn');
+holdBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  try { holdBtn.setPointerCapture(e.pointerId); } catch (_) {}
+  startListening();
 });
-document.getElementById('askInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') doAsk(e.target.value);
-});
+holdBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopListening(); });
+holdBtn.addEventListener('pointercancel', () => stopListening());
+holdBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// Boot: default pretend Flinders so prototype works without GPS permission
 locName = PRETEND_SPOTS[0].nameZh;
 setLocation(PRETEND_SPOTS[0].lat, PRETEND_SPOTS[0].lng, locName, 'flinders');
-// Then try real geolocation
 locate();
+
+window.__cocoAsk = doAsk;
+window.__cocoAskAnswer = askAnswer;
+window.__cocoSetHour = (h) => { window.__COCO_MOCK_HOUR = h; updateRemind(); };
+window.__cocoSetPrefs = (p) => { Object.assign(prefs, p); savePrefs(); refresh(); };
+window.__cocoJustAte = () => { ateUntil = Date.now() + 2*3600*1000; localStorage.setItem(LS_ATE, String(ateUntil)); updateRemind(); };
+window.__cocoForceNudgeClear = () => { nudged = {}; saveNudged(); };
 </script>
 </body>
 </html>
