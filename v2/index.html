@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v36 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v37 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -739,6 +739,7 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
   <button type="button" class="tab active" data-tab="elders" onclick="switchTab('elders')"></button>
   <button type="button" class="tab" data-tab="messages" onclick="switchTab('messages')"></button>
   <button type="button" class="tab" data-tab="contacts" onclick="switchTab('contacts')"></button>
+  <button type="button" class="tab" data-tab="medicine" onclick="switchTab('medicine')"></button>
   <button type="button" class="tab" data-tab="alerts" onclick="switchTab('alerts')"></button>
   <button type="button" class="tab" data-tab="settings" onclick="switchTab('settings')"></button>
 </div>
@@ -862,6 +863,20 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
       </div>
     </div>
 
+
+    <div id="tabMedicine" class="hidden">
+      <div class="card">
+        <h2 id="medTitle">Medicine</h2>
+        <p class="muted" id="medHint" style="margin-bottom:12px"></p>
+        <div class="form-group">
+          <label id="lblMedElder">Senior</label>
+          <select id="medElderSelect" onchange="renderMedicineTab()"></select>
+        </div>
+        <div id="medList"></div>
+        <button type="button" class="btn btn-primary btn-block" style="margin-top:12px" onclick="startAddMedication()" id="btnAddMed">Add medicine</button>
+      </div>
+    </div>
+
     <div id="tabAlerts" class="hidden">
       <div class="card">
         <h2 id="alertsTitle"></h2>
@@ -978,6 +993,18 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 <div id="cloudBadge" class="cloud-badge hidden" style="position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:10px;z-index:60"></div>
 
 <div id="callOverlay" class="call-overlay hidden" aria-live="assertive"></div>
+
+<div id="medOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="medOverlayTitle">
+  <div class="med-overlay-card">
+    <div class="med-pill-emoji" aria-hidden="true">💊</div>
+    <h2 id="medOverlayTitle">Time for medicine</h2>
+    <div class="med-overlay-name" id="medOverlayName"></div>
+    <div class="med-overlay-note" id="medOverlayNote"></div>
+    <div class="med-overlay-time" id="medOverlayTime"></div>
+    <button type="button" id="medTakenBtn" onclick="confirmMedTaken()">I've taken it</button>
+  </div>
+</div>
+
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
 
@@ -985,12 +1012,12 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 <script src="./cloud.js"></script>
 <script>
 /* ===== Presok cloud config — set mode to 'supabase' after SETUP.md ===== */
-const PRESK_CONFIG = window.PRESK_CONFIG = {
+const PRESK_CONFIG = window.PRESK_CONFIG = Object.assign({
   mode: 'supabase', // 'mock' | 'supabase' | 'local'
   supabaseUrl: 'https://rmxofemhptekiegfkgpn.supabase.co',
   supabaseAnonKey: 'sb_publishable_13eYhbMPK0E1G8VsprJMTg_mEGDleRC',
   mockUrl: 'http://127.0.0.1:8787'
-};
+}, window.PRESK_CONFIG || {});
 
 const STORAGE_KEY = 'presok_v2_ui';
 const DATA_SCHEMA_VERSION = 5; // careReplyHours 12 so +24/+48/+72 demo steps land on ladder 2/3/4
@@ -1145,7 +1172,43 @@ const i18n = {
     noElders: 'No one yet — add your parent above.',
     noContacts: 'No contacts yet',
     noNotifs: 'No alerts yet',
-    toastCheckin: "Checked in — family can see you're OK.",
+    
+    tabMedicine: 'Medicine',
+    medTitle: 'Medicine reminders',
+    medHint: 'Set times for tablets. The senior phone shows a big pill reminder when due (while the app is open). After 30 minutes without confirm, family gets an alert.',
+    lblMedElder: 'For this senior',
+    btnAddMed: 'Add medicine',
+    medEmpty: 'No medicines yet. Tap Add medicine.',
+    medAddTitle: 'Add medicine',
+    medEditTitle: 'Edit medicine',
+    medLblElder: 'Senior',
+    medLblName: 'Medicine name',
+    medLblDose: 'Dose / note (optional)',
+    medLblTimes: 'Times of day',
+    medTimesHelp: '24-hour times, e.g. 08:00, 20:00 (device local / Australia).',
+    medNamePlaceholder: 'Blood pressure tablet',
+    medDosePlaceholder: '1 tablet with water',
+    medActive: 'Active',
+    medInactive: 'Paused',
+    medEdit: 'Edit',
+    medDelete: 'Delete',
+    medDeleteConfirm: 'Delete this medicine reminder?',
+    medSave: 'Save',
+    medCancel: 'Cancel',
+    medBadTimes: 'Enter times like 08:00 or 20:00',
+    medNeedName: 'Please enter a medicine name',
+    medOverlayTitle: 'Time for medicine',
+    medTakenBtn: "I've taken it",
+    medUnknown: 'Medicine',
+    medStatusTaken: 'Taken',
+    medStatusMissed: 'Missed',
+    medStatusDue: 'Due now',
+    medStatusUpcoming: 'Scheduled',
+    toastMedTaken: 'Medicine marked as taken',
+    toastMedTakenFamily: 'Senior took their medicine',
+    toastMedMissedFamily: 'Medicine not confirmed',
+    toastMedFailed: 'Could not save medicine. Try again.',
+toastCheckin: "Checked in — family can see you're OK.",
     toastAdded: 'Added',
     toastDeleted: 'Removed',
     toastSaved: 'Saved',
@@ -1344,7 +1407,44 @@ const i18n = {
     noElders: '还没有人 — 请先在上方添加长辈。',
     noContacts: '还没有联系人',
     noNotifs: '暂无通知',
-    toastCheckin: '签到成功！家人会看到您一切正常。',
+
+
+    tabMedicine: '用药',
+    medTitle: '吃药提醒',
+    medHint: '设置吃药时间。到点时老人手机（App打开时）会全屏显示大💊并响铃；30分钟未确认会通知家属。',
+    lblMedElder: '给这位长辈',
+    btnAddMed: '添加药品',
+    medEmpty: '还没有药品，点“添加药品”。',
+    medAddTitle: '添加药品',
+    medEditTitle: '编辑药品',
+    medLblElder: '长辈',
+    medLblName: '药名',
+    medLblDose: '剂量 / 备注（可选）',
+    medLblTimes: '每天几点吃',
+    medTimesHelp: '24小时制，例如 08:00, 20:00（手机本地 / 澳洲时间）。',
+    medNamePlaceholder: '降压药',
+    medDosePlaceholder: '一片，温水送服',
+    medActive: '启用',
+    medInactive: '已暂停',
+    medEdit: '编辑',
+    medDelete: '删除',
+    medDeleteConfirm: '删除这个吃药提醒？',
+    medSave: '保存',
+    medCancel: '取消',
+    medBadTimes: '请输入时间，如 08:00 或 20:00',
+    medNeedName: '请填写药名',
+    medOverlayTitle: '该吃药了',
+    medTakenBtn: '已吃药',
+    medUnknown: '药品',
+    medStatusTaken: '已吃',
+    medStatusMissed: '漏服',
+    medStatusDue: '该吃了',
+    medStatusUpcoming: '待吃',
+    toastMedTaken: '已记录吃药',
+    toastMedTakenFamily: '长辈已确认吃药',
+    toastMedMissedFamily: '吃药未确认',
+    toastMedFailed: '保存失败，请重试。',
+toastCheckin: '签到成功！家人会看到您一切正常。',
     toastAdded: '已添加',
     toastDeleted: '已删除',
     toastSaved: '已保存',
@@ -1422,7 +1522,9 @@ function defaultState() {
     messages: [
       { id: 'm_seed_e1', elderId: 'e1', from: 'family', durationMs: 3200, at: now - 3600 * 1000, readByElder: true, readByFamily: true },
       { id: 'm_seed_e2', elderId: 'e2', from: 'elder', durationMs: 2100, at: now - 1800 * 1000, readByElder: true, readByFamily: false }
-    ]
+    ],
+    medicationReminders: [],
+    medicationDoses: []
   };
 }
 
@@ -1449,6 +1551,8 @@ function loadState() {
     const merged = Object.assign(defaultState(), s);
     merged.schemaVersion = DATA_SCHEMA_VERSION;
     if (!Array.isArray(merged.messages)) merged.messages = [];
+    if (!Array.isArray(merged.medicationReminders)) merged.medicationReminders = [];
+    if (!Array.isArray(merged.medicationDoses)) merged.medicationDoses = [];
     if (!Array.isArray(merged.elders)) merged.elders = defaultState().elders;
     merged.elders = merged.elders.map(e => {
       if (!e.nick) {
@@ -1782,6 +1886,369 @@ function resetMsgChimeKnown() {
   _knownMsgIds = null;
 }
 
+/* ===== Medication reminders (presok-meds-v37) ===== */
+const MED_MISS_MS = 30 * 60 * 1000;
+const MED_RECHIME_MS = 60 * 1000;
+let _medOverlayDoseId = null;
+let _medRechimeTimer = null;
+let _medLastChimeAt = 0;
+let _knownMedNotifIds = null;
+
+function ensureMedStateArrays() {
+  if (!Array.isArray(state.medicationReminders)) state.medicationReminders = [];
+  if (!Array.isArray(state.medicationDoses)) state.medicationDoses = [];
+}
+
+function formatMedAmpm(hhmm) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || '').trim());
+  if (!m) return String(hhmm || '');
+  let hh = Number(m[1]); const mm = Number(m[2]);
+  const ampm = hh >= 12 ? 'pm' : 'am';
+  const h12 = hh === 0 ? 12 : (hh > 12 ? hh - 12 : hh);
+  return h12 + ':' + String(mm).padStart(2, '0') + ' ' + ampm;
+}
+
+function todayKeyInTz(ms, tz) {
+  try {
+    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz || 'Australia/Melbourne', year: 'numeric', month: '2-digit', day: '2-digit' });
+    return fmt.format(new Date(ms)); // YYYY-MM-DD
+  } catch (e) {
+    const d = new Date(ms);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+}
+
+function doseDayKey(dose) {
+  const rem = (state.medicationReminders || []).find(r => r.id === dose.reminderId);
+  const tz = (rem && rem.timezone) || 'Australia/Melbourne';
+  return todayKeyInTz(dose.dueAt || now(), tz);
+}
+
+function reminderById(id) {
+  return (state.medicationReminders || []).find(r => r.id === id) || null;
+}
+
+function getDueUntakenDosesForElder(elderId) {
+  ensureMedStateArrays();
+  const tnow = now();
+  return (state.medicationDoses || []).filter(d => {
+    if (d.elderId !== elderId) return false;
+    if (d.status !== 'pending') return false;
+    if (d.dueAt == null) return false;
+    if (d.dueAt > tnow) return false;
+    // still show until taken or marked missed (missed stays pending on client until sweep)
+    return true;
+  }).sort((a, b) => a.dueAt - b.dueAt);
+}
+
+function stopMedRechime() {
+  if (_medRechimeTimer) { clearInterval(_medRechimeTimer); _medRechimeTimer = null; }
+}
+
+function playMedChime() {
+  try {
+    playMsgChime();
+  } catch (e) {}
+  try { if (navigator.vibrate) navigator.vibrate([40, 30, 40, 30, 60]); } catch (e) {}
+}
+
+function hideMedOverlay() {
+  const el = document.getElementById('medOverlay');
+  if (el) el.classList.add('hidden');
+  _medOverlayDoseId = null;
+  stopMedRechime();
+}
+
+function showMedOverlay(dose) {
+  const el = document.getElementById('medOverlay');
+  if (!el || !dose) return;
+  const rem = reminderById(dose.reminderId);
+  const name = rem ? rem.name : t('medUnknown');
+  const note = rem && rem.doseNote ? rem.doseNote : '';
+  document.getElementById('medOverlayName').textContent = name;
+  const noteEl = document.getElementById('medOverlayNote');
+  if (noteEl) {
+    noteEl.textContent = note ? note : formatMedAmpm(dose.timeLocal);
+    noteEl.classList.toggle('hidden', !note && !dose.timeLocal);
+  }
+  const timeEl = document.getElementById('medOverlayTime');
+  if (timeEl) timeEl.textContent = formatMedAmpm(dose.timeLocal);
+  const btn = document.getElementById('medTakenBtn');
+  if (btn) btn.textContent = t('medTakenBtn');
+  const title = document.getElementById('medOverlayTitle');
+  if (title) title.textContent = t('medOverlayTitle');
+  el.classList.remove('hidden');
+  const changed = _medOverlayDoseId !== dose.id;
+  _medOverlayDoseId = dose.id;
+  if (changed || (now() - _medLastChimeAt) > MED_RECHIME_MS - 1000) {
+    playMedChime();
+    _medLastChimeAt = now();
+  }
+  stopMedRechime();
+  _medRechimeTimer = setInterval(() => {
+    if (!_medOverlayDoseId) { stopMedRechime(); return; }
+    playMedChime();
+    _medLastChimeAt = now();
+  }, MED_RECHIME_MS);
+}
+
+function updateMedOverlay() {
+  if (role !== 'elder') { hideMedOverlay(); return; }
+  const elder = getActiveElder();
+  if (!elder) { hideMedOverlay(); return; }
+  const due = getDueUntakenDosesForElder(elder.id);
+  if (!due.length) { hideMedOverlay(); return; }
+  // Prefer oldest due pending
+  showMedOverlay(due[0]);
+}
+
+async function confirmMedTaken() {
+  if (!_medOverlayDoseId) return;
+  const doseId = _medOverlayDoseId;
+  try {
+    if (cloud && cloudReady && typeof cloud.markMedicationTaken === 'function') {
+      await cloud.markMedicationTaken(doseId);
+      await pullCloudState({ silent: true });
+    } else {
+      ensureMedStateArrays();
+      const d = state.medicationDoses.find(x => x.id === doseId);
+      if (d) {
+        d.status = 'taken';
+        d.takenAt = now();
+        const rem = reminderById(d.reminderId);
+        const elder = state.elders.find(e => e.id === d.elderId);
+        state.notifications.unshift({
+          id: 'n_med_' + doseId,
+          level: 'info',
+          kind: 'medTaken',
+          elderId: d.elderId,
+          message: (elder ? elder.name : 'Senior') + ' took medicine: ' + (rem ? rem.name : 'Medicine') + ' (' + d.timeLocal + ')',
+          at: now(),
+        });
+        saveState();
+      }
+    }
+    hideMedOverlay();
+    toast(t('toastMedTaken'));
+    render();
+  } catch (e) {
+    console.warn(e);
+    toast(t('toastMedFailed'));
+  }
+}
+
+function considerNewMedNotifications(notifs) {
+  const list = notifs || [];
+  const ids = list.map(n => n.id).filter(Boolean);
+  if (_knownMedNotifIds === null) {
+    _knownMedNotifIds = new Set(ids);
+    return;
+  }
+  if (role !== 'family') {
+    ids.forEach(id => _knownMedNotifIds.add(id));
+    return;
+  }
+  const freshTaken = list.filter(n => n && n.id && !_knownMedNotifIds.has(n.id) && n.kind === 'medTaken');
+  const freshMissed = list.filter(n => n && n.id && !_knownMedNotifIds.has(n.id) && n.kind === 'medMissed');
+  ids.forEach(id => _knownMedNotifIds.add(id));
+  if (_knownMedNotifIds.size > 200) _knownMedNotifIds = new Set(ids.slice(0, 120));
+  if (freshTaken.length) {
+    try { playMsgChime(); } catch (e) {}
+    toast(t('toastMedTakenFamily'));
+  }
+  if (freshMissed.length) {
+    try { playMsgChime(); } catch (e) {}
+    const newest = freshMissed[0];
+    toast(sanitizeAlertText(newest.message || t('toastMedMissedFamily')));
+    try { browserNotify('Presok', newest.message || ''); } catch (e) {}
+  }
+}
+
+function resetMedNotifKnown() { _knownMedNotifIds = null; }
+
+function renderMedicineTab() {
+  ensureMedStateArrays();
+  const root = document.getElementById('medList');
+  const hint = document.getElementById('medHint');
+  if (hint) hint.textContent = t('medHint');
+  const title = document.getElementById('medTitle');
+  if (title) title.textContent = t('medTitle');
+  const btnAdd = document.getElementById('btnAddMed');
+  if (btnAdd) btnAdd.textContent = t('btnAddMed');
+  const elderSel = document.getElementById('medElderSelect');
+  if (elderSel) {
+    const cur = elderSel.value;
+    elderSel.innerHTML = (state.elders || []).map(e =>
+      `<option value="${escapeHtml(e.id)}">${escapeHtml(elderTitle(e))}</option>`
+    ).join('');
+    if (cur && [...elderSel.options].some(o => o.value === cur)) elderSel.value = cur;
+    else if (state.activeElderId) elderSel.value = state.activeElderId;
+  }
+  if (!root) return;
+  const elderId = elderSel && elderSel.value;
+  const reminders = (state.medicationReminders || []).filter(r => !elderId || r.elderId === elderId);
+  if (!reminders.length) {
+    root.innerHTML = `<div class="empty"><div class="emoji">💊</div>${escapeHtml(t('medEmpty'))}</div>`;
+    return;
+  }
+  const today = todayKeyInTz(now(), 'Australia/Melbourne');
+  root.innerHTML = reminders.map(r => {
+    const doses = (state.medicationDoses || []).filter(d => d.reminderId === r.id && doseDayKey(d) === today)
+      .sort((a, b) => (a.timeLocal || '').localeCompare(b.timeLocal || ''));
+    // If no doses yet, show scheduled times as due/upcoming
+    const times = (r.timesLocal || []).slice().sort();
+    let doseHtml;
+    if (doses.length) {
+      doseHtml = doses.map(d => {
+        let st = d.status;
+        if (st === 'pending' && d.dueAt != null && d.dueAt > now()) st = 'upcoming';
+        else if (st === 'pending' && d.dueAt != null && d.dueAt <= now()) st = 'due';
+        const label = st === 'taken' ? t('medStatusTaken') + (d.takenAt ? ' · ' + formatTime(d.takenAt) : '')
+          : st === 'missed' ? t('medStatusMissed')
+          : st === 'due' ? t('medStatusDue')
+          : t('medStatusUpcoming');
+        const cls = st === 'taken' ? 'ok' : (st === 'missed' || st === 'due' ? 'warn' : '');
+        return `<div class="med-dose-row ${cls}"><span>${escapeHtml(formatMedAmpm(d.timeLocal))}</span><span>${escapeHtml(label)}</span></div>`;
+      }).join('');
+    } else {
+      doseHtml = times.map(tm => `<div class="med-dose-row"><span>${escapeHtml(formatMedAmpm(tm))}</span><span>${escapeHtml(t('medStatusUpcoming'))}</span></div>`).join('');
+    }
+    const activeLabel = r.active ? t('medActive') : t('medInactive');
+    return `<div class="med-card ${r.active ? '' : 'inactive'}" data-id="${escapeHtml(r.id)}">
+      <div class="med-card-head">
+        <div>
+          <div class="med-name">💊 ${escapeHtml(r.name)}</div>
+          <div class="muted">${escapeHtml(r.doseNote || '')}</div>
+          <div class="muted">${escapeHtml(activeLabel)} · ${escapeHtml(times.map(formatMedAmpm).join(', '))}</div>
+        </div>
+        <div class="med-card-actions">
+          <button type="button" class="btn btn-secondary" onclick="editMedication('${escapeHtml(r.id)}')">${escapeHtml(t('medEdit'))}</button>
+          <button type="button" class="btn btn-danger" onclick="deleteMedication('${escapeHtml(r.id)}')">${escapeHtml(t('medDelete'))}</button>
+        </div>
+      </div>
+      <div class="med-doses">${doseHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function openMedForm(editId) {
+  ensureMedStateArrays();
+  const rem = editId ? reminderById(editId) : null;
+  const elders = state.elders || [];
+  const elderOpts = elders.map(e => `<option value="${escapeHtml(e.id)}" ${rem && rem.elderId === e.id ? 'selected' : ''}>${escapeHtml(elderTitle(e))}</option>`).join('');
+  const times = rem ? (rem.timesLocal || []).join(', ') : '08:00';
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal" style="max-width:420px">
+        <h2>${escapeHtml(rem ? t('medEditTitle') : t('medAddTitle'))}</h2>
+        <div class="form-group">
+          <label>${escapeHtml(t('medLblElder'))}</label>
+          <select id="medFormElder">${elderOpts}</select>
+        </div>
+        <div class="form-group">
+          <label>${escapeHtml(t('medLblName'))}</label>
+          <input type="text" id="medFormName" maxlength="60" value="${escapeHtml(rem ? rem.name : '')}" placeholder="${escapeHtml(t('medNamePlaceholder'))}">
+        </div>
+        <div class="form-group">
+          <label>${escapeHtml(t('medLblDose'))}</label>
+          <input type="text" id="medFormDose" maxlength="80" value="${escapeHtml(rem ? (rem.doseNote || '') : '')}" placeholder="${escapeHtml(t('medDosePlaceholder'))}">
+        </div>
+        <div class="form-group">
+          <label>${escapeHtml(t('medLblTimes'))}</label>
+          <input type="text" id="medFormTimes" value="${escapeHtml(times)}" placeholder="08:00, 20:00">
+          <p class="muted" style="margin-top:6px">${escapeHtml(t('medTimesHelp'))}</p>
+        </div>
+        <label style="display:flex;align-items:center;gap:10px;font-weight:600;margin-bottom:14px">
+          <input type="checkbox" id="medFormActive" ${!rem || rem.active ? 'checked' : ''} style="width:22px;height:22px">
+          <span>${escapeHtml(t('medActive'))}</span>
+        </label>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">${escapeHtml(t('medCancel'))}</button>
+          <button type="button" class="btn btn-primary" onclick="saveMedicationForm('${escapeHtml(editId || '')}')">${escapeHtml(t('medSave'))}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function editMedication(id) { openMedForm(id); }
+function startAddMedication() { openMedForm(''); }
+
+function parseTimesInput(raw) {
+  return String(raw || '').split(/[,;\s]+/).map(s => s.trim()).filter(Boolean).map(s => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(s);
+    if (!m) throw new Error('bad time');
+    const hh = Number(m[1]), mm = Number(m[2]);
+    if (hh > 23 || mm > 59) throw new Error('bad time');
+    return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+  });
+}
+
+async function saveMedicationForm(editId) {
+  const elderId = document.getElementById('medFormElder').value;
+  const name = document.getElementById('medFormName').value.trim();
+  const doseNote = document.getElementById('medFormDose').value.trim();
+  const active = document.getElementById('medFormActive').checked;
+  let times;
+  try { times = parseTimesInput(document.getElementById('medFormTimes').value); }
+  catch (e) { toast(t('medBadTimes')); return; }
+  if (!name) { toast(t('medNeedName')); return; }
+  if (!times.length) { toast(t('medBadTimes')); return; }
+  try {
+    if (cloud && cloudReady) {
+      await cloud.upsertMedicationReminder(elderId, name, doseNote, times, active, editId || null);
+      try { await cloud.ensureMedicationDoses(1); } catch (e) {}
+      await pullCloudState({ silent: true });
+    } else {
+      ensureMedStateArrays();
+      if (editId) {
+        const r = reminderById(editId);
+        if (r) {
+          r.elderId = elderId; r.name = name; r.doseNote = doseNote; r.timesLocal = times; r.active = active;
+        }
+      } else {
+        state.medicationReminders.push({
+          id: 'med_' + Date.now(), elderId, name, doseNote, timesLocal: times,
+          timezone: 'Australia/Melbourne', active
+        });
+      }
+      saveState();
+    }
+    closeModal();
+    toast(t('toastSaved'));
+    renderMedicineTab();
+  } catch (e) {
+    console.warn(e);
+    toast(t('toastMedFailed'));
+  }
+}
+
+async function deleteMedication(id) {
+  if (!id) return;
+  if (!confirm(t('medDeleteConfirm'))) return;
+  try {
+    if (cloud && cloudReady) {
+      await cloud.deleteMedicationReminder(id);
+      await pullCloudState({ silent: true });
+    } else {
+      ensureMedStateArrays();
+      state.medicationReminders = state.medicationReminders.filter(r => r.id !== id);
+      state.medicationDoses = state.medicationDoses.filter(d => d.reminderId !== id);
+      saveState();
+    }
+    toast(t('toastDeleted'));
+    renderMedicineTab();
+  } catch (e) {
+    console.warn(e);
+    toast(t('toastMedFailed'));
+  }
+}
+
+async function maybeEnsureMedDoses() {
+  if (!cloud || !cloudReady) return;
+  if (typeof cloud.ensureMedicationDoses !== 'function') return;
+  try { await cloud.ensureMedicationDoses(1); } catch (e) {}
+}
+
 
 function applyI18n() {
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
@@ -1836,7 +2303,7 @@ function applyI18n() {
   document.getElementById('aboutText').textContent = t('aboutText');
   document.getElementById('newElderName').placeholder = t('elderPlaceholder');
   const tabs = document.querySelectorAll('#familyTabs .tab');
-  const tabKeys = ['tabElders', 'tabMessages', 'tabContacts', 'tabAlerts', 'tabSettings'];
+  const tabKeys = ['tabElders', 'tabMessages', 'tabContacts', 'tabMedicine', 'tabAlerts', 'tabSettings'];
   tabs.forEach((el, i) => {
     const key = tabKeys[i];
     let label = t(key);
@@ -1891,6 +2358,10 @@ function updateCareLadderLabels() {
   set('autoAnswerHelp', 'autoAnswerHelp');
   set('lblMsgChime', 'lblMsgChime');
   set('msgChimeHelp', 'msgChimeHelp');
+  set('medTitle', 'medTitle');
+  set('medHint', 'medHint');
+  set('btnAddMed', 'btnAddMed');
+  set('lblMedElder', 'lblMedElder');
   const ol = document.getElementById('careLadderList');
   if (ol) {
     ol.innerHTML = [1,2,3,4].map(i => `<li>${escapeHtml(t('careStep' + i))}</li>`).join('');
@@ -1930,6 +2401,7 @@ function renderElder() {
   document.getElementById('checkinSub').textContent = recent && status === 'ok' ? t('checkinDoneSub') : t('checkinSub');
   updateSimClock();
   renderElderVoice();
+  try { updateMedOverlay(); } catch (e) {}
   if (state.activeCall && state.activeCall.status === 'ringing' && state.activeCall.elderId === elder.id) {
     showIncomingCall(elder);
   } else if (state.activeCall && state.activeCall.status === 'connected' && state.activeCall.elderId === elder.id && callUiMode !== 'incall') {
@@ -2061,6 +2533,7 @@ function render() {
   document.getElementById('familyTabs').classList.toggle('hidden', role !== 'family');
   if (role === 'elder') renderElder();
   else { renderFamily(); switchTab(familyTab); }
+  try { if (role === 'elder') updateMedOverlay(); } catch (e) {}
   saveState();
 }
 
@@ -2086,7 +2559,7 @@ function toggleRole() {
 
 function switchTab(name) {
   familyTab = name;
-  ['elders', 'messages', 'contacts', 'alerts', 'settings'].forEach(tname => {
+  ['elders', 'messages', 'contacts', 'medicine', 'alerts', 'settings'].forEach(tname => {
     const pane = document.getElementById('tab' + tname.charAt(0).toUpperCase() + tname.slice(1));
     if (pane) pane.classList.toggle('hidden', tname !== name);
   });
@@ -2101,6 +2574,9 @@ function switchTab(name) {
       const thread = document.getElementById('chatThread');
       if (thread) thread.scrollTop = thread.scrollHeight;
     }
+  }
+  if (name === 'medicine') {
+    try { maybeEnsureMedDoses().then(() => renderMedicineTab()); } catch (e) { renderMedicineTab(); }
   }
 }
 
@@ -3547,9 +4023,14 @@ async function pullCloudState(opts) {
       mapStateFromCloud(remote);
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       try { considerNewIncomingMessages(state.messages || []); } catch (e) {}
+      try { considerNewMedNotifications(state.notifications || []); } catch (e) {}
       if (cloudReady) {
         applyI18n();
         render();
+        try { updateMedOverlay(); } catch (e) {}
+        if (role === 'family' && familyTab === 'medicine') {
+          try { renderMedicineTab(); } catch (e) {}
+        }
       }
       setCloudBadge(t('cloudLive'));
       return remote;
@@ -3579,6 +4060,12 @@ window.PresokApp = {
   isMsgChimeEnabled,
   resetMsgChimeKnown,
   get knownMsgIds() { return _knownMsgIds; },
+  updateMedOverlay,
+  confirmMedTaken,
+  renderMedicineTab,
+  considerNewMedNotifications,
+  resetMedNotifKnown,
+  get medOverlayDoseId() { return _medOverlayDoseId; },
 };
 async function bootCloud() {
   cloud = PresokCloud.createCloud(PRESK_CONFIG);
@@ -3686,10 +4173,14 @@ async function maybeSweepMissedForFamily() {
   _lastFamilySweepAt = nowMs;
   try {
     const res = await cloud.sweepMyHouseholdMissed();
-    if (res && res.alerts_created > 0) {
+    const careN = res && Number(res.alerts_created || 0);
+    const medN = res && Number(res.med_alerts_created || 0);
+    if (careN > 0 || medN > 0) {
       await pullCloudState({ silent: true });
       const newest = (state.notifications || [])[0];
-      if (newest && (newest.kind || '').startsWith('care')) browserNotify('Presok', newest.message);
+      if (newest && ((newest.kind || '').startsWith('care') || newest.kind === 'medMissed')) {
+        browserNotify('Presok', newest.message);
+      }
     }
   } catch (e) {
     console.warn('family sweep', e);
@@ -3714,6 +4205,7 @@ function finishBootUi() {
   _bootDone = true;
   try { if (role === 'elder') warmMicForSenior(); } catch (e) {}
   try { maybeSweepMissedForFamily(); } catch (e) {}
+  try { maybeEnsureMedDoses().then(() => { try { updateMedOverlay(); } catch (e) {} }); } catch (e) {}
 }
 
 function maybeBrowserNotifySetup() {
@@ -4128,9 +4620,11 @@ setInterval(() => {
   if (!_bootDone) return;
   if (role === 'elder') renderElder();
   else if (familyTab === 'elders' || familyTab === 'alerts' || familyTab === 'messages') renderFamily();
+  else if (familyTab === 'medicine') renderMedicineTab();
   updateSimClock();
   try { maybeSweepMissedForFamily(); } catch (e) {}
-}, 30000);
+  try { updateMedOverlay(); } catch (e) {}
+}, 15000);
 
 // Start: try cloud session, else show gate (local demo still available)
 bootCloud().catch(err => {

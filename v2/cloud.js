@@ -124,6 +124,49 @@
       if (!storagePath) return null;
       return this.baseUrl + '/voice/' + encodeURIComponent(storagePath);
     }
+    async upsertMedicationReminder(elderId, name, doseNote, times, active, id, timezone) {
+      return this._fetch('/rpc/upsert_medication_reminder', {
+        method: 'POST',
+        body: JSON.stringify({
+          p_elder_id: elderId,
+          p_name: name,
+          p_dose_note: doseNote || null,
+          p_times: times,
+          p_active: active != null ? !!active : true,
+          p_id: id || null,
+          p_timezone: timezone || 'Australia/Melbourne',
+        })
+      });
+    }
+    async deleteMedicationReminder(id) {
+      return this._fetch('/rpc/delete_medication_reminder', {
+        method: 'POST', body: JSON.stringify({ p_id: id })
+      });
+    }
+    async ensureMedicationDoses(days) {
+      return this._fetch('/rpc/ensure_medication_doses', {
+        method: 'POST', body: JSON.stringify({ p_days: days || 1 })
+      });
+    }
+    async markMedicationTaken(doseId) {
+      return this._fetch('/rpc/mark_medication_taken', {
+        method: 'POST', body: JSON.stringify({ p_dose_id: doseId })
+      });
+    }
+    async sweepMyHouseholdMissedMeds() {
+      return this._fetch('/rpc/sweep_my_household_missed_meds', { method: 'POST', body: '{}' });
+    }
+    async testForceMedicationDose(reminderId, dueAt, timeLocal, status) {
+      return this._fetch('/rpc/test_force_medication_dose', {
+        method: 'POST',
+        body: JSON.stringify({
+          reminder_id: reminderId,
+          due_at: dueAt,
+          time_local: timeLocal,
+          status: status || 'pending',
+        })
+      });
+    }
     subscribe(handler) {
       this._handlers.add(handler);
       if (this._es) return () => this._handlers.delete(handler);
@@ -135,7 +178,7 @@
           try { h(type, payload); } catch (e) { console.warn(e); }
         }
       };
-      ['elder', 'message', 'notification', 'household', 'contact', 'messages', 'contacts', 'elder_deleted', 'notifications_cleared', 'contact_deleted']
+      ['elder', 'message', 'notification', 'household', 'contact', 'messages', 'contacts', 'elder_deleted', 'notifications_cleared', 'contact_deleted', 'medication_reminder', 'medication_dose']
         .forEach(t => this._es.addEventListener(t, forward(t)));
       this._es.onerror = () => { /* browser will retry */ };
       return () => this._handlers.delete(handler);
@@ -193,16 +236,18 @@
         .from('household_members').select('*').eq('user_id', user.id);
       if (mErr) throw mErr;
       if (!memberships || !memberships.length) {
-        return { memberships: [], membership: null, household: null, elders: [], contacts: [], messages: [], notifications: [] };
+        return { memberships: [], membership: null, household: null, elders: [], contacts: [], messages: [], notifications: [], medication_reminders: [], medication_doses: [] };
       }
       const membership = memberships.find(m => m.role === 'family') || memberships[0];
       const hid = membership.household_id;
-      const [hRes, eRes, cRes, msgRes, nRes] = await Promise.all([
+      const [hRes, eRes, cRes, msgRes, nRes, mrRes, mdRes] = await Promise.all([
         this.client.from('households').select('*').eq('id', hid).single(),
         this.client.from('elders').select('*').eq('household_id', hid).order('created_at'),
         this.client.from('contacts').select('*').eq('household_id', hid).order('sort_order'),
         this.client.from('messages').select('*').eq('household_id', hid).order('created_at', { ascending: false }),
         this.client.from('notifications').select('*').eq('household_id', hid).order('created_at', { ascending: false }).limit(50),
+        this.client.from('medication_reminders').select('*').eq('household_id', hid).order('created_at'),
+        this.client.from('medication_doses').select('*').eq('household_id', hid).order('due_at', { ascending: false }).limit(200),
       ]);
       if (hRes.error) throw hRes.error;
       return {
@@ -213,6 +258,8 @@
         contacts: cRes.data || [],
         messages: msgRes.data || [],
         notifications: nRes.data || [],
+        medication_reminders: mrRes.data || [],
+        medication_doses: mdRes.data || [],
       };
     }
     async addElder(householdId, name, nick) {
@@ -345,6 +392,38 @@
       if (error) throw error;
       return data.signedUrl;
     }
+    async upsertMedicationReminder(elderId, name, doseNote, times, active, id, timezone) {
+      const { data, error } = await this.client.rpc('upsert_medication_reminder', {
+        p_elder_id: elderId,
+        p_name: name,
+        p_dose_note: doseNote || null,
+        p_times: times,
+        p_active: active != null ? !!active : true,
+        p_id: id || null,
+        p_timezone: timezone || 'Australia/Melbourne',
+      });
+      if (error) throw error;
+      return data;
+    }
+    async deleteMedicationReminder(id) {
+      const { error } = await this.client.rpc('delete_medication_reminder', { p_id: id });
+      if (error) throw error;
+    }
+    async ensureMedicationDoses(days) {
+      const { data, error } = await this.client.rpc('ensure_medication_doses', { p_days: days || 1 });
+      if (error) throw error;
+      return data;
+    }
+    async markMedicationTaken(doseId) {
+      const { data, error } = await this.client.rpc('mark_medication_taken', { p_dose_id: doseId });
+      if (error) throw error;
+      return data;
+    }
+    async sweepMyHouseholdMissedMeds() {
+      const { data, error } = await this.client.rpc('sweep_my_household_missed_meds');
+      if (error) throw error;
+      return data;
+    }
     subscribe(handler) {
       this._handlers.add(handler);
       const notify = (type, payload) => {
@@ -358,6 +437,8 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, (p) => notify('notification', p.new || p.old))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, (p) => notify('contact', p.new || p.old))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'households' }, (p) => notify('household', p.new || p.old))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'medication_reminders' }, (p) => notify('medication_reminder', p.new || p.old))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'medication_doses' }, (p) => notify('medication_dose', p.new || p.old))
         .subscribe();
       this.channels.push(ch);
       return () => this._handlers.delete(handler);
@@ -419,6 +500,25 @@
       message: n.message,
       at: n.created_at ? Date.parse(n.created_at) : Date.now(),
     }));
+    const medicationReminders = (remote.medication_reminders || []).map(r => ({
+      id: r.id,
+      elderId: r.elder_id,
+      name: r.name,
+      doseNote: r.dose_note || '',
+      timesLocal: r.times_local || [],
+      timezone: r.timezone || 'Australia/Melbourne',
+      active: r.active !== false,
+    }));
+    const medicationDoses = (remote.medication_doses || []).map(d => ({
+      id: d.id,
+      reminderId: d.reminder_id,
+      elderId: d.elder_id,
+      timeLocal: d.time_local,
+      dueAt: d.due_at ? Date.parse(d.due_at) : null,
+      status: d.status || 'pending',
+      takenAt: d.taken_at ? Date.parse(d.taken_at) : null,
+      missedNotifiedAt: d.missed_notified_at ? Date.parse(d.missed_notified_at) : null,
+    }));
     const membership = remote.membership;
     return {
       schemaVersion: 5,
@@ -431,7 +531,7 @@
       thresholdHours: h.threshold_hours || 24,
       careReplyHours: h.care_reply_hours != null ? Number(h.care_reply_hours) : 12,
       autoAnswerCalls: !!h.auto_answer_calls,
-      timeOffsetMs: 0,
+      timeOffsetMs: (prev && prev.timeOffsetMs) || 0,
       activeElderId: (membership && membership.elder_id)
         || (prev && prev.activeElderId && elders.some(e => e.id === prev.activeElderId) && prev.activeElderId)
         || (elders[0] && elders[0].id)
@@ -441,6 +541,8 @@
       contacts,
       notifications,
       messages,
+      medicationReminders,
+      medicationDoses,
     };
   }
 
