@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="DailyOK">
+<meta name="apple-mobile-web-app-title" content="Presok">
 <meta name="theme-color" content="#0f766e">
-<meta name="description" content="DailyOK — a simple daily check-in so family and carers know you're alright.">
-<title>DailyOK</title>
+<meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
+<title>Presok</title>
 <style>
 :root {
   --bg: #f0fdf4;
@@ -597,7 +597,7 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 </head>
 <body>
 <header class="topbar">
-  <h1 id="appTitle">DailyOK</h1>
+  <h1 id="appTitle">Presok</h1>
   <div class="role-switch" role="tablist" aria-label="Who is using this phone">
     <button type="button" class="role-tab active" id="roleTabElder" role="tab"
       aria-selected="true" onclick="setRole('elder')"></button>
@@ -825,7 +825,7 @@ const STORAGE_KEY = 'dailyok_v2';
 const DATA_SCHEMA_VERSION = 4; // careReplyHours 12 so +24/+48/+72 demo steps land on ladder 2/3/4
 const i18n = {
   en: {
-    appTitle: 'DailyOK',
+    appTitle: 'Presok',
     roleElder: "I'm the senior",
     roleFamily: 'Family & carers',
     roleSwitchLabel: 'Who is using this phone',
@@ -859,7 +859,7 @@ const i18n = {
     simClock: 'Simulated time: ',
     realTime: '(using real time)',
     careLadderTitle: 'Care steps',
-    careLadderIntro: 'When a check-in is late, DailyOK walks family through clear next steps. Use the demo time buttons to try each step.',
+    careLadderIntro: 'When a check-in is late, Presok walks family through clear next steps. Use the demo time buttons to try each step.',
     careStep1: 'Step 1 — Daily check-in: senior taps I\'m OK (or sends a voice note).',
     careStep2: 'Step 2 — Overdue: remind the senior, and family send a voice message.',
     careStep3: 'Step 3 — No reply within the wait time: family start a video call.',
@@ -937,7 +937,7 @@ const i18n = {
     lblElderName: 'Name',
     btnAddElder: 'Add',
     contactsTitle: 'Emergency contacts',
-    contactsDesc: 'When a check-in is overdue or SOS is pressed, DailyOK simulates notifying these people. Order is the video-call priority for “Video call family”. A full version can send SMS or push alerts.',
+    contactsDesc: 'When a check-in is overdue or SOS is pressed, Presok simulates notifying these people. Order is the video-call priority for “Video call family”. A full version can send SMS or push alerts.',
     lblContactName: 'Name',
     lblContactPhone: 'Mobile number',
     lblContactRole: 'Role',
@@ -958,8 +958,8 @@ const i18n = {
     btnResetAll: 'Reset demo data',
     btnResetDemo: 'Reset demo data',
     resetDemoHelp: 'Reloads Margaret · Mum and John · Dad with sample messages. Clears voice clips on this phone.',
-    aboutTitle: 'About DailyOK',
-    aboutText: 'DailyOK is a prototype. Check-in data stays in this browser (localStorage). Voice notes are stored on this device (IndexedDB). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
+    aboutTitle: 'About Presok',
+    aboutText: 'Presok is a prototype. Check-in data stays in this browser (localStorage). Voice notes are stored on this device (IndexedDB). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
     noElders: 'No one added yet',
     noContacts: 'No contacts yet',
     noNotifs: 'No alerts yet',
@@ -987,7 +987,7 @@ const i18n = {
     elderPlaceholder: 'e.g. Margaret',
   },
   zh: {
-    appTitle: 'DailyOK',
+    appTitle: 'Presok',
     roleElder: '我是长辈',
     roleFamily: '家属 / 护工',
     roleSwitchLabel: '谁在用这部手机',
@@ -1021,7 +1021,7 @@ const i18n = {
     simClock: '当前模拟时间：',
     realTime: '（使用真实时间）',
     careLadderTitle: '护理步骤',
-    careLadderIntro: '签到超时后，DailyOK 会按步骤提示家属。用演示时间按钮可逐级查看。',
+    careLadderIntro: '签到超时后，Presok 会按步骤提示家属。用演示时间按钮可逐级查看。',
     careStep1: '步骤 1 — 日常签到：长辈点「我很好」或发语音。',
     careStep2: '步骤 2 — 超时：提醒长辈，家属发送语音。',
     careStep3: '步骤 3 — 等待时间内无回复：家属发起视频通话。',
@@ -1120,7 +1120,7 @@ const i18n = {
     btnResetAll: '重置演示数据',
     btnResetDemo: '重置演示数据',
     resetDemoHelp: '重新载入「玛格丽特 · 妈妈」和「约翰 · 爸爸」及示例消息，并清除本机语音。',
-    aboutTitle: '关于 DailyOK',
+    aboutTitle: '关于 Presok',
     aboutText: '这是原型。签到数据保存在本浏览器（localStorage），语音保存在本机（IndexedDB）。正式版需要后端、短信/推送、澳洲隐私合规与应用商店账号。澳洲紧急电话：000。',
     noElders: '还没有添加老人',
     noContacts: '还没有联系人',
