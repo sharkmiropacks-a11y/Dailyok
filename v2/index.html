@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v38 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v39 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -722,6 +722,102 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 }
 #addElderCard.primary-setup h2 { font-size: 1.35rem; color: var(--primary); }
 
+
+/* presok-meds-overlay-v39 — full-screen senior medicine reminder (fixed; do not flow into page) */
+#medOverlay.med-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 450;
+  background: rgba(15, 23, 42, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px calc(28px + var(--safe-bottom));
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+#medOverlay.med-overlay.hidden {
+  display: none !important;
+}
+#medOverlay .med-overlay-card {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 28px;
+  padding: 28px 22px 24px;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  border: 4px solid #99f6e4;
+}
+#medOverlay .med-pill-emoji {
+  font-size: 120px;
+  line-height: 1;
+  margin: 4px 0 12px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#medOverlay .med-overlay-card h2 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0 0 14px;
+  line-height: 1.25;
+}
+#medOverlay .med-overlay-name {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+#medOverlay .med-overlay-note {
+  font-size: 1.15rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+#medOverlay .med-overlay-note.hidden {
+  display: none !important;
+}
+#medOverlay .med-overlay-time {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin: 10px 0 22px;
+  font-variant-numeric: tabular-nums;
+}
+#medOverlay #medTakenBtn,
+#medOverlay .med-taken-btn {
+  display: block;
+  width: 100%;
+  min-height: 72px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #16a34a, #15803d);
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 10px 28px rgba(22, 163, 74, 0.4);
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+}
+#medOverlay #medTakenBtn:active,
+#medOverlay .med-taken-btn:active {
+  background: linear-gradient(145deg, #15803d, #166534);
+  transform: scale(0.98);
+}
+
 </style>
 </head>
 <body>
@@ -994,14 +1090,14 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 
 <div id="callOverlay" class="call-overlay hidden" aria-live="assertive"></div>
 
-<div id="medOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="medOverlayTitle">
+<div id="medOverlay" class="med-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="medOverlayTitle">
   <div class="med-overlay-card">
     <div class="med-pill-emoji" aria-hidden="true">💊</div>
     <h2 id="medOverlayTitle">Time for medicine</h2>
     <div class="med-overlay-name" id="medOverlayName"></div>
     <div class="med-overlay-note" id="medOverlayNote"></div>
     <div class="med-overlay-time" id="medOverlayTime"></div>
-    <button type="button" id="medTakenBtn" onclick="confirmMedTaken()">I've taken it</button>
+    <button type="button" class="med-taken-btn" id="medTakenBtn" onclick="confirmMedTaken()">I've taken it</button>
   </div>
 </div>
 
@@ -1886,7 +1982,7 @@ function resetMsgChimeKnown() {
   _knownMsgIds = null;
 }
 
-/* ===== Medication reminders (presok-meds-v37 / sync-v38) ===== */
+/* ===== Medication reminders (presok-meds-v37 / sync-v38 / overlay-v39) ===== */
 const MED_MISS_MS = 30 * 60 * 1000;
 const MED_RECHIME_MS = 60 * 1000;
 let _medOverlayDoseId = null;
