@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v34 -->
+<!-- presok-v35 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -443,6 +443,16 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 .voice-meta .who { font-weight: 700; font-size: 0.95rem; }
 .voice-meta .dur { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
 /* presok-playback-ui-v34 */
+/* presok-msg-chime-v35 */
+@keyframes msgTabPulse {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+}
+.tab.msg-pulse { animation: msgTabPulse 0.55s ease 2; color: var(--alert) !important; }
+.unread-badge.msg-pulse {
+  animation: msgTabPulse 0.55s ease 2;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.35);
+}
 .voice-playback { margin-top: 6px; }
 .voice-bar {
   height: 12px; border-radius: 999px; background: #ccfbf1;
@@ -900,6 +910,14 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
           <p class="muted" id="autoAnswerHelp" style="margin-top:6px;margin-bottom:16px"></p>
         </div>
 
+        <div class="form-group" id="msgChimeGroup">
+          <label style="display:flex;align-items:flex-start;gap:10px;font-weight:600">
+            <input type="checkbox" id="msgChimeCheck" onchange="saveMsgChime()" checked style="width:22px;height:22px;margin-top:2px;flex-shrink:0">
+            <span id="lblMsgChime"></span>
+          </label>
+          <p class="muted" id="msgChimeHelp" style="margin-top:6px;margin-bottom:16px"></p>
+        </div>
+
         <div class="demo-panel" id="familyDemo" style="margin:0 0 16px; background:#f8fafc; border:1px dashed #94a3b8; border-radius:12px; padding:14px">
           <h3 id="demoTitle" style="margin:0 0 10px; font-size:0.95rem; color:#0f766e"></h3>
           <div class="btn-row" style="margin-bottom:8px">
@@ -1021,6 +1039,9 @@ const i18n = {
     careReplyHelp: 'Default 1 hour after becoming overdue (and again before the final alert). Driven by the demo clock.',
     lblAutoAnswer: 'Auto-answer calls from family (demo)',
     autoAnswerHelp: 'Requires the senior\'s consent in real life. In this demo, an incoming call answers itself after a 3-second countdown.',
+    lblMsgChime: 'Sound for new messages',
+    msgChimeHelp: 'Plays a chime and vibrates when a new voice message arrives while this page is open. No sound when the page is closed or the phone is locked (browser limit).',
+    toastNewVoice: 'New voice message',
     stepPill1: 'Step 1 · On track',
     stepPill2: 'Step 2 · Send a voice note',
     stepPill3: 'Step 3 · Video call',
@@ -1217,6 +1238,9 @@ const i18n = {
     careReplyHelp: '默认超时后再等 1 小时（最终告警前再等一轮）。受演示时钟驱动。',
     lblAutoAnswer: '自动接听家属来电（演示）',
     autoAnswerHelp: '正式版需长辈同意。演示中来电会在 3 秒倒计时后自动接听。',
+    lblMsgChime: '新消息提示音',
+    msgChimeHelp: '页面打开时收到新语音会响一声并震动。页面关闭或锁屏时无法响铃（浏览器限制）。',
+    toastNewVoice: '收到新语音消息',
     stepPill1: '步骤 1 · 正常',
     stepPill2: '步骤 2 · 请发语音',
     stepPill3: '步骤 3 · 视频通话',
@@ -1641,6 +1665,124 @@ function toast(msg) {
   toast._t = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
+/* ===== Incoming message chime (presok-msg-chime-v35) ===== */
+const MSG_CHIME_KEY = 'presok_msg_chime';
+let _audioCtx = null;
+let _audioUnlocked = false;
+let _knownMsgIds = null; // null until first cloud snapshot primed
+
+function isMsgChimeEnabled() {
+  try {
+    const v = localStorage.getItem(MSG_CHIME_KEY);
+    if (v === null || v === undefined) return true;
+    return v !== '0' && v !== 'false';
+  } catch (e) { return true; }
+}
+
+function saveMsgChime() {
+  const el = document.getElementById('msgChimeCheck');
+  const on = el ? !!el.checked : true;
+  try { localStorage.setItem(MSG_CHIME_KEY, on ? '1' : '0'); } catch (e) {}
+  toast(t('toastSaved'));
+}
+
+function unlockAudioCtx() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!_audioCtx) _audioCtx = new AC();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {});
+    _audioUnlocked = true;
+  } catch (e) {}
+}
+
+(function bindAudioUnlock() {
+  const unlock = () => { unlockAudioCtx(); };
+  document.addEventListener('pointerdown', unlock, { passive: true, capture: true });
+  document.addEventListener('touchend', unlock, { passive: true, capture: true });
+  document.addEventListener('click', unlock, { passive: true, capture: true });
+})();
+
+function playMsgChime() {
+  /* presok-msg-chime-v35 */
+  try {
+    if (!isMsgChimeEnabled()) return;
+    unlockAudioCtx();
+    if (!_audioCtx) return;
+    const ctx = _audioCtx;
+    const now = ctx.currentTime;
+    // Soft two-tone ding (A5 → D6)
+    [[880, 0, 0.14], [1174.7, 0.11, 0.2]].forEach(([freq, delay, dur]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, now + delay);
+      g.gain.setValueAtTime(0.0001, now + delay);
+      g.gain.linearRampToValueAtTime(0.16, now + delay + 0.018);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + delay + dur);
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start(now + delay);
+      o.stop(now + delay + dur + 0.03);
+    });
+    try {
+      if (navigator.vibrate) navigator.vibrate([36, 28, 36]);
+    } catch (e) {}
+  } catch (e) { console.warn('chime', e); }
+}
+
+function pulseMessagesBadge() {
+  try {
+    if (role === 'family') {
+      const tab = document.querySelector('#familyTabs .tab[data-tab="messages"]');
+      if (tab) {
+        tab.classList.remove('msg-pulse');
+        void tab.offsetWidth;
+        tab.classList.add('msg-pulse');
+        setTimeout(() => tab.classList.remove('msg-pulse'), 1400);
+      }
+    } else {
+      const badge = document.getElementById('elderUnreadBadge');
+      if (badge) {
+        badge.classList.remove('hidden');
+        badge.classList.remove('msg-pulse');
+        void badge.offsetWidth;
+        badge.classList.add('msg-pulse');
+        setTimeout(() => badge.classList.remove('msg-pulse'), 1400);
+      }
+    }
+  } catch (e) {}
+}
+
+function notifyIncomingVoice(count) {
+  const n = Math.max(1, Number(count) || 1);
+  playMsgChime();
+  toast(t('toastNewVoice') + (n > 1 ? (' · ' + n) : ''));
+  pulseMessagesBadge();
+}
+
+function considerNewIncomingMessages(msgs) {
+  const list = msgs || [];
+  const ids = list.map(m => m.id).filter(Boolean);
+  if (_knownMsgIds === null) {
+    _knownMsgIds = new Set(ids);
+    return;
+  }
+  const incomingFrom = role === 'elder' ? 'family' : 'elder';
+  const fresh = list.filter(m => m && m.id && !_knownMsgIds.has(m.id) && m.from === incomingFrom);
+  ids.forEach(id => _knownMsgIds.add(id));
+  // keep set from growing forever
+  if (_knownMsgIds.size > 200) {
+    _knownMsgIds = new Set(ids.slice(0, 120));
+  }
+  if (fresh.length) notifyIncomingVoice(fresh.length);
+}
+
+function resetMsgChimeKnown() {
+  _knownMsgIds = null;
+}
+
+
 function applyI18n() {
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
   document.getElementById('appTitle').textContent = t('appTitle');
@@ -1747,6 +1889,8 @@ function updateCareLadderLabels() {
   set('careReplyHelp', 'careReplyHelp');
   set('lblAutoAnswer', 'lblAutoAnswer');
   set('autoAnswerHelp', 'autoAnswerHelp');
+  set('lblMsgChime', 'lblMsgChime');
+  set('msgChimeHelp', 'msgChimeHelp');
   const ol = document.getElementById('careLadderList');
   if (ol) {
     ol.innerHTML = [1,2,3,4].map(i => `<li>${escapeHtml(t('careStep' + i))}</li>`).join('');
@@ -1871,6 +2015,8 @@ function renderFamily() {
   if (crs) crs.value = String(state.careReplyHours || 1);
   const aac = document.getElementById('autoAnswerCheck');
   if (aac) aac.checked = !!state.autoAnswerCalls;
+  const mcc = document.getElementById('msgChimeCheck');
+  if (mcc) mcc.checked = isMsgChimeEnabled();
   document.getElementById('activeElderSelect').innerHTML = state.elders.map(e =>
     `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(elderTitle(e))}</option>`
   ).join('');
@@ -2156,6 +2302,7 @@ const MAX_VOICE_MSGS = 40;
 /* presok-hold-fix-v31 */
 /* presok-pair-fix-v33 */
 /* presok-playback-ui-v34 */
+/* presok-msg-chime-v35 */
 const MIN_REC_MS = 500;
 const MIN_HOLD_ACCEPT_MS = 600;
 const MIN_BLOB_BYTES = 64;
@@ -3390,6 +3537,7 @@ async function pullCloudState(opts) {
       if (!remote.household) return remote;
       mapStateFromCloud(remote);
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      try { considerNewIncomingMessages(state.messages || []); } catch (e) {}
       if (cloudReady) {
         applyI18n();
         render();
@@ -3416,6 +3564,12 @@ window.PresokApp = {
   get role() { return role; },
   pullCloudState,
   refreshPairCode,
+  playMsgChime,
+  notifyIncomingVoice,
+  considerNewIncomingMessages,
+  isMsgChimeEnabled,
+  resetMsgChimeKnown,
+  get knownMsgIds() { return _knownMsgIds; },
 };
 async function bootCloud() {
   cloud = PresokCloud.createCloud(PRESK_CONFIG);
@@ -3834,6 +3988,7 @@ resetDemoData = async function() {
     cloud.signOut();
   } catch (e) {}
   cloudReady = false;
+  try { resetMsgChimeKnown(); } catch (e) {}
   location.reload();
 };
 
@@ -3942,6 +4097,8 @@ applyI18n = function() {
   _applyI18nLocal();
   const evn = document.getElementById('elderVoiceNote');
   if (evn) evn.textContent = (cloud && cloudReady) ? t('voiceDeviceNote') : t('voiceDeviceNoteLocal');
+  const mcc = document.getElementById('msgChimeCheck');
+  if (mcc) mcc.checked = isMsgChimeEnabled();
   // Cloud mode: reset buttons unlink this phone (not "reset demo data")
   if (cloud && cloudReady) {
     const unlink = t('pairSignOut');
