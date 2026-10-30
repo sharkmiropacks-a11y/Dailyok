@@ -1225,7 +1225,7 @@ const i18n = {
     toastCallDeclined: '已拒绝来电',
     toastContactsAlerted: '演示：将通知联系人上门或拨打 000',
     alertStep4: '仍无回应 — 请通知联系人，考虑上门或拨打 000',
-    tabMessages: '语音',
+    tabMessages: '消息',
     elderVoiceTitle: '家人的语音',
     voiceDeviceNote: '演示：语音只保存在本机，不会联网发送。',
     holdToTalk: '按住说话',
@@ -1233,7 +1233,7 @@ const i18n = {
     holdHintFamily: '松手发送给长辈',
     holdArming: '正在打开麦克风…',
     holdRecording: '正在录音…松手发送',
-    voiceEmptyElder: '还没有语音。家人可在「语音」页发送。',
+    voiceEmptyElder: '还没有语音。家人可在「消息」页发送。',
     voiceEmptyFamily: '还没有消息。按住下方按钮发送语音。',
     voiceFromFamily: '家属',
     voiceFromElder: '长辈',
@@ -2130,8 +2130,10 @@ function resetAllData() { resetDemoData(); }
 const VOICE_IDB = 'presok_voice_v2';
 const VOICE_STORE = 'clips';
 const MAX_VOICE_MSGS = 40;
-const MIN_REC_MS = 700;
-const MIN_HOLD_ACCEPT_MS = 900;
+/* presok-hold-fix-v31 */
+const MIN_REC_MS = 500;
+const MIN_HOLD_ACCEPT_MS = 600;
+const MIN_BLOB_BYTES = 64;
 const MAX_REC_MS = 60000;
 
 let voiceDbPromise = null;
@@ -2234,19 +2236,24 @@ async function clearAllVoiceAudio() {
   try { localStorage.removeItem(STORAGE_KEY + '_voice'); } catch (e) {}
 }
 
+function isIOSLike() {
+  const ua = navigator.userAgent || '';
+  if (/iPad|iPhone|iPod/i.test(ua)) return true;
+  // iPadOS desktop UA
+  if (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1) return true;
+  return false;
+}
+
 function pickRecorderMime() {
-  const types = [
-    'audio/mp4',
-    'audio/aac',
-    'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/ogg;codecs=opus'
-  ];
-  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  // iOS Safari only records reliably with mp4/aac; webm is unsupported.
+  const types = isIOSLike()
+    ? ['audio/mp4', 'audio/aac', 'audio/wav', 'audio/mpeg']
+    : ['audio/mp4', 'audio/aac', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'];
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return isIOSLike() ? 'audio/mp4' : '';
   for (const type of types) {
     try { if (MediaRecorder.isTypeSupported(type)) return type; } catch (e) {}
   }
-  return '';
+  return isIOSLike() ? 'audio/mp4' : '';
 }
 
 function blobToDataUrl(blob) {
@@ -2479,13 +2486,23 @@ function setHoldUi(from, mode) {
   else label.textContent = t('holdToTalk');
 }
 
-async function ensureMicStream() {
+function micTracksLive(stream) {
+  if (!stream) return false;
+  const tracks = stream.getAudioTracks();
+  // readyState only — track.muted can flicker true on iOS at start
+  return tracks.length > 0 && tracks.every(tr => tr.readyState === 'live');
+}
+
+async function ensureMicStream(forceNew) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw Object.assign(new Error('no media'), { name: 'NotSupportedError' });
   }
+  if (forceNew && mediaStream) {
+    try { mediaStream.getTracks().forEach(tr => tr.stop()); } catch (e) {}
+    mediaStream = null;
+  }
   if (mediaStream) {
-    const live = mediaStream.getTracks().some(tr => tr.readyState === 'live');
-    if (live) return mediaStream;
+    if (micTracksLive(mediaStream)) return mediaStream;
     try { mediaStream.getTracks().forEach(tr => tr.stop()); } catch (e) {}
     mediaStream = null;
   }
@@ -2527,6 +2544,7 @@ async function startHoldRecord(from, ev) {
   recCancelled = false;
   recFrom = from;
   recChunks = [];
+  recStartedAt = 0;
   holdPressedAt = Date.now();
   // Instant feedback before any mic work (paint before await)
   setHoldUi(from, 'arming');
@@ -2534,20 +2552,43 @@ async function startHoldRecord(from, ev) {
   if (recCancelled) { setHoldUi(from, false); return; }
   recArming = (async () => {
     try {
-      await ensureMicStream();
+      // iOS Safari: MediaRecorder on a reused/pre-warmed stream often yields an empty blob.
+      // Force a fresh getUserMedia each hold on iOS; elsewhere reuse the warm stream.
+      await ensureMicStream(!!isIOSLike());
+      if (recCancelled) return;
+      if (!micTracksLive(mediaStream)) {
+        await ensureMicStream(true);
+      }
       if (recCancelled) return;
       const mime = pickRecorderMime();
       try {
         mediaRecorder = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
       } catch (err) {
-        setHoldUi(from, false);
-        toast(t('toastVoiceFailed'));
-        return;
+        // Retry once with a brand-new stream (stale track after visibility change)
+        await ensureMicStream(true);
+        if (recCancelled) return;
+        try {
+          mediaRecorder = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
+        } catch (err2) {
+          setHoldUi(from, false);
+          toast(t('toastVoiceFailed'));
+          return;
+        }
       }
       mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
       mediaRecorder.onerror = () => { toast(t('toastVoiceFailed')); };
-      recStartedAt = Date.now();
-      mediaRecorder.start(100);
+      mediaRecorder.onstart = () => { if (!recStartedAt) recStartedAt = Date.now(); };
+      // timeslice so ondataavailable fires during hold (helps flush on stop)
+      try {
+        mediaRecorder.start(250);
+      } catch (errStart) {
+        try { mediaRecorder.start(); } catch (errStart2) {
+          setHoldUi(from, false);
+          toast(t('toastVoiceFailed'));
+          return;
+        }
+      }
+      if (!recStartedAt) recStartedAt = Date.now();
       setHoldUi(from, true);
       clearTimeout(recMaxTimer);
       recMaxTimer = setTimeout(() => stopHoldRecord(from, true), MAX_REC_MS);
@@ -2586,36 +2627,57 @@ async function stopHoldRecord(from, auto) {
   const mr = mediaRecorder;
   if (!mr || mr.state === 'inactive') {
     mediaRecorder = null;
-    // If user held long but mic never started, soft tip
-    if (!auto && (Date.now() - pressedAt) < MIN_HOLD_ACCEPT_MS) {
-      /* ignore quick abort while arming */
+    // Mic never started — only tip if the press itself was a short tap
+    const holdDurEarly = Date.now() - pressedAt;
+    if (!auto && holdDurEarly >= MIN_HOLD_ACCEPT_MS) {
+      stopMediaTracks(true);
+      toast(t('toastVoiceFailed'));
     }
     return;
   }
   const started = recStartedAt || pressedAt;
   const who = recFrom;
-  const mime = mr.mimeType || pickRecorderMime() || 'audio/webm';
+  const mime = mr.mimeType || pickRecorderMime() || (isIOSLike() ? 'audio/mp4' : 'audio/webm');
   const blob = await new Promise(resolve => {
-    mr.onstop = () => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
       resolve(new Blob(recChunks, { type: mime }));
     };
-    try { mr.stop(); } catch (e) { resolve(new Blob()); }
+    mr.ondataavailable = e => {
+      if (e.data && e.data.size) recChunks.push(e.data);
+    };
+    mr.onstop = finish;
+    // Flush buffered data before stop (critical on iOS Safari), then stop
+    try {
+      if (mr.state === 'recording' && typeof mr.requestData === 'function') mr.requestData();
+    } catch (e) {}
+    try { mr.stop(); } catch (e) { finish(); }
+    // Safety: some WebKit builds never fire onstop after empty record
+    setTimeout(finish, 800);
   });
-  // Keep mic stream warm (do not stop tracks)
   mediaRecorder = null;
   recChunks = [];
-  const recDur = Date.now() - started;
-  const holdDur = Date.now() - pressedAt;
-  const tooShortRec = recDur < MIN_REC_MS;
-  const heldLongEnough = holdDur >= MIN_HOLD_ACCEPT_MS;
-  if (!blob || blob.size < 20) {
+  // Measure from actual recorder start, not finger-down (arming latency)
+  const stopAt = Date.now();
+  const recDur = Math.max(0, stopAt - started);
+  const holdDur = Math.max(0, stopAt - pressedAt);
+  const genuinelyShortHold = holdDur < MIN_HOLD_ACCEPT_MS;
+  if (!blob || blob.size < MIN_BLOB_BYTES) {
+    // Empty blob after a long hold = recorder/stream failure (common on iOS reused stream).
+    // Invalidate mic so the next hold re-acquires getUserMedia.
+    stopMediaTracks(true);
+    if (genuinelyShortHold) toast(t('toastVoiceTooShort'));
+    else toast(t('toastVoiceFailed'));
+    return;
+  }
+  if (recDur < MIN_REC_MS && genuinelyShortHold) {
     toast(t('toastVoiceTooShort'));
     return;
   }
-  if (tooShortRec && !heldLongEnough) {
-    toast(t('toastVoiceTooShort'));
-    return;
-  }
+  // On iOS, drop the stream after each clip so the next MediaRecorder gets a fresh track
+  if (isIOSLike()) stopMediaTracks(true);
   const dur = Math.max(recDur, Math.min(holdDur, MAX_REC_MS));
   try {
     const dataUrl = await blobToDataUrl(blob);
@@ -2688,14 +2750,31 @@ function bindHoldButton(el, from) {
       onStart(e);
     });
     el.addEventListener('pointerup', onEnd);
-    el.addEventListener('pointercancel', e => { e.preventDefault(); cancelHoldRecord(from); });
+    el.addEventListener('pointercancel', e => {
+      e.preventDefault();
+      // iOS may fire pointercancel during a long hold; save if we actually recorded
+      const held = recStartedAt ? (Date.now() - recStartedAt) : (Date.now() - (holdPressedAt || Date.now()));
+      if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from && held >= MIN_HOLD_ACCEPT_MS) {
+        stopHoldRecord(from, false);
+      } else {
+        cancelHoldRecord(from);
+      }
+    });
     el.addEventListener('lostpointercapture', () => {
       if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from) stopHoldRecord(from, false);
     });
   } else {
     el.addEventListener('touchstart', e => { lastTouchAt = Date.now(); onStart(e); }, { passive: false });
     el.addEventListener('touchend', onEnd, { passive: false });
-    el.addEventListener('touchcancel', e => { e.preventDefault(); cancelHoldRecord(from); }, { passive: false });
+    el.addEventListener('touchcancel', e => {
+      e.preventDefault();
+      const held = recStartedAt ? (Date.now() - recStartedAt) : (Date.now() - (holdPressedAt || Date.now()));
+      if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from && held >= MIN_HOLD_ACCEPT_MS) {
+        stopHoldRecord(from, false);
+      } else {
+        cancelHoldRecord(from);
+      }
+    }, { passive: false });
     el.addEventListener('mousedown', e => {
       if (Date.now() - lastTouchAt < 700) return;
       onStart(e);
@@ -2710,6 +2789,15 @@ function bindHoldButton(el, from) {
   }
   el.addEventListener('contextmenu', e => e.preventDefault());
 }
+
+// Drop cached mic if the page was backgrounded and tracks died (common on iOS)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (mediaStream && !micTracksLive(mediaStream)) {
+    try { mediaStream.getTracks().forEach(tr => tr.stop()); } catch (e) {}
+    mediaStream = null;
+  }
+});
 
 function bindVoiceControls() {
   bindHoldButton(document.getElementById('elderHoldTalk'), 'elder');
@@ -3683,6 +3771,14 @@ applyI18n = function() {
   _applyI18nLocal();
   const evn = document.getElementById('elderVoiceNote');
   if (evn) evn.textContent = (cloud && cloudReady) ? t('voiceDeviceNote') : t('voiceDeviceNoteLocal');
+  // Cloud mode: reset buttons unlink this phone (not "reset demo data")
+  if (cloud && cloudReady) {
+    const unlink = t('pairSignOut');
+    const brd = document.getElementById('btnResetDemo');
+    if (brd) brd.textContent = unlink;
+    const bra = document.getElementById('btnResetAll');
+    if (bra) bra.textContent = unlink;
+  }
 };
 
 // Replace original boot: don't render until gate decided
