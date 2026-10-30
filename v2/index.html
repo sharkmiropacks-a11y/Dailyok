@@ -1777,7 +1777,7 @@ function escapeHtml(s) {
 function renderFamily() {
   const list = document.getElementById('elderList');
   if (!state.elders.length) {
-    list.innerHTML = `<div class="empty"><div class="emoji">🙂</div>${t('noElders')}</div>`;
+    list.innerHTML = `<div class="empty"><div class="emoji">🙂</div>${escapeHtml(t('noElders'))}</div>`;
   } else {
     list.innerHTML = state.elders.map(elder => {
       const step = getCareStep(elder);
@@ -1793,8 +1793,8 @@ function renderFamily() {
           <div class="avatar">${emoji}</div>
           <div class="info" style="flex:1;min-width:0">
             <div class="name">${escapeHtml(elder.name)}${(elderNick(elder) ? ' <span class="elder-nick">· ' + escapeHtml(elderNick(elder)) + '</span>' : '')}</div>
-            <div class="meta">${meta}</div>
-            <span class="care-step-pill s${step}">${pill}</span>
+            <div class="meta">${escapeHtml(meta)}</div>
+            <span class="care-step-pill s${step}">${escapeHtml(pill)}</span>
           </div>
         </div>
         <div class="care-action ${act.cls}">
@@ -1811,7 +1811,7 @@ function renderFamily() {
 
   const cl = document.getElementById('contactList');
   if (!state.contacts.length) {
-    cl.innerHTML = `<div class="empty"><div class="emoji">📞</div>${t('noContacts')}</div>`;
+    cl.innerHTML = `<div class="empty"><div class="emoji">📞</div>${escapeHtml(t('noContacts'))}</div>`;
   } else {
     const roleLabel = { family: t('roleFamilyOpt'), carer: t('roleCarerOpt'), nurse: t('roleNurseOpt') };
     const n = state.contacts.length;
@@ -1820,7 +1820,7 @@ function renderFamily() {
         <div style="display:flex;align-items:flex-start;gap:4px;min-width:0;flex:1">
           <span class="prio" title="${escapeHtml(t('callPriority'))}">${idx + 1}</span>
           <div style="min-width:0">
-            <div class="c-name">${escapeHtml(c.name)} <span class="muted">· ${roleLabel[c.role] || c.role}</span></div>
+            <div class="c-name">${escapeHtml(c.name)} <span class="muted">· ${escapeHtml(roleLabel[c.role] || c.role || '')}</span></div>
             <div class="c-phone">${escapeHtml(c.phone || '')}</div>
           </div>
         </div>
@@ -1834,7 +1834,7 @@ function renderFamily() {
 
   const nl = document.getElementById('notifList');
   if (!state.notifications.length) {
-    nl.innerHTML = `<div class="empty"><div class="emoji">🔔</div>${t('noNotifs')}</div>`;
+    nl.innerHTML = `<div class="empty"><div class="emoji">🔔</div>${escapeHtml(t('noNotifs'))}</div>`;
   } else {
     nl.innerHTML = state.notifications.map(n => `
       <div class="notif ${n.level}">
@@ -1949,12 +1949,12 @@ function doSOS() {
   document.getElementById('modalRoot').innerHTML = `
     <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
       <div class="modal sos-modal">
-        <h2>🆘 ${t('sosTitle')}</h2>
-        <p>${t('sosBody')}</p>
+        <h2>🆘 ${escapeHtml(t('sosTitle'))}</h2>
+        <p>${escapeHtml(t('sosBody'))}</p>
         <p style="font-size:1.3rem;font-weight:800;color:#b91c1c">000</p>
         <div class="btn-row" style="justify-content:center">
-          <button type="button" class="btn btn-danger" onclick="confirmSOS()">${t('sosAlert')}</button>
-          <button type="button" class="btn btn-secondary" onclick="closeModal()">${t('sosClose')}</button>
+          <button type="button" class="btn btn-danger" onclick="confirmSOS()">${escapeHtml(t('sosAlert'))}</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">${escapeHtml(t('sosClose'))}</button>
         </div>
       </div>
     </div>`;
@@ -3368,6 +3368,27 @@ function continueOffline() {
   finishBootUi();
 }
 
+let _lastFamilySweepAt = 0;
+async function maybeSweepMissedForFamily() {
+  if (!cloud || !cloudReady) return;
+  if (state.membershipRole !== 'family') return;
+  if (typeof cloud.sweepMyHouseholdMissed !== 'function') return;
+  const nowMs = Date.now();
+  // At most once per 2 minutes (fallback when pg_cron is not scheduled)
+  if (nowMs - _lastFamilySweepAt < 120000) return;
+  _lastFamilySweepAt = nowMs;
+  try {
+    const res = await cloud.sweepMyHouseholdMissed();
+    if (res && res.alerts_created > 0) {
+      await pullCloudState({ silent: true });
+      const newest = (state.notifications || [])[0];
+      if (newest && (newest.kind || '').startsWith('care')) browserNotify('Presok', newest.message);
+    }
+  } catch (e) {
+    console.warn('family sweep', e);
+  }
+}
+
 function finishBootUi() {
   if (state.membershipRole === 'elder') {
     // Lock to senior view — hide family tab switch
@@ -3385,6 +3406,7 @@ function finishBootUi() {
   restoreCallUiIfNeeded();
   _bootDone = true;
   try { if (role === 'elder') warmMicForSenior(); } catch (e) {}
+  try { maybeSweepMissedForFamily(); } catch (e) {}
 }
 
 function maybeBrowserNotifySetup() {
@@ -3792,6 +3814,7 @@ setInterval(() => {
   if (role === 'elder') renderElder();
   else if (familyTab === 'elders' || familyTab === 'alerts' || familyTab === 'messages') renderFamily();
   updateSimClock();
+  try { maybeSweepMissedForFamily(); } catch (e) {}
 }, 30000);
 
 // Start: try cloud session, else show gate (local demo still available)
