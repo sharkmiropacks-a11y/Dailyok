@@ -624,6 +624,29 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
 }
 .cloud-badge.err { background: #fecaca; color: #991b1b; }
 
+
+.pair-code-big {
+  font-size: 2.4rem; font-weight: 800; letter-spacing: 0.28em; text-align: center;
+  padding: 18px 12px; margin: 12px 0; border-radius: 16px;
+  background: #ecfdf5; color: #0f766e; border: 3px dashed #2dd4bf;
+  font-variant-numeric: tabular-nums;
+}
+.pair-setup-card h2 { margin-bottom: 6px; }
+.pair-setup-card .share-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.pair-setup-card .share-row .btn { flex: 1; min-width: 120px; }
+#tabElders.family-people { display: flex; flex-direction: column; }
+#tabElders.family-people #familyHint { order: 0; }
+#tabElders.family-people #addElderCard { order: 1; }
+#tabElders.family-people #pairingPanel { order: 2; }
+#tabElders.family-people #elderList { order: 3; }
+#tabElders.family-people.has-seniors #pairingPanel { order: 1; }
+#tabElders.family-people.has-seniors #elderList { order: 2; }
+#tabElders.family-people.has-seniors #addElderCard { order: 3; margin-top: 8px; }
+#addElderCard.primary-setup {
+  border: 2px solid #99f6e4; box-shadow: 0 8px 28px rgba(15,118,110,0.18);
+}
+#addElderCard.primary-setup h2 { font-size: 1.35rem; color: var(--primary); }
+
 </style>
 </head>
 <body>
@@ -701,15 +724,17 @@ main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); 
   <section id="familyView" class="hidden">
     <div id="tabElders">
       <div class="setup-hint" id="familyHint"></div>
-      <div class="elder-list" id="elderList"></div>
-      <div class="card" style="margin-top:16px">
+      <div class="card primary-setup" id="addElderCard" style="margin-bottom:16px">
         <h2 id="addElderTitle"></h2>
+        <p class="muted" id="addParentHint" style="margin-bottom:12px"></p>
         <div class="form-group">
           <label id="lblElderName"></label>
-          <input type="text" id="newElderName" maxlength="40">
+          <input type="text" id="newElderName" maxlength="40" placeholder="">
         </div>
         <button type="button" class="btn btn-primary btn-block" onclick="addElder()" id="btnAddElder"></button>
       </div>
+      <div id="pairingPanel" class="hidden"></div>
+      <div class="elder-list" id="elderList"></div>
     </div>
 
     <div id="tabMessages" class="hidden">
@@ -996,9 +1021,16 @@ const i18n = {
     tabAlerts: 'Alerts',
     tabSettings: 'Settings',
     familyHint: 'Green = OK · Yellow = elder reminded · Red = family alerted. To simulate an overdue check-in, open Settings → Demo: simulate time passing.',
-    addElderTitle: 'Add someone',
-    lblElderName: 'Name',
-    btnAddElder: 'Add',
+    addElderTitle: 'Add your parent',
+    addParentHint: 'Start here — add the person who will tap I\'m OK each day on their own phone.',
+    lblElderName: 'Their name',
+    btnAddElder: 'Add parent',
+    pairFamilyHelp: 'Enter this code on your parent\'s phone: open Presok → I\'m the senior.',
+    pairShareBtn: 'Share code',
+    pairCopiedBtn: 'Copied!',
+    pairShareText: 'Your Presok code is {code}. On your phone open Presok, tap I\'m the senior, and enter this code.',
+    pairAfterAddTitle: 'Connect their phone',
+    noEldersFamily: 'No one yet — add your parent above.',
     contactsTitle: 'Emergency contacts',
     contactsDesc: 'When a check-in is overdue or SOS is pressed, Presok simulates notifying these people. Order is the video-call priority for “Video call family”. A full version can send SMS or push alerts.',
     lblContactName: 'Name',
@@ -1023,7 +1055,7 @@ const i18n = {
     resetDemoHelp: 'Reloads Margaret · Mum and John · Dad with sample messages. Clears voice clips on this phone.',
     aboutTitle: 'About Presok',
     aboutText: 'Presok is a prototype. Check-in data stays in this browser (localStorage). Voice notes are stored on this device (IndexedDB). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
-    noElders: 'No one added yet',
+    noElders: 'No one yet — add your parent above.',
     noContacts: 'No contacts yet',
     noNotifs: 'No alerts yet',
     toastCheckin: "Checked in — family can see you're OK.",
@@ -1056,7 +1088,7 @@ const i18n = {
     pairEnterCode: 'Enter the 6-digit code from your family',
     pairCodeLabel: 'Pairing code',
     pairCodeBtn: 'Connect this phone',
-    pairCodeHelp: 'Ask your family to open People → show pairing code.',
+    pairCodeHelp: 'Your family will show you a 6-digit code after they add you under People.',
     pairShowCode: 'Pairing code',
     pairRefreshCode: 'New code',
     pairCopied: 'Code ready — tell the senior phone',
@@ -1184,9 +1216,16 @@ const i18n = {
     tabAlerts: '通知',
     tabSettings: '设置',
     familyHint: '绿色=正常 · 黄色=已提醒老人 · 红色=已告警家属。模拟超时请到「设置」→「演示：模拟时间流逝」。',
-    addElderTitle: '添加老人',
+    addElderTitle: '添加父母 / 长辈',
+    addParentHint: '从这里开始 — 添加每天要在自己手机上点「我很好」的人。',
     lblElderName: '姓名',
-    btnAddElder: '添加',
+    btnAddElder: '添加长辈',
+    pairFamilyHelp: '请在长辈手机上打开 Presok → 点「我是长辈」→ 输入此配对码。',
+    pairShareBtn: '分享配对码',
+    pairCopiedBtn: '已复制！',
+    pairShareText: '你的 Presok 配对码是 {code}。请在手机打开 Presok，点「我是长辈」，输入此码。',
+    pairAfterAddTitle: '连接长辈的手机',
+    noEldersFamily: '还没有人 — 请先在上方添加长辈。',
     contactsTitle: '紧急联系人',
     contactsDesc: '超时或按 SOS 时，会在此模拟通知这些人。「视频呼叫家人」按此顺序拨打（正式版可发短信/推送）。',
     lblContactName: '姓名',
@@ -1211,7 +1250,7 @@ const i18n = {
     resetDemoHelp: '重新载入「玛格丽特 · 妈妈」和「约翰 · 爸爸」及示例消息，并清除本机语音。',
     aboutTitle: '关于 Presok',
     aboutText: '这是原型。签到数据保存在本浏览器（localStorage），语音保存在本机（IndexedDB）。正式版需要后端、短信/推送、澳洲隐私合规与应用商店账号。澳洲紧急电话：000。',
-    noElders: '还没有添加老人',
+    noElders: '还没有人 — 请先在上方添加长辈。',
     noContacts: '还没有联系人',
     noNotifs: '暂无通知',
     toastCheckin: '签到成功！家人会看到您一切正常。',
@@ -1244,7 +1283,7 @@ const i18n = {
     pairEnterCode: '请输入家属给你的 6 位配对码',
     pairCodeLabel: '配对码',
     pairCodeBtn: '连接这部手机',
-    pairCodeHelp: '请家属在「老人」页查看配对码。',
+    pairCodeHelp: '家属在「老人」页添加你之后，会看到一个 6 位配对码。',
     pairShowCode: '配对码',
     pairRefreshCode: '换新码',
     pairCopied: '配对码已就绪 — 告诉长辈手机',
@@ -1555,6 +1594,8 @@ function applyI18n() {
   document.getElementById('resetTimeBtn').textContent = t('resetTime');
   document.getElementById('familyHint').textContent = t('familyHint');
   document.getElementById('addElderTitle').textContent = t('addElderTitle');
+  const aph = document.getElementById('addParentHint');
+  if (aph) aph.textContent = t('addParentHint');
   document.getElementById('lblElderName').textContent = t('lblElderName');
   document.getElementById('btnAddElder').textContent = t('btnAddElder');
   document.getElementById('contactsTitle').textContent = t('contactsTitle');
@@ -2948,7 +2989,7 @@ async function elderCallAnswered() {
 let cloud = null;
 let cloudReady = false;
 let cloudUnsub = null;
-let _pulling = false;
+let _pullTail = Promise.resolve();
 let _bootDone = false;
 
 function setCloudBadge(text, isErr) {
@@ -2998,31 +3039,31 @@ function mapStateFromCloud(remote) {
 }
 
 async function pullCloudState(opts) {
-  if (!cloud || _pulling) return;
-  _pulling = true;
-  try {
-    if (!(opts && opts.silent)) setCloudBadge(t('cloudSyncing'));
-    const remote = await cloud.getState();
-    if (!remote.household) {
-      _pulling = false;
+  if (!cloud) return;
+  // Serialize pulls so realtime + explicit refresh never drop each other.
+  // Every caller awaits a full getState→map that runs after prior pulls finish.
+  const run = async () => {
+    try {
+      if (!(opts && opts.silent)) setCloudBadge(t('cloudSyncing'));
+      const remote = await cloud.getState();
+      if (!remote.household) return remote;
+      mapStateFromCloud(remote);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      if (cloudReady) {
+        applyI18n();
+        render();
+      }
+      setCloudBadge(t('cloudLive'));
       return remote;
+    } catch (err) {
+      console.warn(err);
+      setCloudBadge(t('cloudError'), true);
+      throw err;
     }
-    mapStateFromCloud(remote);
-    // local cache for offline paint
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-    if (cloudReady) {
-      applyI18n();
-      render();
-    }
-    setCloudBadge(t('cloudLive'));
-    return remote;
-  } catch (err) {
-    console.warn(err);
-    setCloudBadge(t('cloudError'), true);
-    throw err;
-  } finally {
-    _pulling = false;
-  }
+  };
+  const p = _pullTail.then(run, run);
+  _pullTail = p.then(() => {}, () => {});
+  return p;
 }
 
 
@@ -3196,7 +3237,11 @@ addElder = async function() {
     const e = await cloud.addElder(state.householdId, name, null);
     input.value = '';
     await pullCloudState();
-    toast(t('toastAdded') + ' · ' + t('pairShowCode') + ' ' + (e.pairing_code || ''));
+    toast(t('toastAdded') + ' · ' + (e.pairing_code || ''));
+    try {
+      const panel = document.getElementById('pairingPanel');
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {}
   } catch (err) {
     console.warn(err);
     toast(t('cloudError'));
@@ -3413,48 +3458,104 @@ resetDemoData = async function() {
   location.reload();
 };
 
-// Patch family elder cards to show pairing code
+// Family People tab: add-parent first; big pairing codes only after seniors exist
 const _renderFamilyLocal = renderFamily;
 renderFamily = function() {
   _renderFamilyLocal();
-  if (!cloud || !cloudReady || role !== 'family') return;
-  // Inject pairing codes into elder cards if not present
+  const addCard = document.getElementById('addElderCard');
+  const panel = document.getElementById('pairingPanel');
+  const host = document.getElementById('tabElders');
+  const empty = !state.elders.length;
+
+  if (host) {
+    host.classList.add('family-people');
+    host.classList.toggle('has-seniors', !empty);
+  }
+  if (addCard) {
+    addCard.classList.toggle('primary-setup', empty);
+  }
+
+  const hint = document.getElementById('familyHint');
+  if (hint && role === 'family') {
+    if (empty) {
+      hint.classList.add('hidden');
+    } else {
+      hint.classList.remove('hidden');
+      hint.textContent = t('familyHint');
+    }
+  }
+
+  // Soften empty list when form is already the CTA
   const list = document.getElementById('elderList');
-  if (!list) return;
-  state.elders.forEach(e => {
-    if (!e.pairingCode) return;
-    const card = list.querySelector('[data-elder-id="' + e.id + '"]') || null;
-    // cards may not have data attr — find by name heading
-    const cards = list.querySelectorAll('.card, .elder-card, .person-card, div');
-    // Simpler: append a codes panel under elder list once
-  });
-  let panel = document.getElementById('pairingPanel');
-  if (!panel) {
-    panel = document.createElement('div');
-    panel.id = 'pairingPanel';
-    panel.className = 'card';
-    panel.style.marginTop = '12px';
-    const host = document.getElementById('tabElders');
-    if (host) host.insertBefore(panel, host.querySelector('.card'));
+  if (list && empty && role === 'family') {
+    list.innerHTML = '';
   }
-  if (familyTab === 'elders') {
-    panel.classList.remove('hidden');
-    panel.innerHTML = '<h2 style="margin-bottom:8px">' + escapeHtml(t('pairShowCode')) + '</h2>' +
-      '<p class="muted" style="margin-bottom:10px">' + escapeHtml(t('pairCodeHelp')) + '</p>' +
-      state.elders.map(e => (
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;flex-wrap:wrap">' +
-          '<div><strong>' + escapeHtml(elderTitle(e)) + '</strong>' +
-          '<div class="pair-code-chip">' + escapeHtml(e.pairingCode || '——') + '</div></div>' +
-          '<button type="button" class="btn btn-secondary" data-refresh-pair="' + e.id + '">' + escapeHtml(t('pairRefreshCode')) + '</button>' +
-        '</div>'
-      )).join('');
-    panel.querySelectorAll('[data-refresh-pair]').forEach(btn => {
-      btn.onclick = () => refreshPairCode(btn.getAttribute('data-refresh-pair'));
-    });
-  } else {
+
+  if (!panel) return;
+  if (!(cloud && cloudReady) || role !== 'family' || familyTab !== 'elders') {
     panel.classList.add('hidden');
+    panel.innerHTML = '';
+    return;
   }
+
+  if (empty) {
+    // Never show senior-side "ask your family" copy on the family phone
+    panel.classList.add('hidden');
+    panel.innerHTML = '';
+    return;
+  }
+
+  panel.classList.remove('hidden');
+  panel.innerHTML = state.elders.map(e => {
+    const code = e.pairingCode || '——————';
+    return (
+      '<div class="card pair-setup-card" style="margin-bottom:12px" data-elder-pair="' + e.id + '">' +
+        '<h2>' + escapeHtml(t('pairAfterAddTitle')) + '</h2>' +
+        '<p class="muted" style="margin-bottom:4px"><strong>' + escapeHtml(elderTitle(e)) + '</strong></p>' +
+        '<p class="muted">' + escapeHtml(t('pairFamilyHelp')) + '</p>' +
+        '<div class="pair-code-big" aria-label="' + escapeHtml(t('pairShowCode')) + '">' + escapeHtml(code) + '</div>' +
+        '<div class="share-row">' +
+          '<button type="button" class="btn btn-primary" data-share-pair="' + e.id + '" data-code="' + escapeHtml(code) + '">' + escapeHtml(t('pairShareBtn')) + '</button>' +
+          '<button type="button" class="btn btn-secondary" data-refresh-pair="' + e.id + '">' + escapeHtml(t('pairRefreshCode')) + '</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+
+  panel.querySelectorAll('[data-refresh-pair]').forEach(btn => {
+    btn.onclick = () => refreshPairCode(btn.getAttribute('data-refresh-pair'));
+  });
+  panel.querySelectorAll('[data-share-pair]').forEach(btn => {
+    btn.onclick = () => sharePairCode(btn.getAttribute('data-code'), btn);
+  });
 };
+
+async function sharePairCode(code, btn) {
+  const text = t('pairShareText').replace('{code}', code || '');
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'Presok', text: text });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    if (btn) {
+      const prev = btn.textContent;
+      btn.textContent = t('pairCopiedBtn');
+      setTimeout(() => { btn.textContent = prev; }, 1600);
+    } else {
+      toast(t('pairCopiedBtn'));
+    }
+  } catch (e2) {
+    toast(code || t('cloudError'));
+  }
+}
+if (window.PresokApp) window.PresokApp.sharePairCode = sharePairCode;
+
+
 
 // Update voice note text for cloud
 const _applyI18nLocal = applyI18n;
