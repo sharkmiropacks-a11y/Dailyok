@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v40 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v41 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -137,6 +137,18 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
 }
 #elderView .sos-zone { margin-top: auto; }
 #elderView .elder-actions-row { flex-shrink: 0; }
+#elderSettingsCard {
+  flex-shrink: 0;
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  box-shadow: none;
+  border: 1px solid var(--border);
+}
+@media (max-height: 900px) {
+  #elderSettingsHelp, #elderSettingsTitle { display: none; }
+  #elderSettingsCard { padding: 6px 8px; margin-top: 4px; }
+  #btnTestMedAlarm { padding: 10px 12px; font-size: 0.88rem; min-height: 44px; }
+}
 .voice-section#elderVoiceSection {
   flex: 1 1 auto;
   min-height: 0;
@@ -908,6 +920,11 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
         </span>
       </button>
     </div>
+    <div class="card" id="elderSettingsCard">
+      <h2 id="elderSettingsTitle" style="margin:0 0 6px;font-size:0.95rem">Settings</h2>
+      <p class="muted" id="elderSettingsHelp" style="margin:0 0 8px;font-size:0.8rem"></p>
+      <button type="button" class="btn btn-secondary btn-block" id="btnTestMedAlarm" onclick="testMedAlarm()">Test medicine alarm</button>
+    </div>
   </section>
 
   <section id="familyView" class="hidden">
@@ -1046,6 +1063,11 @@ main { flex: 1; display: flex; flex-direction: column; padding: 10px 12px; paddi
           <p class="muted" id="msgChimeHelp" style="margin-top:6px;margin-bottom:16px"></p>
         </div>
 
+
+        <div class="form-group" id="medAlarmTestGroup">
+          <button type="button" class="btn btn-secondary btn-block" id="btnTestMedAlarmFamily" onclick="testMedAlarm()">Test medicine alarm</button>
+          <p class="muted" id="medAlarmTestHelp" style="margin-top:6px;margin-bottom:16px"></p>
+        </div>
         <div class="demo-panel" id="familyDemo" style="margin:0 0 16px; background:#f8fafc; border:1px dashed #94a3b8; border-radius:12px; padding:14px">
           <h3 id="demoTitle" style="margin:0 0 10px; font-size:0.95rem; color:#0f766e"></h3>
           <div class="btn-row" style="margin-bottom:8px">
@@ -1181,6 +1203,11 @@ const i18n = {
     autoAnswerHelp: 'Requires the senior\'s consent in real life. In this demo, an incoming call answers itself after a 3-second countdown.',
     lblMsgChime: 'Sound for new messages',
     msgChimeHelp: 'Plays a chime and vibrates when a new voice message arrives while this page is open. No sound when the page is closed or the phone is locked (browser limit).',
+    elderSettingsTitle: 'Settings',
+    elderSettingsHelp: 'Tap once on this page first so the phone can play sounds. Medicine alarms are louder than the message chime.',
+    btnTestMedAlarm: 'Test medicine alarm',
+    medAlarmTestHelp: 'Plays the loud medicine alarm (same sound the senior hears). Message chime stays soft.',
+    toastMedAlarmTest: 'Playing medicine alarm',
     toastNewVoice: 'New voice message',
     stepPill1: 'Step 1 · On track',
     stepPill2: 'Step 2 · Send a voice note',
@@ -1416,6 +1443,11 @@ toastCheckin: "Checked in — family can see you're OK.",
     autoAnswerHelp: '正式版需长辈同意。演示中来电会在 3 秒倒计时后自动接听。',
     lblMsgChime: '新消息提示音',
     msgChimeHelp: '页面打开时收到新语音会响一声并震动。页面关闭或锁屏时无法响铃（浏览器限制）。',
+    elderSettingsTitle: '设置',
+    elderSettingsHelp: '请先在页面上点一下，手机才能出声。吃药提醒比消息提示音更响、更长。',
+    btnTestMedAlarm: '试听吃药提醒音',
+    medAlarmTestHelp: '播放大声的吃药提醒音（与长辈手机相同）。消息提示音保持轻柔。',
+    toastMedAlarmTest: '正在播放吃药提醒音',
     toastNewVoice: '收到新语音消息',
     stepPill1: '步骤 1 · 正常',
     stepPill2: '步骤 2 · 请发语音',
@@ -2112,11 +2144,178 @@ function stopMedRechime() {
   if (_medRechimeTimer) { clearInterval(_medRechimeTimer); _medRechimeTimer = null; }
 }
 
-function playMedChime() {
+/* ===== Medication alarm (presok-med-alarm-v41) — loud, separate from msg chime ===== */
+let _medAlarmAudioEl = null;
+let _medAlarmWavUri = null;
+
+function _encodeWavPcm16(samples, sampleRate) {
+  const numSamples = samples.length;
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+  const writeStr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+  let offset = 44;
+  for (let i = 0; i < numSamples; i++) {
+    let s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    offset += 2;
+  }
+  const bytes = new Uint8Array(buffer);
+  let bin = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+
+function buildMedAlarmWavDataUri() {
+  /* ~3.6s alarm: 2 bursts × 5 beeps (880/660 Hz square+saw), loud */
+  const sr = 22050;
+  const totalSec = 3.6;
+  const n = Math.floor(sr * totalSec);
+  const samples = new Float32Array(n);
+  const beepDur = 0.14;
+  const gap = 0.08;
+  const freqs = [880, 660, 880, 660, 880];
+  const burstStarts = [0.05, 1.85];
+  for (const start of burstStarts) {
+    freqs.forEach((freq, i) => {
+      const t0 = start + i * (beepDur + gap);
+      const t1 = t0 + beepDur;
+      const i0 = Math.max(0, Math.floor(t0 * sr));
+      const i1 = Math.min(n, Math.floor(t1 * sr));
+      for (let j = i0; j < i1; j++) {
+        const t = j / sr;
+        const local = t - t0;
+        const env = Math.min(1, local / 0.012) * Math.min(1, (beepDur - local) / 0.03);
+        const phase = 2 * Math.PI * freq * local;
+        const square = Math.sin(phase) >= 0 ? 1 : -1;
+        const saw = ((freq * local) % 1) * 2 - 1;
+        samples[j] += env * 0.72 * (0.55 * square + 0.45 * saw);
+      }
+    });
+  }
+  // soft clip
+  for (let i = 0; i < n; i++) {
+    const x = samples[i];
+    samples[i] = Math.tanh(x * 1.35);
+  }
+  return _encodeWavPcm16(samples, sr);
+}
+
+function ensureMedAlarmWav() {
+  if (!_medAlarmWavUri) {
+    try { _medAlarmWavUri = buildMedAlarmWavDataUri(); } catch (e) { console.warn('med wav', e); }
+  }
+  return _medAlarmWavUri;
+}
+
+function playMedAlarmViaAudioElement() {
   try {
-    playMsgChime();
+    const uri = ensureMedAlarmWav();
+    if (!uri) return false;
+    if (!_medAlarmAudioEl) {
+      _medAlarmAudioEl = new Audio();
+      _medAlarmAudioEl.setAttribute('playsinline', 'true');
+      _medAlarmAudioEl.preload = 'auto';
+    }
+    const el = _medAlarmAudioEl;
+    el.pause();
+    el.currentTime = 0;
+    el.src = uri;
+    el.volume = 1;
+    const p = el.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+    return true;
+  } catch (e) {
+    console.warn('med audio el', e);
+    return false;
+  }
+}
+
+function playMedAlarmViaWebAudio() {
+  /* Loud alarm-clock pattern via Web Audio + compressor (presok-med-alarm-v41) */
+  try {
+    unlockAudioCtx();
+    if (!_audioCtx) return false;
+    const ctx = _audioCtx;
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.95, now);
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.setValueAtTime(-18, now);
+    comp.knee.setValueAtTime(6, now);
+    comp.ratio.setValueAtTime(12, now);
+    comp.attack.setValueAtTime(0.003, now);
+    comp.release.setValueAtTime(0.12, now);
+    master.connect(comp);
+    comp.connect(ctx.destination);
+
+    const freqs = [880, 660, 880, 660, 880];
+    const beepDur = 0.14;
+    const gap = 0.08;
+    const burstStarts = [0.0, 1.8];
+    burstStarts.forEach((burstAt) => {
+      freqs.forEach((freq, i) => {
+        const t0 = now + burstAt + i * (beepDur + gap);
+        const o1 = ctx.createOscillator();
+        const o2 = ctx.createOscillator();
+        const g = ctx.createGain();
+        o1.type = 'square';
+        o2.type = 'sawtooth';
+        o1.frequency.setValueAtTime(freq, t0);
+        o2.frequency.setValueAtTime(freq * 0.5, t0);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.linearRampToValueAtTime(0.85, t0 + 0.012);
+        g.gain.setValueAtTime(0.85, t0 + beepDur - 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + beepDur);
+        o1.connect(g);
+        o2.connect(g);
+        g.connect(master);
+        o1.start(t0);
+        o2.start(t0);
+        o1.stop(t0 + beepDur + 0.04);
+        o2.stop(t0 + beepDur + 0.04);
+      });
+    });
+    return true;
+  } catch (e) {
+    console.warn('med webaudio', e);
+    return false;
+  }
+}
+
+function playMedChime() {
+  /* presok-med-alarm-v41 — does NOT use playMsgChime */
+  try {
+    unlockAudioCtx();
+    playMedAlarmViaWebAudio();
+    playMedAlarmViaAudioElement();
+  } catch (e) { console.warn('med alarm', e); }
+  try {
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 80, 200, 80, 200, 80, 320, 120, 200, 80, 200, 80, 200]);
+    }
   } catch (e) {}
-  try { if (navigator.vibrate) navigator.vibrate([40, 30, 40, 30, 60]); } catch (e) {}
+}
+
+function testMedAlarm() {
+  try { unlockAudioCtx(); } catch (e) {}
+  try { toast(t('toastMedAlarmTest')); } catch (e) {}
+  playMedChime();
 }
 
 function hideMedOverlay() {
@@ -2580,6 +2779,11 @@ function updateCareLadderLabels() {
   set('autoAnswerHelp', 'autoAnswerHelp');
   set('lblMsgChime', 'lblMsgChime');
   set('msgChimeHelp', 'msgChimeHelp');
+  set('elderSettingsTitle', 'elderSettingsTitle');
+  set('elderSettingsHelp', 'elderSettingsHelp');
+  set('btnTestMedAlarm', 'btnTestMedAlarm');
+  set('btnTestMedAlarmFamily', 'btnTestMedAlarm');
+  set('medAlarmTestHelp', 'medAlarmTestHelp');
   set('medTitle', 'medTitle');
   set('medHint', 'medHint');
   set('btnAddMed', 'btnAddMed');
@@ -4314,6 +4518,8 @@ window.PresokApp = {
   pullCloudState,
   refreshPairCode,
   playMsgChime,
+  playMedChime,
+  testMedAlarm,
   notifyIncomingVoice,
   considerNewIncomingMessages,
   isMsgChimeEnabled,
