@@ -1,0 +1,3487 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Presok">
+<meta name="theme-color" content="#0f766e">
+<meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
+<title>Presok</title>
+<style>
+:root {
+  --bg: #f0fdf4;
+  --card: #ffffff;
+  --primary: #0f766e;
+  --primary-dark: #0d5f58;
+  --ok: #16a34a;
+  --warn: #ca8a04;
+  --alert: #dc2626;
+  --text: #134e4a;
+  --muted: #5f7a76;
+  --border: #ccfbf1;
+  --sos: #b91c1c;
+  --shadow: 0 4px 20px rgba(15, 118, 110, 0.12);
+  --radius: 16px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+button { font-family: inherit; cursor: pointer; border: none; }
+input, select, textarea { font-family: inherit; font-size: 16px; }
+
+.topbar {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 10px; background: var(--primary); color: #fff;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em; text-align: center; }
+
+.role-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  background: rgba(0,0,0,0.18); padding: 5px; border-radius: 14px;
+}
+.role-tab {
+  appearance: none; -webkit-appearance: none;
+  background: transparent; color: rgba(255,255,255,0.85);
+  padding: 14px 10px; border-radius: 11px;
+  font-size: 1rem; font-weight: 800; line-height: 1.2;
+  min-height: 52px; touch-action: manipulation;
+  border: 2px solid transparent;
+}
+.role-tab.active {
+  background: #fff; color: var(--primary);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  border-color: #fff;
+}
+.role-tab:not(.active):active { background: rgba(255,255,255,0.18); }
+
+.tabs {
+  display: flex; background: #fff; border-bottom: 1px solid var(--border);
+  position: relative; z-index: 40;
+}
+.tab {
+  flex: 1; padding: 14px 8px; text-align: center; font-weight: 600;
+  color: var(--muted); background: transparent; font-size: 0.9rem;
+  border-bottom: 3px solid transparent;
+}
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+main { flex: 1; padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); max-width: 560px; margin: 0 auto; width: 100%; }
+
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px;
+}
+.card h2 { font-size: 1.15rem; margin-bottom: 12px; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.hidden { display: none !important; }
+
+.elder-hero { text-align: center; padding: 8px 0 16px; }
+.elder-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.status-pill {
+  display: inline-block; padding: 6px 16px; border-radius: 999px;
+  font-weight: 700; font-size: 0.95rem; margin: 8px 0;
+}
+.status-pill.ok { background: #dcfce7; color: var(--ok); }
+.status-pill.warn { background: #fef9c3; color: var(--warn); }
+.status-pill.alert { background: #fee2e2; color: var(--alert); }
+.last-check { font-size: 1.05rem; margin-top: 8px; line-height: 1.5; }
+
+.checkin-btn {
+  width: 100%; aspect-ratio: 1; max-width: 280px; margin: 20px auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 50%; background: linear-gradient(145deg, #14b8a6, #0f766e);
+  color: #fff; box-shadow: 0 12px 40px rgba(15, 118, 110, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 8px solid #99f6e4;
+}
+.checkin-btn:active { transform: scale(0.96); }
+.checkin-btn .emoji { font-size: 3.5rem; line-height: 1; margin-bottom: 8px; }
+.checkin-btn .label { font-size: 2rem; font-weight: 800; letter-spacing: 0.02em; }
+.checkin-btn .sub { font-size: 1rem; opacity: 0.9; margin-top: 4px; font-weight: 500; }
+.checkin-btn.done {
+  background: linear-gradient(145deg, #4ade80, #16a34a);
+  border-color: #bbf7d0;
+}
+
+/* Sticky SOS footer — always separated from voice/video */
+.sos-zone {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  margin-top: 24px;
+  padding: 14px 0 calc(10px + var(--safe-bottom));
+  border-top: 3px dashed #fca5a5;
+  background: linear-gradient(180deg, rgba(254,242,242,0.92), #fef2f2 40%);
+  box-shadow: 0 -8px 24px rgba(127, 29, 29, 0.08);
+}
+#elderView {
+  padding-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 140px);
+}
+#elderView .sos-zone { margin-top: auto; }
+.voice-section#elderVoiceSection .voice-inbox {
+  max-height: 100px;
+}
+@media (max-height: 900px) {
+  .elder-hero { margin-bottom: 2px; }
+  .elder-hero .elder-name { font-size: 1.3rem; }
+  .elder-hero .last-check { font-size: 0.85rem; }
+  .voice-section#elderVoiceSection { margin: 6px 0 0; }
+  .voice-section#elderVoiceSection .voice-inbox { max-height: 72px; }
+  .voice-section#elderVoiceSection .empty { padding: 6px; }
+  .voice-section#elderVoiceSection .empty .emoji { font-size: 1.4rem; margin-bottom: 2px; }
+  .sos-hold { min-height: 96px; padding: 14px 14px 14px 88px; }
+  .sos-hold .sos-ring { width: 64px; height: 64px; left: 12px; }
+}
+@media (max-height: 700px) {
+  .who-am-i { margin: 4px 0 2px; padding: 6px 8px; }
+  .checkin-btn { max-width: 160px; margin: 4px auto 2px; border-width: 5px; }
+  .checkin-btn .emoji { font-size: 2.2rem; }
+  .checkin-btn .label { font-size: 1.25rem; }
+  .checkin-btn .sub { font-size: 0.8rem; }
+  .elder-action-btn { min-height: 96px; padding: 10px 6px; font-size: 0.9rem; }
+  .elder-action-btn .ea-ico { font-size: 1.6rem; }
+  .elder-action-btn .hint { font-size: 0.65rem; }
+  .voice-section#elderVoiceSection .voice-inbox { max-height: 56px; }
+  .sos-hold { min-height: 84px; padding: 10px 12px 10px 78px; }
+  .sos-hold .sos-title { font-size: 1.15rem; }
+  .sos-hold .sos-hint { font-size: 0.8rem; }
+  #elderView { min-height: calc(100dvh - 120px); }
+}
+
+.sos-hold {
+  position: relative;
+  width: 100%;
+  min-height: 112px;
+  padding: 18px 16px 18px 96px;
+  border-radius: 20px;
+  background: #7f1d1d;
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(127, 29, 29, 0.4);
+  text-align: left;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none;
+  border: 3px solid #fecaca;
+}
+.sos-hold.holding { background: #991b1b; }
+.sos-hold .sos-ring {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  width: 72px; height: 72px;
+}
+.sos-hold .sos-ring-bg {
+  fill: none; stroke: rgba(255,255,255,0.25); stroke-width: 8;
+}
+.sos-hold .sos-ring-fg {
+  fill: none; stroke: #fbbf24; stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 276.46;
+  stroke-dashoffset: 276.46;
+  transform: rotate(-90deg); transform-origin: 50% 50%;
+  transition: none;
+}
+.sos-hold .sos-inner { display: flex; flex-direction: column; gap: 2px; }
+.sos-hold .sos-emoji { font-size: 1.4rem; line-height: 1; }
+.sos-hold .sos-title { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.02em; }
+.sos-hold .sos-hint { font-size: 0.9rem; font-weight: 600; opacity: 0.92; }
+
+.elder-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+.elder-action-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 18px 10px; border-radius: 18px;
+  color: #fff; font-weight: 800; font-size: 1.05rem; line-height: 1.2;
+  text-align: center; min-height: 128px;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+  border: 4px solid transparent;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+.elder-action-btn .ea-ico { font-size: 2.2rem; line-height: 1; }
+.elder-action-btn .hint {
+  display: block; font-size: 0.72rem; font-weight: 600; opacity: 0.9; margin-top: 2px;
+}
+.elder-action-btn.voice {
+  background: linear-gradient(145deg, #2563eb, #1d4ed8);
+  border-color: #93c5fd;
+}
+.elder-action-btn.voice:active, .elder-action-btn.voice.recording {
+  background: linear-gradient(145deg, #dc2626, #b91c1c);
+  border-color: #fecaca;
+  transform: scale(0.98);
+}
+.elder-action-btn.video {
+  background: linear-gradient(145deg, #7c3aed, #6d28d9);
+  border-color: #c4b5fd;
+}
+.elder-action-btn.video:active { background: linear-gradient(145deg, #6d28d9, #5b21b6); transform: scale(0.98); }
+
+.contact-item .c-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.contact-item .prio {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #e0f2f1; color: var(--primary); font-size: 0.75rem; font-weight: 800;
+  margin-right: 6px;
+}
+.btn-icon {
+  width: 36px; height: 36px; border-radius: 10px; font-size: 1rem; font-weight: 800;
+  background: #e0f2f1; color: var(--primary); display: inline-flex;
+  align-items: center; justify-content: center;
+}
+.btn-icon:disabled { opacity: 0.35; }
+.btn-icon.danger { background: #fee2e2; color: var(--alert); }
+
+.reminder-banner {
+  background: #fef3c7; border: 2px solid #f59e0b; border-radius: var(--radius);
+  padding: 16px; margin-bottom: 16px; text-align: center; font-size: 1.1rem; font-weight: 600;
+  color: #92400e;
+}
+.alert-banner {
+  background: #fee2e2; border: 2px solid #ef4444; border-radius: var(--radius);
+  padding: 16px; margin-bottom: 16px; text-align: center; font-size: 1.1rem; font-weight: 600;
+  color: #991b1b;
+}
+
+.elder-list { display: flex; flex-direction: column; gap: 12px; }
+.elder-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px; background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); border-left: 6px solid var(--ok);
+  text-align: left; width: 100%;
+}
+.elder-item.warn { border-left-color: var(--warn); }
+.elder-item.alert { border-left-color: var(--alert); }
+.elder-item .avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #ccfbf1; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; flex-shrink: 0;
+}
+.elder-item.warn .avatar { background: #fef9c3; }
+.elder-item.alert .avatar { background: #fee2e2; }
+.elder-item .info { flex: 1; min-width: 0; }
+.elder-item .name { font-size: 1.15rem; font-weight: 700; }
+.elder-item .meta { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.badge {
+  padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700;
+  white-space: nowrap;
+}
+.badge.ok { background: #dcfce7; color: var(--ok); }
+.badge.warn { background: #fef9c3; color: var(--warn); }
+.badge.alert { background: #fee2e2; color: var(--alert); }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.95rem; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--border);
+  border-radius: 12px; background: #fff; color: var(--text);
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none; border-color: var(--primary);
+}
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.95rem;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:active { background: var(--primary-dark); }
+.btn-secondary { background: #e0f2f1; color: var(--primary); }
+.btn-danger { background: #fee2e2; color: var(--alert); }
+.btn-block { width: 100%; }
+
+.contact-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px;
+}
+.contact-item .c-name { font-weight: 700; }
+.contact-item .c-phone { font-size: 0.85rem; color: var(--muted); }
+
+.notif-list { display: flex; flex-direction: column; gap: 10px; }
+.notif {
+  padding: 14px; border-radius: 12px; background: #fff;
+  border-left: 4px solid var(--primary); box-shadow: var(--shadow);
+}
+.notif.warn { border-left-color: var(--warn); background: #fffbeb; }
+.notif.alert { border-left-color: var(--alert); background: #fef2f2; }
+.notif .n-time { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+.demo-panel {
+  margin-top: 20px; padding: 14px; background: #f8fafc;
+  border: 2px dashed #94a3b8; border-radius: var(--radius);
+}
+.demo-panel h3 { font-size: 0.9rem; color: #64748b; margin-bottom: 10px; }
+.demo-panel .btn { font-size: 0.8rem; padding: 8px 12px; }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px;
+}
+.modal {
+  background: #fff; border-radius: 20px; padding: 24px;
+  max-width: 400px; width: 100%; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal h2 { font-size: 1.4rem; margin-bottom: 12px; }
+.modal p { font-size: 1.05rem; line-height: 1.5; margin-bottom: 16px; color: var(--text); }
+.modal.sos-modal { border: 4px solid var(--sos); }
+.modal.sos-modal h2 { color: var(--sos); font-size: 1.8rem; }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty .emoji { font-size: 3rem; margin-bottom: 12px; }
+
+.toast {
+  position: fixed; bottom: calc(24px + var(--safe-bottom)); left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: #134e4a; color: #fff; padding: 14px 24px;
+  border-radius: 999px; font-weight: 600; z-index: 200;
+  transition: transform 0.3s; max-width: 90%; text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.setup-hint {
+  background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 12px;
+  padding: 12px; font-size: 0.9rem; margin-bottom: 16px; line-height: 1.45;
+}
+
+.voice-section { margin: 16px 0 8px; }
+.voice-section .voice-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; gap: 8px;
+}
+.voice-section .voice-head h2 {
+  font-size: 1.05rem; font-weight: 800; color: var(--text);
+}
+.unread-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 26px; padding: 0 8px;
+  border-radius: 999px; background: var(--alert); color: #fff;
+  font-size: 0.8rem; font-weight: 800;
+}
+.unread-badge.hidden { display: none !important; }
+.voice-device-note {
+  font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4;
+}
+.voice-inbox { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 220px; overflow-y: auto; }
+.voice-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--card); border-radius: 14px;
+  box-shadow: var(--shadow); border: 2px solid transparent;
+}
+.voice-row.unread { border-color: #f59e0b; background: #fffbeb; }
+.voice-play {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); color: #fff; font-size: 1.35rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(15,118,110,0.3);
+}
+.voice-play:active { background: var(--primary-dark); }
+.voice-play.playing { background: #ca8a04; }
+.voice-meta { flex: 1; min-width: 0; }
+.voice-meta .who { font-weight: 700; font-size: 0.95rem; }
+.voice-meta .dur { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+.hold-talk {
+  width: 100%; padding: 22px 16px; border-radius: 18px;
+  background: linear-gradient(145deg, #0d9488, #0f766e);
+  color: #fff; font-size: 1.35rem; font-weight: 800;
+  box-shadow: 0 8px 28px rgba(15,118,110,0.35);
+  user-select: none; -webkit-user-select: none;
+  touch-action: none; margin: 8px 0 12px;
+  border: 4px solid #5eead4;
+}
+.hold-talk:active, .hold-talk.recording {
+  background: linear-gradient(145deg, #dc2626, #b91c1c);
+  border-color: #fecaca;
+  transform: scale(0.98);
+}
+.hold-talk .hint { display: block; font-size: 0.85rem; font-weight: 600; opacity: 0.9; margin-top: 4px; }
+
+.messages-pane { display: flex; flex-direction: column; min-height: 60vh; }
+.chat-thread {
+  flex: 1; display: flex; flex-direction: column; gap: 10px;
+  padding: 8px 0 16px; max-height: calc(100dvh - 320px); overflow-y: auto;
+}
+.chat-bubble {
+  max-width: 85%; padding: 10px 12px; border-radius: 16px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow);
+}
+.chat-bubble.from-family {
+  align-self: flex-end; background: #ccfbf1; border-bottom-right-radius: 4px;
+}
+.chat-bubble.from-elder {
+  align-self: flex-start; background: #fff; border-bottom-left-radius: 4px;
+}
+.chat-bubble .play {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--primary); color: #fff; font-size: 1.1rem; font-weight: 800;
+  flex-shrink: 0;
+}
+.chat-bubble .play.playing { background: #ca8a04; }
+.chat-bubble .info { min-width: 0; }
+.chat-bubble .dur { font-weight: 800; font-size: 1.05rem; }
+.chat-bubble .when { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.chat-empty { text-align: center; padding: 32px 12px; color: var(--muted); }
+.tab-badge {
+  display: inline-block; min-width: 18px; height: 18px; line-height: 18px;
+  padding: 0 5px; margin-left: 4px; border-radius: 999px;
+  background: var(--alert); color: #fff; font-size: 0.7rem; font-weight: 800;
+  vertical-align: middle;
+}
+.tabs .tab { font-size: 0.78rem; padding: 12px 2px; }
+.checkin-btn { max-width: 200px; margin: 8px auto 4px; }
+.checkin-btn .emoji { font-size: 2.8rem; }
+.checkin-btn .label { font-size: 1.55rem; }
+.elder-action-btn { min-height: 112px; padding: 14px 8px; }
+.elder-action-btn .ea-ico { font-size: 1.9rem; }
+.elder-action-btn { font-size: 0.98rem; }
+
+.elder-card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); border-left: 6px solid var(--ok);
+  padding: 14px; margin-bottom: 0;
+}
+.elder-card.warn { border-left-color: var(--warn); }
+.elder-card.alert { border-left-color: var(--alert); }
+.elder-card.step3 { border-left-color: #ea580c; }
+.elder-card.step4 { border-left-color: var(--alert); }
+.elder-card-top { display: flex; align-items: center; gap: 12px; }
+.elder-card .avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #ccfbf1; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; flex-shrink: 0;
+}
+.elder-card.warn .avatar, .elder-card.step2 .avatar { background: #fef9c3; }
+.elder-card.step3 .avatar { background: #ffedd5; }
+.elder-card.alert .avatar, .elder-card.step4 .avatar { background: #fee2e2; }
+.elder-card .name { font-size: 1.15rem; font-weight: 700; }
+.elder-card .meta { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.care-step-pill {
+  display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 800; background: #e0f2f1; color: var(--primary);
+}
+.care-step-pill.s2 { background: #fef9c3; color: #a16207; }
+.care-step-pill.s3 { background: #ffedd5; color: #c2410c; }
+.care-step-pill.s4 { background: #fee2e2; color: #b91c1c; }
+.care-action {
+  margin-top: 12px; padding: 12px; border-radius: 12px;
+  background: #f0fdfa; border: 1px solid #99f6e4;
+}
+.care-action.s2 { background: #fffbeb; border-color: #fcd34d; }
+.care-action.s3 { background: #fff7ed; border-color: #fdba74; }
+.care-action.s4 { background: #fef2f2; border-color: #fca5a5; }
+.care-action .ca-title { font-weight: 800; font-size: 0.9rem; margin-bottom: 8px; }
+.elder-card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-video {
+  flex: 1; min-width: 120px; padding: 12px 14px; border-radius: 12px;
+  background: #0369a1; color: #fff; font-weight: 800; font-size: 0.95rem;
+}
+.btn-video:active { background: #075985; }
+.messages-call-bar { margin-bottom: 10px; }
+
+.care-ladder { margin: 0 0 16px; padding: 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; }
+.care-ladder h3 { font-size: 1rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+.care-ladder ol { padding-left: 1.2rem; margin: 8px 0; }
+.care-ladder li { margin: 6px 0; font-size: 0.88rem; line-height: 1.4; color: var(--text); }
+.care-ladder .muted { margin-top: 8px; }
+
+.call-overlay {
+  position: fixed; inset: 0; z-index: 400; background: #0f172a; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 48px 24px calc(32px + var(--safe-bottom));
+}
+.call-overlay.hidden { display: none !important; }
+.call-avatar {
+  width: 120px; height: 120px; border-radius: 50%; background: #134e4a;
+  display: flex; align-items: center; justify-content: center; font-size: 3.5rem;
+  margin: 24px auto 16px; border: 4px solid #2dd4bf;
+}
+.call-name { font-size: 1.8rem; font-weight: 800; text-align: center; }
+.call-status { font-size: 1.1rem; opacity: 0.85; text-align: center; margin-top: 8px; }
+.call-actions { display: flex; gap: 28px; align-items: center; justify-content: center; width: 100%; }
+.call-btn {
+  width: 88px; height: 88px; border-radius: 50%; font-weight: 800; font-size: 0.85rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  color: #fff; border: none;
+}
+.call-btn .ico { font-size: 1.8rem; line-height: 1; }
+.call-btn.answer { background: #16a34a; width: 110px; height: 110px; font-size: 1rem; }
+.call-btn.decline, .call-btn.hangup { background: #dc2626; }
+.call-btn.mute, .call-btn.cam { background: #334155; width: 72px; height: 72px; }
+.call-btn.active-off { background: #64748b; }
+
+.in-call { padding: 12px; justify-content: flex-start; }
+.in-call-stage {
+  position: relative; width: 100%; flex: 1; border-radius: 16px; overflow: hidden;
+  background: #1e293b; min-height: 55vh; margin: 12px 0;
+}
+.in-call-stage video.self {
+  position: absolute; right: 12px; top: 12px; width: 34%; max-width: 140px;
+  aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; border: 2px solid #fff;
+  background: #000; z-index: 2;
+}
+.in-call-stage .remote {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 24px; text-align: center;
+  background: linear-gradient(160deg, #0f766e, #134e4a 60%, #0f172a);
+}
+.in-call-stage .remote .big { font-size: 3rem; margin-bottom: 12px; }
+.in-call-stage .remote .label { font-size: 1.05rem; font-weight: 700; max-width: 280px; line-height: 1.4; }
+.in-call-bar { display: flex; gap: 16px; justify-content: center; align-items: center; padding: 8px 0 4px; }
+.call-countdown { font-size: 1.2rem; font-weight: 700; color: #99f6e4; margin-top: 16px; text-align: center; }
+
+.who-am-i {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 10px; padding: 8px 10px;
+  background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 12px;
+  font-size: 0.8rem; color: #475569;
+}
+.who-am-i label { font-weight: 700; white-space: nowrap; }
+.who-am-i select {
+  flex: 1; min-width: 140px; padding: 8px 10px; border-radius: 10px;
+  border: 2px solid var(--border); background: #fff; font-weight: 700; font-size: 0.9rem;
+}
+.elder-nick { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+.conv-list { display: flex; flex-direction: column; gap: 0; background: var(--card);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.conv-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 14px 14px; text-align: left; background: #fff;
+  border-bottom: 1px solid var(--border); color: inherit;
+}
+.conv-row:last-child { border-bottom: none; }
+.conv-row:active { background: #f0fdfa; }
+.conv-avatar {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: #ccfbf1; color: var(--primary); font-weight: 800; font-size: 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.conv-body { flex: 1; min-width: 0; }
+.conv-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.conv-name { font-weight: 800; font-size: 1.05rem; }
+.conv-time { font-size: 0.75rem; color: var(--muted); flex-shrink: 0; }
+.conv-preview { font-size: 0.88rem; color: var(--muted); margin-top: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-unread {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px;
+  background: #22c55e; color: #fff; font-size: 0.75rem; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.thread-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.thread-header .back {
+  padding: 10px 12px; border-radius: 12px; background: #e0f2f1; color: var(--primary);
+  font-weight: 800; font-size: 0.95rem; flex-shrink: 0;
+}
+.thread-header .th-title { font-weight: 800; font-size: 1.15rem; flex: 1; min-width: 0; }
+.thread-header .th-nick { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+
+.pair-gate {
+  position: fixed; inset: 0; z-index: 500; background: linear-gradient(165deg, #0f766e, #134e4a 55%, #042f2e);
+  color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 28px 22px calc(28px + var(--safe-bottom)); text-align: center;
+}
+.pair-gate.hidden { display: none !important; }
+.pair-gate h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+.pair-gate .sub { opacity: 0.9; max-width: 340px; line-height: 1.45; margin-bottom: 28px; }
+.pair-gate .gate-btn {
+  width: min(360px, 100%); padding: 18px 16px; border-radius: 16px; font-size: 1.15rem; font-weight: 800;
+  margin: 8px 0; background: #fff; color: var(--primary);
+}
+.pair-gate .gate-btn.secondary { background: rgba(255,255,255,0.15); color: #fff; border: 2px solid rgba(255,255,255,0.45); }
+.pair-gate .code-row { display: flex; gap: 8px; width: min(360px, 100%); margin: 12px 0; }
+.pair-gate .code-row input {
+  flex: 1; padding: 16px; border-radius: 14px; border: none; font-size: 1.6rem; font-weight: 800;
+  letter-spacing: 0.35em; text-align: center;
+}
+.pair-code-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px;
+  background: #ecfdf5; color: #0f766e; font-weight: 800; font-size: 1.15rem; letter-spacing: 0.2em;
+  border: 2px dashed #5eead4; margin-top: 8px;
+}
+.cloud-badge {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.2); color: #fff;
+  align-self: center;
+}
+.cloud-badge.err { background: #fecaca; color: #991b1b; }
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <h1 id="appTitle">Presok</h1>
+  <div class="role-switch" role="tablist" aria-label="Who is using this phone">
+    <button type="button" class="role-tab active" id="roleTabElder" role="tab"
+      aria-selected="true" onclick="setRole('elder')"></button>
+    <button type="button" class="role-tab" id="roleTabFamily" role="tab"
+      aria-selected="false" onclick="setRole('family')"></button>
+  </div>
+</header>
+
+<div id="familyTabs" class="tabs hidden">
+  <button type="button" class="tab active" data-tab="elders" onclick="switchTab('elders')"></button>
+  <button type="button" class="tab" data-tab="messages" onclick="switchTab('messages')"></button>
+  <button type="button" class="tab" data-tab="contacts" onclick="switchTab('contacts')"></button>
+  <button type="button" class="tab" data-tab="alerts" onclick="switchTab('alerts')"></button>
+  <button type="button" class="tab" data-tab="settings" onclick="switchTab('settings')"></button>
+</div>
+
+<main>
+  <section id="elderView">
+    <div class="who-am-i" id="whoAmIBar">
+      <label for="whoAmISelect" id="whoAmILabel">Who am I? (demo)</label>
+      <select id="whoAmISelect" onchange="setWhoAmI()"></select>
+    </div>
+    <div id="elderReminder" class="reminder-banner hidden"></div>
+    <div id="elderAlertBanner" class="alert-banner hidden"></div>
+    <div class="elder-hero">
+      <div class="elder-name" id="elderDisplayName"></div>
+      <div class="status-pill ok" id="elderStatusPill"></div>
+      <div class="last-check" id="elderLastCheck"></div>
+    </div>
+    <button type="button" class="checkin-btn" id="checkinBtn" onclick="doCheckIn()">
+      <span class="emoji">👍</span>
+      <span class="label" id="checkinLabel"></span>
+      <span class="sub" id="checkinSub"></span>
+    </button>
+    <div class="elder-actions-row">
+      <button type="button" class="elder-action-btn voice" id="elderHoldTalk" aria-label="Hold to talk">
+        <span class="ea-ico" aria-hidden="true">🎙️</span>
+        <span id="elderHoldLabel">Hold to talk</span>
+        <span class="hint" id="elderHoldHint">Release to send · also checks you in</span>
+      </button>
+      <button type="button" class="elder-action-btn video" id="elderVideoCallBtn" onclick="startElderVideoCall()">
+        <span class="ea-ico" aria-hidden="true">📹</span>
+        <span id="elderVideoLabel">Video call family</span>
+        <span class="hint" id="elderVideoHint">Calls contacts in priority order</span>
+      </button>
+    </div>
+    <div class="voice-section" id="elderVoiceSection">
+      <div class="voice-head">
+        <h2 id="elderVoiceTitle">Messages from family</h2>
+        <span class="unread-badge hidden" id="elderUnreadBadge">0</span>
+      </div>
+      <p class="voice-device-note" id="elderVoiceNote"></p>
+      <div class="voice-inbox" id="elderVoiceInbox"></div>
+    </div>
+    <div class="sos-zone">
+      <button type="button" class="sos-hold" id="sosBtn" aria-label="Hold 2 seconds for emergency SOS">
+        <svg class="sos-ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="sos-ring-bg" cx="50" cy="50" r="44"></circle>
+          <circle class="sos-ring-fg" id="sosRingFg" cx="50" cy="50" r="44"></circle>
+        </svg>
+        <span class="sos-inner">
+          <span class="sos-emoji">🆘</span>
+          <span class="sos-title" id="sosLabel">SOS</span>
+          <span class="sos-hint" id="sosHoldHint">Hold 2s for emergency</span>
+        </span>
+      </button>
+    </div>
+  </section>
+
+  <section id="familyView" class="hidden">
+    <div id="tabElders">
+      <div class="setup-hint" id="familyHint"></div>
+      <div class="elder-list" id="elderList"></div>
+      <div class="card" style="margin-top:16px">
+        <h2 id="addElderTitle"></h2>
+        <div class="form-group">
+          <label id="lblElderName"></label>
+          <input type="text" id="newElderName" maxlength="40">
+        </div>
+        <button type="button" class="btn btn-primary btn-block" onclick="addElder()" id="btnAddElder"></button>
+      </div>
+    </div>
+
+    <div id="tabMessages" class="hidden">
+      <div id="messagesListView">
+        <div class="setup-hint" id="messagesHint"></div>
+        <div class="conv-list" id="convList"></div>
+      </div>
+      <div id="messagesThreadView" class="messages-pane hidden">
+        <div class="thread-header">
+          <button type="button" class="back" id="threadBackBtn" onclick="closeFamilyThread()">←</button>
+          <div style="min-width:0;flex:1">
+            <div class="th-title" id="threadElderName"></div>
+            <div class="th-nick" id="threadElderNick"></div>
+          </div>
+        </div>
+        <div class="messages-call-bar">
+          <button type="button" class="btn-video btn-block" id="messagesVideoBtn" onclick="startVideoCall()"></button>
+        </div>
+        <div class="chat-thread" id="chatThread"></div>
+        <button type="button" class="hold-talk" id="familyHoldTalk" aria-label="Hold to talk">
+          <span id="familyHoldLabel">Hold to talk</span>
+          <span class="hint" id="familyHoldHint">Release to send to the senior</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="tabContacts" class="hidden">
+      <div class="card">
+        <h2 id="contactsTitle"></h2>
+        <p class="muted" id="contactsDesc" style="margin-bottom:8px"></p>
+        <p class="muted" id="contactsPriorityHelp" style="margin-bottom:12px;font-weight:600;color:var(--primary)"></p>
+        <div id="contactList"></div>
+        <div class="form-group" style="margin-top:16px">
+          <label id="lblContactName"></label>
+          <input type="text" id="newContactName" maxlength="40">
+        </div>
+        <div class="form-group">
+          <label id="lblContactPhone"></label>
+          <input type="tel" id="newContactPhone" placeholder="+61 4…">
+        </div>
+        <div class="form-group">
+          <label id="lblContactRole"></label>
+          <select id="newContactRole">
+            <option value="family"></option>
+            <option value="carer"></option>
+            <option value="nurse"></option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" onclick="addContact()" id="btnAddContact"></button>
+      </div>
+    </div>
+
+    <div id="tabAlerts" class="hidden">
+      <div class="card">
+        <h2 id="alertsTitle"></h2>
+        <p class="muted" id="alertsDesc" style="margin-bottom:12px"></p>
+        <div class="notif-list" id="notifList"></div>
+        <button type="button" class="btn btn-secondary btn-block" style="margin-top:12px" onclick="clearNotifs()" id="btnClearNotifs"></button>
+      </div>
+    </div>
+
+    <div id="tabSettings" class="hidden">
+      <div class="card">
+        <h2 id="settingsTitle"></h2>
+        <div class="form-group">
+          <label id="lblThreshold"></label>
+          <select id="thresholdSelect" onchange="saveThreshold()">
+            <option value="12">12 hours</option>
+            <option value="24" selected>24 hours</option>
+            <option value="48">48 hours</option>
+            <option value="72">72 hours</option>
+          </select>
+        </div>
+        <p class="muted" id="thresholdHelp" style="margin-bottom:16px"></p>
+
+        <div class="care-ladder" id="careLadder">
+          <h3 id="careLadderTitle">Care steps</h3>
+          <p class="muted" id="careLadderIntro"></p>
+          <ol id="careLadderList"></ol>
+          <div class="form-group" style="margin-top:12px;margin-bottom:8px">
+            <label id="lblCareReply"></label>
+            <select id="careReplySelect" onchange="saveCareReply()">
+              <option value="1">1 hour</option>
+              <option value="2">2 hours</option>
+              <option value="6">6 hours</option>
+              <option value="12" selected>12 hours</option>
+              <option value="24">24 hours</option>
+            </select>
+          </div>
+          <p class="muted" id="careReplyHelp"></p>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:flex-start;gap:10px;font-weight:600">
+            <input type="checkbox" id="autoAnswerCheck" onchange="saveAutoAnswer()" style="width:22px;height:22px;margin-top:2px;flex-shrink:0">
+            <span id="lblAutoAnswer"></span>
+          </label>
+          <p class="muted" id="autoAnswerHelp" style="margin-top:6px;margin-bottom:16px"></p>
+        </div>
+
+        <div class="demo-panel" id="familyDemo" style="margin:0 0 16px; background:#f8fafc; border:1px dashed #94a3b8; border-radius:12px; padding:14px">
+          <h3 id="demoTitle" style="margin:0 0 10px; font-size:0.95rem; color:#0f766e"></h3>
+          <div class="btn-row" style="margin-bottom:8px">
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(1)">+1h</button>
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(12)">+12h</button>
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(24)">+24h</button>
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(48)">+48h</button>
+            <button type="button" class="btn btn-secondary" onclick="simulateHours(72)">+72h</button>
+          </div>
+          <button type="button" class="btn btn-danger btn-block" onclick="resetDemoTime()" id="resetTimeBtn"></button>
+          <button type="button" class="btn btn-secondary btn-block" onclick="resetDemoData()" id="btnResetDemo" style="margin-top:8px"></button>
+          <p class="muted" style="margin-top:8px" id="simClock"></p>
+        </div>
+
+        <div class="form-group">
+          <label id="lblActiveElder"></label>
+          <select id="activeElderSelect" onchange="setActiveElder()"></select>
+        </div>
+        <p class="muted" id="activeElderHelp" style="margin-bottom:16px"></p>
+        <div class="form-group">
+          <label id="lblLanguage"></label>
+          <select id="languageSelect" onchange="saveLanguage()">
+            <option value="en">English (Australia)</option>
+            <option value="zh">中文（简体）</option>
+          </select>
+        </div>
+        <p class="muted" id="languageHelp" style="margin-bottom:16px"></p>
+        <button type="button" class="btn btn-danger btn-block" onclick="resetDemoData()" id="btnResetAll"></button>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2 id="aboutTitle"></h2>
+        <p class="muted" id="aboutText" style="line-height:1.5"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+
+<div id="pairGate" class="pair-gate hidden" aria-live="polite">
+  <h1 id="pairGateTitle">Welcome to Presok</h1>
+  <p class="sub" id="pairGateSub"></p>
+  <div id="pairGateChoose">
+    <button type="button" class="gate-btn" id="btnPairFamily"></button>
+    <button type="button" class="gate-btn secondary" id="btnPairSenior"></button>
+    <button type="button" class="gate-btn secondary" id="btnPairLocal" style="margin-top:18px;font-size:0.95rem;opacity:0.85">Continue offline (this phone only)</button>
+  </div>
+  <div id="pairGateCode" class="hidden" style="width:min(360px,100%)">
+    <p id="pairEnterCode" style="margin-bottom:8px;font-weight:700"></p>
+    <div class="code-row">
+      <input id="pairCodeInput" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••">
+    </div>
+    <p class="sub" id="pairCodeHelp" style="margin:4px 0 12px;font-size:0.9rem"></p>
+    <button type="button" class="gate-btn" id="btnPairCode"></button>
+    <button type="button" class="gate-btn secondary" id="btnPairBack">Back</button>
+  </div>
+  <p id="pairGateStatus" style="margin-top:16px;min-height:1.2em;opacity:0.9"></p>
+</div>
+<div id="cloudBadge" class="cloud-badge hidden" style="position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:10px;z-index:60"></div>
+
+<div id="callOverlay" class="call-overlay hidden" aria-live="assertive"></div>
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
+<script src="./cloud.js"></script>
+<script>
+/* ===== Presok cloud config — set mode to 'supabase' after SETUP.md ===== */
+const PRESK_CONFIG = window.PRESK_CONFIG = {
+  mode: 'supabase', // 'mock' | 'supabase' | 'local'
+  supabaseUrl: 'https://rmxofemhptekiegfkgpn.supabase.co',
+  supabaseAnonKey: 'sb_publishable_13eYhbMPK0E1G8VsprJMTg_mEGDleRC',
+  mockUrl: 'http://127.0.0.1:8787'
+};
+
+const STORAGE_KEY = 'presok_v2_ui';
+const DATA_SCHEMA_VERSION = 5; // careReplyHours 12 so +24/+48/+72 demo steps land on ladder 2/3/4
+const i18n = {
+  en: {
+    appTitle: 'Presok',
+    roleElder: "I'm the senior",
+    roleFamily: 'Family & carers',
+    roleSwitchLabel: 'Who is using this phone',
+    checkinLabel: "I'm OK",
+    checkinSub: 'Tap to let family know',
+    checkinDone: "You're checked in ✓",
+    checkinDoneSub: 'Tap again to update',
+    sosLabel: 'SOS',
+    sosHoldHint: 'Hold 2s for emergency',
+    elderVideoLabel: 'Video call family',
+    elderVideoHint: 'Calls contacts in priority order',
+    contactsPriorityHelp: 'Order is call priority. Use ↑ ↓ so the senior reaches the right person first.',
+    callPriority: 'Priority',
+    callTrying: 'Calling',
+    callOf: 'of',
+    callNoAnswerDemo: 'No answer (demo)',
+    callSimulateAnswer: 'Simulate answer',
+    toastNoContacts: 'Add a family contact first (Family → Contacts)',
+    toastTryingNext: 'No answer — trying next contact…',
+    toastNoAnswerAll: 'No one answered. Try again or use SOS if this is urgent.',
+    toastCallingContact: 'Calling ',
+    lastNever: 'No check-in yet',
+    lastCheck: 'Last check-in: ',
+    statusOk: 'All good',
+    statusWarn: 'Please check in',
+    statusAlert: 'Alert sent',
+    reminderText: '⏰ Time to check in — tap "I\'m OK"',
+    alertText: '⚠️ Past due — your family has been notified',
+    demoTitle: 'Demo: simulate time passing',
+    resetTime: 'Back to real time',
+    simClock: 'Simulated time: ',
+    realTime: '(using real time)',
+    careLadderTitle: 'Care steps',
+    careLadderIntro: 'When a check-in is late, Presok walks family through clear next steps. Use the demo time buttons to try each step.',
+    careStep1: 'Step 1 — Daily check-in: senior taps I\'m OK (or sends a voice note).',
+    careStep2: 'Step 2 — Overdue: remind the senior, and family send a voice message.',
+    careStep3: 'Step 3 — No reply within the wait time: family start a video call.',
+    careStep4: 'Step 4 — Still no response: alert all contacts and consider visiting or calling 000.',
+    lblCareReply: 'Wait time before next care step',
+    careReplyHelp: 'Default 1 hour after becoming overdue (and again before the final alert). Driven by the demo clock.',
+    lblAutoAnswer: 'Auto-answer calls from family (demo)',
+    autoAnswerHelp: 'Requires the senior\'s consent in real life. In this demo, an incoming call answers itself after a 3-second countdown.',
+    stepPill1: 'Step 1 · On track',
+    stepPill2: 'Step 2 · Send a voice note',
+    stepPill3: 'Step 3 · Video call',
+    stepPill4: 'Step 4 · Alert contacts',
+    careAction1: 'All good — optional video hello',
+    careAction2: 'Suggested: send a voice message now',
+    careAction3: 'Suggested: start a video call',
+    careAction4: 'Suggested: alert contacts / call 000',
+    btnSendVoice: 'Send voice message',
+    btnVideoCall: 'Video call',
+    btnAlertContacts: 'Alert contacts guidance',
+    callCalling: 'Calling…',
+    callIncoming: 'Incoming video call',
+    callFromFamily: 'Family is calling',
+    callAnswer: 'Answer',
+    callDecline: 'Decline',
+    callHangup: 'Hang up',
+    callMute: 'Mute',
+    callUnmute: 'Unmute',
+    callCamOff: 'Camera off',
+    callCamOn: 'Camera on',
+    callRemoteDemo: 'Demo — real calls need a server',
+    callConnecting: 'Connecting…',
+    callEnded: 'Call ended',
+    callAutoIn: 'Auto-answer in ',
+    toastCallStarted: 'Calling the senior — switch views if needed',
+    toastCamDenied: 'Camera access denied. You can still talk with a blank preview in this demo.',
+    toastCallAnswered: 'Call answered — checked in ✓',
+    toastCallDeclined: 'Call declined',
+    toastContactsAlerted: 'Demo: contacts would be alerted to visit or call 000',
+    alertStep4: 'Still no response — alert contacts and consider visiting or calling 000',
+    tabMessages: 'Messages',
+    elderVoiceTitle: 'Messages from family',
+    voiceDeviceNote: 'Demo: voice messages stay on this device only (not sent over the internet).',
+    holdToTalk: 'Hold to talk',
+    holdHintElder: 'Release to send · also checks you in',
+    holdHintFamily: 'Release to send to the senior',
+    holdRecording: 'Recording… release to send',
+    voiceEmptyElder: 'No voice messages yet. Family can send one from Messages.',
+    voiceEmptyFamily: 'No messages yet. Hold the button below to send a voice note.',
+    voiceFromFamily: 'Family',
+    voiceFromElder: 'Senior',
+    voicePlay: 'Play',
+    voicePlaying: '⏸',
+    voiceSec: 's',
+    toastVoiceSent: 'Voice message sent',
+    toastVoiceCheckin: 'Voice sent — checked in ✓',
+    toastVoiceTooShort: 'Hold a little longer to record',
+    toastMicDenied: 'Microphone access denied. Allow the mic in Safari settings to send voice messages.',
+    toastMicUnavailable: 'Microphone not available in this browser.',
+    toastVoiceFailed: 'Could not record. Please try again.',
+    messagesHint: 'Each senior has their own chat — like WeChat. Tap a person to open their thread. Demo: everything stays on this phone.',
+    whoAmILabel: 'Who am I? (demo)',
+    whoAmIHelp: 'Switch which senior this phone is simulating.',
+    convEmpty: 'No conversations yet — add someone under People.',
+    convNoMessages: 'No messages yet',
+    convVoicePreview: 'Voice message',
+    threadBack: 'Chats',
+    nickMum: 'Mum',
+    nickDad: 'Dad',
+    tabElders: 'People',
+    tabContacts: 'Contacts',
+    tabAlerts: 'Alerts',
+    tabSettings: 'Settings',
+    familyHint: 'Green = OK · Yellow = elder reminded · Red = family alerted. To simulate an overdue check-in, open Settings → Demo: simulate time passing.',
+    addElderTitle: 'Add someone',
+    lblElderName: 'Name',
+    btnAddElder: 'Add',
+    contactsTitle: 'Emergency contacts',
+    contactsDesc: 'When a check-in is overdue or SOS is pressed, Presok simulates notifying these people. Order is the video-call priority for “Video call family”. A full version can send SMS or push alerts.',
+    lblContactName: 'Name',
+    lblContactPhone: 'Mobile number',
+    lblContactRole: 'Role',
+    roleFamilyOpt: 'Family',
+    roleCarerOpt: 'Carer',
+    roleNurseOpt: 'Nurse',
+    btnAddContact: 'Add contact',
+    alertsTitle: 'Alert log',
+    alertsDesc: 'These are in-app demo notifications. A production app would send SMS (e.g. Twilio) or push notifications.',
+    btnClearNotifs: 'Clear alerts',
+    settingsTitle: 'Settings',
+    lblThreshold: 'Alert if no check-in for',
+    thresholdHelp: 'Default is 24 hours. We remind the elder first, then alert contacts.',
+    lblActiveElder: 'Person shown on Elder view',
+    activeElderHelp: 'When this phone is on Elder view, this is who checks in.',
+    lblLanguage: 'Language',
+    languageHelp: 'English is the default. Chinese is optional.',
+    btnResetAll: 'Reset demo data',
+    btnResetDemo: 'Reset demo data',
+    resetDemoHelp: 'Reloads Margaret · Mum and John · Dad with sample messages. Clears voice clips on this phone.',
+    aboutTitle: 'About Presok',
+    aboutText: 'Presok is a prototype. Check-in data stays in this browser (localStorage). Voice notes are stored on this device (IndexedDB). A real product needs a backend, SMS/push, privacy compliance under the Australian Privacy Principles, and App Store / Google Play accounts. In an emergency in Australia, call 000.',
+    noElders: 'No one added yet',
+    noContacts: 'No contacts yet',
+    noNotifs: 'No alerts yet',
+    toastCheckin: "Checked in — family can see you're OK.",
+    toastAdded: 'Added',
+    toastDeleted: 'Removed',
+    toastSaved: 'Saved',
+    toastReset: 'Demo data reset — Mum & Dad loaded',
+    toastTimeReset: 'Back to real time',
+    toastSim: 'Simulated +',
+    hours: ' hours',
+    sosTitle: 'Emergency SOS',
+    sosBody: 'A full app would dial 000 and notify all contacts straight away. This is a demo only.',
+    sosAlert: 'Notify contacts',
+    sosClose: 'Close',
+    sosSent: 'Demo: contacts notified — dial 000 if this is real',
+    confirmDelete: 'Remove this?',
+    confirmReset: 'Reset demo data to Margaret · Mum and John · Dad? Voice messages on this phone will be cleared.',
+    agoJust: 'just now',
+    agoMin: ' min ago',
+    agoHour: ' h ago',
+    agoDay: ' d ago',
+    delete: 'Remove',
+    never: 'Never checked in',
+    elderPlaceholder: 'e.g. Margaret',
+    pairGateTitle: 'Welcome to Presok',
+    pairGateSub: 'Family and seniors use separate phones. Data syncs live.',
+    pairIAmFamily: "I'm family / carer",
+    pairIAmSenior: "I'm the senior",
+    pairFamilyCreating: 'Setting up your family space…',
+    pairEnterCode: 'Enter the 6-digit code from your family',
+    pairCodeLabel: 'Pairing code',
+    pairCodeBtn: 'Connect this phone',
+    pairCodeHelp: 'Ask your family to open People → show pairing code.',
+    pairShowCode: 'Pairing code',
+    pairRefreshCode: 'New code',
+    pairCopied: 'Code ready — tell the senior phone',
+    pairConnected: 'Connected! This phone is now linked.',
+    pairInvalid: 'Invalid or expired code. Ask family for a new one.',
+    pairOffline: 'Cloud not configured — running local demo on this phone only.',
+    pairSignOut: 'Unlink this phone',
+    voiceDeviceNote: 'Voice messages sync to family phones over the internet.',
+    voiceDeviceNoteLocal: 'Demo: voice messages stay on this device only (not sent over the internet).',
+    aboutText: 'Presok syncs check-ins and voice notes between phones (Supabase). Video calls are still a local demo. SMS alerts come later. In an emergency in Australia, call 000.',
+    messagesHint: 'Each senior has their own chat. Messages sync live to their phone.',
+    whoAmIHelp: 'On a paired senior phone this is locked. Family phones can switch who they are messaging.',
+    toastCheckin: "Checked in — family can see you're OK on their phone.",
+    cloudSyncing: 'Syncing…',
+    cloudLive: 'Live sync on',
+    cloudError: 'Could not sync. Check your connection.',
+
+  },
+  zh: {
+    appTitle: 'Presok',
+    roleElder: '我是长辈',
+    roleFamily: '家属 / 护工',
+    roleSwitchLabel: '谁在用这部手机',
+    checkinLabel: '我很好',
+    checkinSub: '点一下告诉家人',
+    checkinDone: '今日已签到 ✓',
+    checkinDoneSub: '再点也可以更新时间',
+    sosLabel: '紧急求助',
+    sosHoldHint: '按住 2 秒启动紧急求助',
+    elderVideoLabel: '视频呼叫家人',
+    elderVideoHint: '按联系人优先级依次拨打',
+    contactsPriorityHelp: '顺序即呼叫优先级。用 ↑ ↓ 把最该先接到的人排在最前。',
+    callPriority: '优先级',
+    callTrying: '正在呼叫',
+    callOf: '/',
+    callNoAnswerDemo: '无人接听（演示）',
+    callSimulateAnswer: '模拟接听',
+    toastNoContacts: '请先在「家属 → 联系人」添加联系人',
+    toastTryingNext: '无人接听 — 正在尝试下一位…',
+    toastNoAnswerAll: '无人接听。可再试，或紧急时用 SOS。',
+    toastCallingContact: '正在呼叫 ',
+    lastNever: '还没有签到过',
+    lastCheck: '上次签到：',
+    statusOk: '一切正常',
+    statusWarn: '请尽快签到',
+    statusAlert: '已超时告警',
+    reminderText: '⏰ 您还没有签到，请点一下「我很好」',
+    alertText: '⚠️ 已超过时限，已通知家人',
+    demoTitle: '演示：模拟时间流逝',
+    resetTime: '恢复真实时间',
+    simClock: '当前模拟时间：',
+    realTime: '（使用真实时间）',
+    careLadderTitle: '护理步骤',
+    careLadderIntro: '签到超时后，Presok 会按步骤提示家属。用演示时间按钮可逐级查看。',
+    careStep1: '步骤 1 — 日常签到：长辈点「我很好」或发语音。',
+    careStep2: '步骤 2 — 超时：提醒长辈，家属发送语音。',
+    careStep3: '步骤 3 — 等待时间内无回复：家属发起视频通话。',
+    careStep4: '步骤 4 — 仍无回应：通知所有联系人，考虑上门或拨打 000。',
+    lblCareReply: '进入下一步前的等待时间',
+    careReplyHelp: '默认超时后再等 1 小时（最终告警前再等一轮）。受演示时钟驱动。',
+    lblAutoAnswer: '自动接听家属来电（演示）',
+    autoAnswerHelp: '正式版需长辈同意。演示中来电会在 3 秒倒计时后自动接听。',
+    stepPill1: '步骤 1 · 正常',
+    stepPill2: '步骤 2 · 请发语音',
+    stepPill3: '步骤 3 · 视频通话',
+    stepPill4: '步骤 4 · 通知联系人',
+    careAction1: '一切正常 — 也可视频问候',
+    careAction2: '建议：现在发一条语音',
+    careAction3: '建议：发起视频通话',
+    careAction4: '建议：通知联系人 / 拨打 000',
+    btnSendVoice: '发送语音',
+    btnVideoCall: '视频通话',
+    btnAlertContacts: '告警联系人说明',
+    callCalling: '正在呼叫…',
+    callIncoming: '视频来电',
+    callFromFamily: '家人正在呼叫',
+    callAnswer: '接听',
+    callDecline: '拒绝',
+    callHangup: '挂断',
+    callMute: '静音',
+    callUnmute: '取消静音',
+    callCamOff: '关闭摄像头',
+    callCamOn: '打开摄像头',
+    callRemoteDemo: '演示 — 真实通话需要服务器',
+    callConnecting: '连接中…',
+    callEnded: '通话已结束',
+    callAutoIn: '自动接听倒计时 ',
+    toastCallStarted: '正在呼叫长辈 — 可切换到「我是长辈」接听',
+    toastCamDenied: '无法使用摄像头。演示中仍可继续（无画面）。',
+    toastCallAnswered: '已接听 — 并已签到 ✓',
+    toastCallDeclined: '已拒绝来电',
+    toastContactsAlerted: '演示：将通知联系人上门或拨打 000',
+    alertStep4: '仍无回应 — 请通知联系人，考虑上门或拨打 000',
+    tabMessages: '语音',
+    elderVoiceTitle: '家人的语音',
+    voiceDeviceNote: '演示：语音只保存在本机，不会联网发送。',
+    holdToTalk: '按住说话',
+    holdHintElder: '松手发送 · 同时算作签到',
+    holdHintFamily: '松手发送给长辈',
+    holdRecording: '正在录音…松手发送',
+    voiceEmptyElder: '还没有语音。家人可在「语音」页发送。',
+    voiceEmptyFamily: '还没有消息。按住下方按钮发送语音。',
+    voiceFromFamily: '家属',
+    voiceFromElder: '长辈',
+    voicePlay: '播放',
+    voicePlaying: '⏸',
+    voiceSec: '秒',
+    toastVoiceSent: '语音已发送',
+    toastVoiceCheckin: '语音已发送，并已签到 ✓',
+    toastVoiceTooShort: '请按久一点再松手',
+    toastMicDenied: '无法使用麦克风。请在 Safari 设置中允许麦克风，才能发语音。',
+    toastMicUnavailable: '此浏览器无法使用麦克风。',
+    toastVoiceFailed: '录音失败，请再试一次。',
+    messagesHint: '每位长辈有独立会话（像微信）。点开即可发语音或视频。演示：消息只在本机。',
+    whoAmILabel: '我是谁？（演示）',
+    whoAmIHelp: '切换这部手机正在模拟的长辈。',
+    convEmpty: '还没有会话 — 请先在「老人」里添加。',
+    convNoMessages: '还没有消息',
+    convVoicePreview: '语音消息',
+    threadBack: '会话列表',
+    nickMum: '妈妈',
+    nickDad: '爸爸',
+    tabElders: '老人',
+    tabContacts: '联系人',
+    tabAlerts: '通知',
+    tabSettings: '设置',
+    familyHint: '绿色=正常 · 黄色=已提醒老人 · 红色=已告警家属。模拟超时请到「设置」→「演示：模拟时间流逝」。',
+    addElderTitle: '添加老人',
+    lblElderName: '姓名',
+    btnAddElder: '添加',
+    contactsTitle: '紧急联系人',
+    contactsDesc: '超时或按 SOS 时，会在此模拟通知这些人。「视频呼叫家人」按此顺序拨打（正式版可发短信/推送）。',
+    lblContactName: '姓名',
+    lblContactPhone: '手机号',
+    lblContactRole: '身份',
+    roleFamilyOpt: '儿女/亲属',
+    roleCarerOpt: '护工',
+    roleNurseOpt: '护士',
+    btnAddContact: '添加联系人',
+    alertsTitle: '告警记录',
+    alertsDesc: '以下为应用内模拟通知。正式版可通过短信或推送发送。',
+    btnClearNotifs: '清空通知',
+    settingsTitle: '设置',
+    lblThreshold: '多久没签到就告警',
+    thresholdHelp: '默认 24 小时。超时后先提醒老人，再通知联系人。',
+    lblActiveElder: '当前老人端显示的人',
+    activeElderHelp: '打开「老人端」时，显示并操作这位的签到。',
+    lblLanguage: '语言',
+    languageHelp: '默认英文。中文为可选项。',
+    btnResetAll: '重置演示数据',
+    btnResetDemo: '重置演示数据',
+    resetDemoHelp: '重新载入「玛格丽特 · 妈妈」和「约翰 · 爸爸」及示例消息，并清除本机语音。',
+    aboutTitle: '关于 Presok',
+    aboutText: '这是原型。签到数据保存在本浏览器（localStorage），语音保存在本机（IndexedDB）。正式版需要后端、短信/推送、澳洲隐私合规与应用商店账号。澳洲紧急电话：000。',
+    noElders: '还没有添加老人',
+    noContacts: '还没有联系人',
+    noNotifs: '暂无通知',
+    toastCheckin: '签到成功！家人会看到您一切正常。',
+    toastAdded: '已添加',
+    toastDeleted: '已删除',
+    toastSaved: '已保存',
+    toastReset: '演示数据已重置 — 已载入妈妈与爸爸',
+    toastTimeReset: '已恢复真实时间',
+    toastSim: '已模拟前进 ',
+    hours: ' 小时',
+    sosTitle: '紧急求助',
+    sosBody: '正式版会拨打 000，并立即通知所有联系人。本原型仅做演示。',
+    sosAlert: '通知联系人',
+    sosClose: '关闭',
+    sosSent: '已模拟通知联系人，并提示拨打 000',
+    confirmDelete: '确定删除？',
+    confirmReset: '重置为演示数据（玛格丽特 · 妈妈、约翰 · 爸爸）？本机语音将被清除。',
+    agoJust: '刚刚',
+    agoMin: ' 分钟前',
+    agoHour: ' 小时前',
+    agoDay: ' 天前',
+    delete: '删除',
+    never: '从未签到',
+    elderPlaceholder: '例如：张大爷',
+    pairGateTitle: '欢迎使用 Presok',
+    pairGateSub: '家属和长辈用各自的手机，数据会实时同步。',
+    pairIAmFamily: '我是家属 / 护工',
+    pairIAmSenior: '我是长辈',
+    pairFamilyCreating: '正在创建家庭空间…',
+    pairEnterCode: '请输入家属给你的 6 位配对码',
+    pairCodeLabel: '配对码',
+    pairCodeBtn: '连接这部手机',
+    pairCodeHelp: '请家属在「老人」页查看配对码。',
+    pairShowCode: '配对码',
+    pairRefreshCode: '换新码',
+    pairCopied: '配对码已就绪 — 告诉长辈手机',
+    pairConnected: '已连接！这部手机已配对。',
+    pairInvalid: '配对码无效或已过期，请让家属换一个。',
+    pairOffline: '未配置云端 — 仅本机演示。',
+    pairSignOut: '解除这部手机的配对',
+    voiceDeviceNote: '语音会通过网络同步到家属手机。',
+    voiceDeviceNoteLocal: '演示：语音只保存在本机，不会联网发送。',
+    aboutText: 'Presok 会在手机之间同步签到与语音（Supabase）。视频通话仍为本地演示。短信告警稍后加入。澳洲紧急电话：000。',
+    messagesHint: '每位长辈有独立会话。消息会实时同步到对方手机。',
+    whoAmIHelp: '已配对的长辈手机不可切换。家属手机可选择会话对象。',
+    toastCheckin: '签到成功！家人手机会看到您一切正常。',
+    cloudSyncing: '同步中…',
+    cloudLive: '实时同步已开启',
+    cloudError: '同步失败，请检查网络。',
+
+  }
+};
+
+let _schemaMigrated = false;
+
+function defaultState() {
+  const now = Date.now();
+  return {
+    schemaVersion: DATA_SCHEMA_VERSION,
+    lang: 'en',
+    role: 'elder',
+    thresholdHours: 24,
+    careReplyHours: 12,
+    autoAnswerCalls: false,
+    timeOffsetMs: 0,
+    activeElderId: 'e1',
+    activeCall: null,
+    elders: [
+      { id: 'e1', name: 'Margaret', nick: 'Mum', lastCheckIn: now - 2 * 3600 * 1000, remindedAt: null, alertedAt: null, stepNotified: 1 },
+      { id: 'e2', name: 'John', nick: 'Dad', lastCheckIn: now - 5 * 3600 * 1000, remindedAt: null, alertedAt: null, stepNotified: 1 }
+    ],
+    contacts: [
+      { id: 'c1', name: 'James (son)', phone: '+61 400 000 001', role: 'family' },
+      { id: 'c2', name: 'Sarah (carer)', phone: '+61 400 000 002', role: 'carer' },
+      { id: 'c3', name: 'Emma (daughter)', phone: '+61 400 000 003', role: 'family' }
+    ],
+    notifications: [],
+    messages: [
+      { id: 'm_seed_e1', elderId: 'e1', from: 'family', durationMs: 3200, at: now - 3600 * 1000, readByElder: true, readByFamily: true },
+      { id: 'm_seed_e2', elderId: 'e2', from: 'elder', durationMs: 2100, at: now - 1800 * 1000, readByElder: true, readByFamily: false }
+    ]
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      localStorage.removeItem('elderCheckin_v1');
+      _schemaMigrated = true;
+      return defaultState();
+    }
+    const s = JSON.parse(raw);
+    // Old single-elder (or any pre-schema) saves → full re-seed Mum + Dad
+    if (!s || !s.schemaVersion || s.schemaVersion < DATA_SCHEMA_VERSION) {
+      try { localStorage.removeItem('elderCheckin_v1'); } catch (e) {}
+      _schemaMigrated = true;
+      return defaultState();
+    }
+    if (!s.elders || !s.elders.length) {
+      _schemaMigrated = true;
+      return defaultState();
+    }
+    if (s.lang !== 'zh') s.lang = 'en';
+    const merged = Object.assign(defaultState(), s);
+    merged.schemaVersion = DATA_SCHEMA_VERSION;
+    if (!Array.isArray(merged.messages)) merged.messages = [];
+    if (!Array.isArray(merged.elders)) merged.elders = defaultState().elders;
+    merged.elders = merged.elders.map(e => {
+      if (!e.nick) {
+        if (/margaret/i.test(e.name)) e.nick = 'Mum';
+        else if (/^john$/i.test(e.name) || /dad/i.test(e.name)) e.nick = 'Dad';
+      }
+      return e;
+    });
+    merged.messages = merged.messages.map(m => {
+      const { dataUrl, ...rest } = m;
+      return rest;
+    });
+    return merged;
+  } catch (e) {
+    _schemaMigrated = true;
+    return defaultState();
+  }
+}
+
+let state = loadState();
+let role = state.role || 'elder';
+let lang = state.lang || 'en';
+let familyTab = 'elders';
+let familyMsgPane = 'list'; // list | thread
+if (_schemaMigrated) {
+  try {
+    state.schemaVersion = DATA_SCHEMA_VERSION;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.assign({}, state, { lang: lang, role: role })));
+  } catch (e) {}
+}
+
+function t(key) { return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key; }
+
+
+function saveState() {
+  state.lang = lang;
+  state.role = role;
+  state.schemaVersion = DATA_SCHEMA_VERSION;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function now() { return Date.now() + (state.timeOffsetMs || 0); }
+
+function formatTime(ts) {
+  if (!ts) return t('never');
+  const d = new Date(ts);
+  return d.toLocaleString(lang === 'zh' ? 'zh-AU' : 'en-AU', {
+    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function relativeTime(ts) {
+  if (!ts) return t('never');
+  const diff = now() - ts;
+  if (diff < 60000) return t('agoJust');
+  if (diff < 3600000) return Math.floor(diff / 60000) + t('agoMin');
+  if (diff < 86400000) return Math.floor(diff / 3600000) + t('agoHour');
+  return Math.floor(diff / 86400000) + t('agoDay');
+}
+
+function pushNotif(level, elder, kind) {
+  const msgs = {
+    en: {
+      reminder: `Reminded ${elder.name} to check in`,
+      overdue: `⚠️ ${elder.name} has not checked in for ${state.thresholdHours} hours — please call or visit`,
+      sos: `🆘 ${elder.name} pressed SOS! Contact them or call 000 now`,
+      checkin: `${elder.name} checked in — all good`,
+      careVoice: `Care step 2: ${elder.name} is overdue — please send a voice message`,
+      careVideo: `Care step 3: no reply from ${elder.name} — please start a video call`,
+      careAlert: `Care step 4: still no response from ${elder.name} — alert contacts / consider 000`
+    },
+    zh: {
+      reminder: `已提醒 ${elder.name} 签到`,
+      overdue: `⚠️ ${elder.name} 超过 ${state.thresholdHours} 小时未签到，请尽快上门或电话确认`,
+      sos: `🆘 ${elder.name} 按下了紧急求助！请立即联系或拨打 000`,
+      checkin: `${elder.name} 已签到，一切正常`,
+      careVoice: `护理步骤 2：${elder.name} 已超时 — 请发送语音`,
+      careVideo: `护理步骤 3：${elder.name} 无回复 — 请发起视频通话`,
+      careAlert: `护理步骤 4：${elder.name} 仍无回应 — 请通知联系人 / 考虑 000`
+    }
+  };
+  state.notifications.unshift({
+    id: 'n' + Date.now() + Math.random().toString(36).slice(2, 6),
+    level, kind, elderId: elder.id,
+    message: (msgs[lang] || msgs.en)[kind],
+    at: now()
+  });
+  if (state.notifications.length > 50) state.notifications.length = 50;
+}
+
+function careReplyHours() {
+  const v = parseFloat(state.careReplyHours);
+  return Number.isFinite(v) && v > 0 ? v : 12;
+}
+
+/** Care ladder: 1 on-track, 2 overdue→voice, 3 no reply→video, 4 still silent→alert contacts */
+function getCareStep(elder) {
+  const th = state.thresholdHours || 24;
+  const replyH = careReplyHours();
+  if (!elder.lastCheckIn) {
+    // treat never-checked as overdue from "epoch" — force step 4 path via large hours
+    const hours = 9999;
+    return computeCareStep(elder, hours, th, replyH);
+  }
+  // Floor to whole hours so demo +24/+48/+72 buttons land on exact ladder steps
+  const hours = Math.floor((now() - elder.lastCheckIn) / 3600000);
+  return computeCareStep(elder, hours, th, replyH);
+}
+
+function computeCareStep(elder, hours, th, replyH) {
+  if (hours < th) {
+    elder.stepNotified = 1;
+    return 1;
+  }
+  // Step 2: overdue
+  if (!elder.remindedAt) {
+    elder.remindedAt = now();
+    pushNotif('warn', elder, 'reminder');
+  }
+  const sinceOverdue = hours - th;
+  // Inclusive upper bounds so +24/+48/+72 demo buttons land cleanly on steps 2/3/4
+  if (sinceOverdue <= replyH) {
+    if ((elder.stepNotified || 1) < 2) {
+      elder.stepNotified = 2;
+      pushNotif('warn', elder, 'careVoice');
+      saveState();
+    }
+    return 2;
+  }
+  // Step 3: no reply within wait → video
+  if (sinceOverdue <= replyH * 2) {
+    if ((elder.stepNotified || 1) < 3) {
+      elder.stepNotified = 3;
+      pushNotif('alert', elder, 'careVideo');
+      saveState();
+    }
+    return 3;
+  }
+  // Step 4
+  if (!elder.alertedAt) {
+    elder.alertedAt = now();
+    pushNotif('alert', elder, 'overdue');
+  }
+  if ((elder.stepNotified || 1) < 4) {
+    elder.stepNotified = 4;
+    saveState();
+  }
+  return 4;
+}
+
+function getStatus(elder) {
+  const step = getCareStep(elder);
+  if (step === 1) return 'ok';
+  if (step === 2) return 'warn';
+  if (step === 3) return 'warn';
+  return 'alert';
+}
+
+function careActionFor(step) {
+  if (step === 1) return { cls: 's1', title: t('careAction1'), btn: t('btnVideoCall'), onclick: "startVideoCall('{id}')" };
+  if (step === 2) return { cls: 's2', title: t('careAction2'), btn: t('btnSendVoice'), onclick: "suggestSendVoice('{id}')" };
+  if (step === 3) return { cls: 's3', title: t('careAction3'), btn: t('btnVideoCall'), onclick: "startVideoCall('{id}')" };
+  return { cls: 's4', title: t('careAction4'), btn: t('btnAlertContacts'), onclick: "alertContactsGuidance('{id}')" };
+}
+
+function getActiveElder() {
+  return state.elders.find(e => e.id === state.activeElderId) || state.elders[0];
+}
+
+function elderNick(elder) {
+  if (!elder || !elder.nick) return '';
+  const n = String(elder.nick).trim();
+  if (/^(mum|mom)$/i.test(n)) return t('nickMum');
+  if (/^dad$/i.test(n)) return t('nickDad');
+  return elder.nick;
+}
+
+function elderTitle(elder) {
+  if (!elder) return '';
+  const nick = elderNick(elder);
+  return nick ? (elder.name + ' · ' + nick) : elder.name;
+}
+
+function elderInitial(elder) {
+  if (!elder) return '?';
+  const src = elder.nick || elder.name || '?';
+  return src.trim().charAt(0).toUpperCase();
+}
+
+function setWhoAmI() {
+  const sel = document.getElementById('whoAmISelect');
+  if (!sel) return;
+  state.activeElderId = sel.value;
+  saveState();
+  render();
+  toast(t('whoAmIHelp'));
+}
+
+function fillWhoAmISelect() {
+  const sel = document.getElementById('whoAmISelect');
+  if (!sel) return;
+  sel.innerHTML = state.elders.map(e =>
+    `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(elderTitle(e))}</option>`
+  ).join('');
+  const lbl = document.getElementById('whoAmILabel');
+  if (lbl) lbl.textContent = t('whoAmILabel');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function applyI18n() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en-AU';
+  document.getElementById('appTitle').textContent = t('appTitle');
+  document.getElementById('roleTabElder').textContent = t('roleElder');
+  document.getElementById('roleTabFamily').textContent = t('roleFamily');
+  const switcher = document.querySelector('.role-switch');
+  if (switcher) switcher.setAttribute('aria-label', t('roleSwitchLabel'));
+  document.getElementById('checkinLabel').textContent = t('checkinLabel');
+  document.getElementById('checkinSub').textContent = t('checkinSub');
+  document.getElementById('sosLabel').textContent = t('sosLabel');
+  const sosHint = document.getElementById('sosHoldHint');
+  if (sosHint) sosHint.textContent = t('sosHoldHint');
+  const evl = document.getElementById('elderVideoLabel');
+  if (evl) evl.textContent = t('elderVideoLabel');
+  const evh = document.getElementById('elderVideoHint');
+  if (evh) evh.textContent = t('elderVideoHint');
+  document.getElementById('demoTitle').textContent = t('demoTitle');
+  document.getElementById('resetTimeBtn').textContent = t('resetTime');
+  document.getElementById('familyHint').textContent = t('familyHint');
+  document.getElementById('addElderTitle').textContent = t('addElderTitle');
+  document.getElementById('lblElderName').textContent = t('lblElderName');
+  document.getElementById('btnAddElder').textContent = t('btnAddElder');
+  document.getElementById('contactsTitle').textContent = t('contactsTitle');
+  document.getElementById('contactsDesc').textContent = t('contactsDesc');
+  const cph = document.getElementById('contactsPriorityHelp');
+  if (cph) cph.textContent = t('contactsPriorityHelp');
+  document.getElementById('lblContactName').textContent = t('lblContactName');
+  document.getElementById('lblContactPhone').textContent = t('lblContactPhone');
+  document.getElementById('lblContactRole').textContent = t('lblContactRole');
+  const roleSel = document.getElementById('newContactRole');
+  roleSel.options[0].text = t('roleFamilyOpt');
+  roleSel.options[1].text = t('roleCarerOpt');
+  roleSel.options[2].text = t('roleNurseOpt');
+  document.getElementById('btnAddContact').textContent = t('btnAddContact');
+  document.getElementById('alertsTitle').textContent = t('alertsTitle');
+  document.getElementById('alertsDesc').textContent = t('alertsDesc');
+  document.getElementById('btnClearNotifs').textContent = t('btnClearNotifs');
+  document.getElementById('settingsTitle').textContent = t('settingsTitle');
+  document.getElementById('lblThreshold').textContent = t('lblThreshold');
+  document.getElementById('thresholdHelp').textContent = t('thresholdHelp');
+  document.getElementById('lblActiveElder').textContent = t('lblActiveElder');
+  document.getElementById('activeElderHelp').textContent = t('activeElderHelp');
+  document.getElementById('lblLanguage').textContent = t('lblLanguage');
+  document.getElementById('languageHelp').textContent = t('languageHelp');
+  document.getElementById('btnResetAll').textContent = t('btnResetAll');
+  const brd = document.getElementById('btnResetDemo');
+  if (brd) brd.textContent = t('btnResetDemo');
+  document.getElementById('aboutTitle').textContent = t('aboutTitle');
+  document.getElementById('aboutText').textContent = t('aboutText');
+  document.getElementById('newElderName').placeholder = t('elderPlaceholder');
+  const tabs = document.querySelectorAll('#familyTabs .tab');
+  const tabKeys = ['tabElders', 'tabMessages', 'tabContacts', 'tabAlerts', 'tabSettings'];
+  tabs.forEach((el, i) => {
+    const key = tabKeys[i];
+    let label = t(key);
+    if (key === 'tabMessages') {
+      const unread = countUnreadForFamily();
+      if (unread > 0) label += ' · ' + unread;
+    }
+    el.textContent = label;
+  });
+  const langSel = document.getElementById('languageSelect');
+  if (langSel) langSel.value = lang;
+  // Voice UI labels
+  const evt = document.getElementById('elderVoiceTitle');
+  if (evt) evt.textContent = t('elderVoiceTitle');
+  const evn = document.getElementById('elderVoiceNote');
+  if (evn) evn.textContent = t('voiceDeviceNote');
+  const ehl = document.getElementById('elderHoldLabel');
+  if (ehl && !document.getElementById('elderHoldTalk').classList.contains('recording')) ehl.textContent = t('holdToTalk');
+  const ehh = document.getElementById('elderHoldHint');
+  if (ehh) ehh.textContent = t('holdHintElder');
+  const mh = document.getElementById('messagesHint');
+  if (mh) mh.textContent = t('messagesHint');
+  const wil = document.getElementById('whoAmILabel');
+  if (wil) wil.textContent = t('whoAmILabel');
+  fillWhoAmISelect();
+  const fhl = document.getElementById('familyHoldLabel');
+  if (fhl && !document.getElementById('familyHoldTalk').classList.contains('recording')) fhl.textContent = t('holdToTalk');
+  const fhh = document.getElementById('familyHoldHint');
+  if (fhh) fhh.textContent = t('holdHintFamily');
+  updateCareLadderLabels();
+  const mvb = document.getElementById('messagesVideoBtn');
+  if (mvb) mvb.textContent = '📹 ' + t('btnVideoCall');
+}
+
+function updateCareLadderLabels() {
+  const set = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
+  set('careLadderTitle', 'careLadderTitle');
+  set('careLadderIntro', 'careLadderIntro');
+  set('lblCareReply', 'lblCareReply');
+  set('careReplyHelp', 'careReplyHelp');
+  set('lblAutoAnswer', 'lblAutoAnswer');
+  set('autoAnswerHelp', 'autoAnswerHelp');
+  const ol = document.getElementById('careLadderList');
+  if (ol) {
+    ol.innerHTML = [1,2,3,4].map(i => `<li>${escapeHtml(t('careStep' + i))}</li>`).join('');
+  }
+}
+
+function updateSimClock() {
+  const el = document.getElementById('simClock');
+  if (!el) return;
+  el.textContent = state.timeOffsetMs
+    ? t('simClock') + formatTime(now())
+    : t('simClock') + t('realTime');
+}
+
+function renderElder() {
+  const elder = getActiveElder();
+  if (!elder) return;
+  fillWhoAmISelect();
+  const status = getStatus(elder);
+  saveState();
+  document.getElementById('elderDisplayName').textContent = elderTitle(elder);
+  const pill = document.getElementById('elderStatusPill');
+  pill.className = 'status-pill ' + status;
+  pill.textContent = status === 'ok' ? t('statusOk') : status === 'warn' ? t('statusWarn') : t('statusAlert');
+  const lastEl = document.getElementById('elderLastCheck');
+  lastEl.textContent = !elder.lastCheckIn
+    ? t('lastNever')
+    : t('lastCheck') + formatTime(elder.lastCheckIn) + ' (' + relativeTime(elder.lastCheckIn) + ')';
+  document.getElementById('elderReminder').classList.toggle('hidden', status !== 'warn');
+  document.getElementById('elderReminder').textContent = t('reminderText');
+  document.getElementById('elderAlertBanner').classList.toggle('hidden', status !== 'alert');
+  document.getElementById('elderAlertBanner').textContent = t('alertText');
+  const btn = document.getElementById('checkinBtn');
+  const recent = elder.lastCheckIn && (now() - elder.lastCheckIn) < 6 * 3600000;
+  btn.classList.toggle('done', !!recent && status === 'ok');
+  document.getElementById('checkinLabel').textContent = recent && status === 'ok' ? t('checkinDone') : t('checkinLabel');
+  document.getElementById('checkinSub').textContent = recent && status === 'ok' ? t('checkinDoneSub') : t('checkinSub');
+  updateSimClock();
+  renderElderVoice();
+  if (state.activeCall && state.activeCall.status === 'ringing' && state.activeCall.elderId === elder.id) {
+    showIncomingCall(elder);
+  } else if (state.activeCall && state.activeCall.status === 'connected' && state.activeCall.elderId === elder.id && callUiMode !== 'incall') {
+    showInCall();
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderFamily() {
+  const list = document.getElementById('elderList');
+  if (!state.elders.length) {
+    list.innerHTML = `<div class="empty"><div class="emoji">🙂</div>${t('noElders')}</div>`;
+  } else {
+    list.innerHTML = state.elders.map(elder => {
+      const step = getCareStep(elder);
+      const status = step === 1 ? 'ok' : step === 4 ? 'alert' : 'warn';
+      const cardCls = status + ' step' + step;
+      const meta = elder.lastCheckIn ? t('lastCheck') + relativeTime(elder.lastCheckIn) : t('never');
+      const pill = t('stepPill' + step);
+      const act = careActionFor(step);
+      const onclick = act.onclick.replace('{id}', elder.id);
+      const emoji = step === 1 ? '😊' : step === 2 ? '😟' : step === 3 ? '📹' : '🚨';
+      return `<div class="elder-card ${cardCls}">
+        <div class="elder-card-top">
+          <div class="avatar">${emoji}</div>
+          <div class="info" style="flex:1;min-width:0">
+            <div class="name">${escapeHtml(elder.name)}${(elderNick(elder) ? ' <span class="elder-nick">· ' + escapeHtml(elderNick(elder)) + '</span>' : '')}</div>
+            <div class="meta">${meta}</div>
+            <span class="care-step-pill s${step}">${pill}</span>
+          </div>
+        </div>
+        <div class="care-action ${act.cls}">
+          <div class="ca-title">${escapeHtml(act.title)}</div>
+          <button type="button" class="btn btn-primary btn-block" onclick="${onclick}">${escapeHtml(act.btn)}</button>
+        </div>
+        <div class="elder-card-actions">
+          <button type="button" class="btn btn-danger" style="padding:12px 14px;font-size:0.85rem" onclick="deleteElder('${elder.id}')">${t('delete')}</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  saveState();
+
+  const cl = document.getElementById('contactList');
+  if (!state.contacts.length) {
+    cl.innerHTML = `<div class="empty"><div class="emoji">📞</div>${t('noContacts')}</div>`;
+  } else {
+    const roleLabel = { family: t('roleFamilyOpt'), carer: t('roleCarerOpt'), nurse: t('roleNurseOpt') };
+    const n = state.contacts.length;
+    cl.innerHTML = state.contacts.map((c, idx) => `
+      <div class="contact-item">
+        <div style="display:flex;align-items:flex-start;gap:4px;min-width:0;flex:1">
+          <span class="prio" title="${escapeHtml(t('callPriority'))}">${idx + 1}</span>
+          <div style="min-width:0">
+            <div class="c-name">${escapeHtml(c.name)} <span class="muted">· ${roleLabel[c.role] || c.role}</span></div>
+            <div class="c-phone">${escapeHtml(c.phone || '')}</div>
+          </div>
+        </div>
+        <div class="c-actions">
+          <button type="button" class="btn-icon" ${idx === 0 ? 'disabled' : ''} onclick="moveContact('${c.id}',-1)" aria-label="Move up">↑</button>
+          <button type="button" class="btn-icon" ${idx === n - 1 ? 'disabled' : ''} onclick="moveContact('${c.id}',1)" aria-label="Move down">↓</button>
+          <button type="button" class="btn-icon danger" onclick="deleteContact('${c.id}')" aria-label="${escapeHtml(t('delete'))}">✕</button>
+        </div>
+      </div>`).join('');
+  }
+
+  const nl = document.getElementById('notifList');
+  if (!state.notifications.length) {
+    nl.innerHTML = `<div class="empty"><div class="emoji">🔔</div>${t('noNotifs')}</div>`;
+  } else {
+    nl.innerHTML = state.notifications.map(n => `
+      <div class="notif ${n.level}">
+        <div>${escapeHtml(n.message)}</div>
+        <div class="n-time">${formatTime(n.at)} · ${relativeTime(n.at)}</div>
+      </div>`).join('');
+  }
+
+  document.getElementById('thresholdSelect').value = String(state.thresholdHours || 24);
+  const crs = document.getElementById('careReplySelect');
+  if (crs) crs.value = String(state.careReplyHours || 1);
+  const aac = document.getElementById('autoAnswerCheck');
+  if (aac) aac.checked = !!state.autoAnswerCalls;
+  document.getElementById('activeElderSelect').innerHTML = state.elders.map(e =>
+    `<option value="${e.id}" ${e.id === state.activeElderId ? 'selected' : ''}>${escapeHtml(elderTitle(e))}</option>`
+  ).join('');
+  updateSimClock();
+  renderFamilyMessages();
+  updateCareLadderLabels();
+  const mvb = document.getElementById('messagesVideoBtn');
+  if (mvb) mvb.textContent = '📹 ' + t('btnVideoCall');
+}
+
+function syncRoleTabs() {
+  const elderTab = document.getElementById('roleTabElder');
+  const familyTabBtn = document.getElementById('roleTabFamily');
+  const isElder = role === 'elder';
+  elderTab.classList.toggle('active', isElder);
+  familyTabBtn.classList.toggle('active', !isElder);
+  elderTab.setAttribute('aria-selected', isElder ? 'true' : 'false');
+  familyTabBtn.setAttribute('aria-selected', isElder ? 'false' : 'true');
+}
+
+function syncViewUrl() {
+  try {
+    const url = new URL(location.href);
+    url.searchParams.set('view', role);
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  } catch (e) {}
+}
+
+function render() {
+  applyI18n();
+  syncRoleTabs();
+  document.getElementById('elderView').classList.toggle('hidden', role !== 'elder');
+  document.getElementById('familyView').classList.toggle('hidden', role !== 'family');
+  document.getElementById('familyTabs').classList.toggle('hidden', role !== 'family');
+  if (role === 'elder') renderElder();
+  else { renderFamily(); switchTab(familyTab); }
+  saveState();
+}
+
+function setRole(next) {
+  if (next !== 'elder' && next !== 'family') return;
+  if (role === next) {
+    // Still re-render so a missed first paint cannot leave the wrong pane
+    render();
+    syncViewUrl();
+    return;
+  }
+  role = next;
+  saveState();
+  render();
+  syncViewUrl();
+}
+
+function toggleRole() {
+  setRole(role === 'elder' ? 'family' : 'elder');
+}
+
+function switchTab(name) {
+  familyTab = name;
+  ['elders', 'messages', 'contacts', 'alerts', 'settings'].forEach(tname => {
+    const pane = document.getElementById('tab' + tname.charAt(0).toUpperCase() + tname.slice(1));
+    if (pane) pane.classList.toggle('hidden', tname !== name);
+  });
+  document.querySelectorAll('#familyTabs .tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === name);
+  });
+  if (name === 'messages') {
+    if (familyMsgPane !== 'thread') familyMsgPane = 'list';
+    if (familyMsgPane === 'thread') markMessagesRead('family');
+    renderFamilyMessages();
+    if (familyMsgPane === 'thread') {
+      const thread = document.getElementById('chatThread');
+      if (thread) thread.scrollTop = thread.scrollHeight;
+    }
+  }
+}
+
+function applyCheckIn(silent) {
+  const elder = getActiveElder();
+  if (!elder) return null;
+  elder.lastCheckIn = now();
+  elder.remindedAt = null;
+  elder.alertedAt = null;
+  elder.stepNotified = 1;
+  pushNotif('ok', elder, 'checkin');
+  saveState();
+  if (!silent) toast(t('toastCheckin'));
+  return elder;
+}
+
+function doCheckIn() {
+  if (!applyCheckIn(false)) return;
+  render();
+}
+
+function doSOS() {
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal sos-modal">
+        <h2>🆘 ${t('sosTitle')}</h2>
+        <p>${t('sosBody')}</p>
+        <p style="font-size:1.3rem;font-weight:800;color:#b91c1c">000</p>
+        <div class="btn-row" style="justify-content:center">
+          <button type="button" class="btn btn-danger" onclick="confirmSOS()">${t('sosAlert')}</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">${t('sosClose')}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function confirmSOS() {
+  const elder = getActiveElder();
+  if (elder) { pushNotif('alert', elder, 'sos'); saveState(); }
+  closeModal();
+  toast(t('sosSent'));
+  try { window.location.href = 'tel:000'; } catch (e) {}
+  render();
+}
+
+function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
+
+function addElder() {
+  const input = document.getElementById('newElderName');
+  const name = (input.value || '').trim();
+  if (!name) return;
+  const id = 'e' + Date.now();
+  state.elders.push({ id, name, nick: '', lastCheckIn: now(), remindedAt: null, alertedAt: null, stepNotified: 1 });
+  if (!state.activeElderId) state.activeElderId = id;
+  input.value = '';
+  saveState(); toast(t('toastAdded')); render();
+}
+
+function deleteElder(id) {
+  if (!confirm(t('confirmDelete'))) return;
+  state.elders = state.elders.filter(e => e.id !== id);
+  if (state.activeElderId === id) state.activeElderId = state.elders[0] ? state.elders[0].id : null;
+  saveState(); toast(t('toastDeleted')); render();
+}
+
+function addContact() {
+  const name = (document.getElementById('newContactName').value || '').trim();
+  const phone = (document.getElementById('newContactPhone').value || '').trim();
+  const roleVal = document.getElementById('newContactRole').value;
+  if (!name) return;
+  state.contacts.push({ id: 'c' + Date.now(), name, phone, role: roleVal });
+  document.getElementById('newContactName').value = '';
+  document.getElementById('newContactPhone').value = '';
+  saveState(); toast(t('toastAdded')); render();
+}
+
+function deleteContact(id) {
+  if (!confirm(t('confirmDelete'))) return;
+  state.contacts = state.contacts.filter(c => c.id !== id);
+  saveState(); toast(t('toastDeleted')); render();
+}
+
+function moveContact(id, dir) {
+  const i = state.contacts.findIndex(c => c.id === id);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j < 0 || j >= state.contacts.length) return;
+  const tmp = state.contacts[i];
+  state.contacts[i] = state.contacts[j];
+  state.contacts[j] = tmp;
+  saveState();
+  render();
+}
+
+function clearNotifs() { state.notifications = []; saveState(); render(); }
+
+function saveThreshold() {
+  state.thresholdHours = parseInt(document.getElementById('thresholdSelect').value, 10) || 24;
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
+  saveState(); toast(t('toastSaved')); render();
+}
+
+function saveCareReply() {
+  state.careReplyHours = parseFloat(document.getElementById('careReplySelect').value) || 1;
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
+  saveState(); toast(t('toastSaved')); render();
+}
+
+function saveAutoAnswer() {
+  state.autoAnswerCalls = !!document.getElementById('autoAnswerCheck').checked;
+  saveState(); toast(t('toastSaved'));
+}
+
+function suggestSendVoice(elderId) {
+  if (elderId) openFamilyThread(elderId);
+  else { setRole('family'); familyMsgPane = 'list'; switchTab('messages'); }
+  toast(t('btnSendVoice'));
+}
+
+function alertContactsGuidance(elderId) {
+  const elder = state.elders.find(e => e.id === elderId) || getActiveElder();
+  if (elder) pushNotif('alert', elder, 'careAlert');
+  saveState();
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal sos-modal">
+        <h2>🚨 ${escapeHtml(t('stepPill4'))}</h2>
+        <p>${escapeHtml(t('alertStep4'))}</p>
+        <p style="font-size:1.3rem;font-weight:800;color:#b91c1c">000</p>
+        <button type="button" class="btn btn-primary btn-block" onclick="closeModal();toast(t('toastContactsAlerted'))">${escapeHtml(t('sosClose'))}</button>
+      </div>
+    </div>`;
+  render();
+}
+
+function setActiveElder() {
+  state.activeElderId = document.getElementById('activeElderSelect').value;
+  saveState(); toast(t('toastSaved'));
+}
+
+function saveLanguage() {
+  lang = document.getElementById('languageSelect').value === 'zh' ? 'zh' : 'en';
+  saveState();
+  render();
+  toast(t('toastSaved'));
+}
+
+function simulateHours(h) {
+  state.timeOffsetMs = (state.timeOffsetMs || 0) + h * 3600000;
+  // Do not clear care flags — the demo clock should advance the care ladder
+  saveState(); toast(t('toastSim') + h + t('hours')); render();
+}
+
+function resetDemoTime() {
+  state.timeOffsetMs = 0;
+  state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
+  saveState(); toast(t('toastTimeReset')); render();
+}
+
+function resetDemoData() {
+  if (!confirm(t('confirmReset'))) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('elderCheckin_v1');
+  clearAllVoiceAudio().finally(() => {
+    state = defaultState();
+    lang = state.lang || 'en';
+    role = state.role || 'elder';
+    familyTab = 'elders';
+    familyMsgPane = 'list';
+    saveState();
+    toast(t('toastReset'));
+    render();
+  });
+}
+function resetAllData() { resetDemoData(); }
+
+(function applyQuery() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('lang') === 'en' || q.get('lang') === 'zh') { lang = q.get('lang'); state.lang = lang; }
+    const viewParam = (q.get('view') || '').toLowerCase();
+    if (viewParam === 'family' || viewParam === 'elder') { role = viewParam; state.role = role; }
+    if (q.get('tab')) { familyTab = q.get('tab'); }
+    if (q.get('fresh') === '1') {
+      const e = state.elders[0];
+      if (e) { e.lastCheckIn = Date.now() - 2 * 3600000; e.remindedAt = null; e.alertedAt = null; }
+      state.timeOffsetMs = 0;
+      state.notifications = [];
+      state.messages = [];
+      state.activeCall = null;
+      state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; e.stepNotified = 1; });
+    }
+    const sim = parseInt(q.get('sim') || '', 10);
+    if (sim > 0) {
+      state.timeOffsetMs = (state.timeOffsetMs || 0) + sim * 3600000;
+      state.elders.forEach(e => { e.remindedAt = null; e.alertedAt = null; });
+    }
+    saveState();
+  } catch (e) {}
+})();
+
+
+/* ===== Voice messaging (WeChat-style, on-device) ===== */
+const VOICE_IDB = 'presok_voice_v2';
+const VOICE_STORE = 'clips';
+const MAX_VOICE_MSGS = 40;
+const MIN_REC_MS = 450;
+const MAX_REC_MS = 60000;
+
+let voiceDbPromise = null;
+let mediaRecorder = null;
+let mediaStream = null;
+let recChunks = [];
+let recStartedAt = 0;
+let recFrom = null; // 'elder' | 'family'
+let recMaxTimer = null;
+let playingAudio = null;
+let playingId = null;
+let holdBound = false;
+let recArming = null; // Promise while getUserMedia / MediaRecorder starts
+let recCancelled = false;
+
+function openVoiceDb() {
+  if (voiceDbPromise) return voiceDbPromise;
+  voiceDbPromise = new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('no idb')); return; }
+    const req = indexedDB.open(VOICE_IDB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(VOICE_STORE)) db.createObjectStore(VOICE_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('idb open failed'));
+  });
+  return voiceDbPromise;
+}
+
+async function idbPutAudio(id, dataUrl) {
+  try {
+    const db = await openVoiceDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readwrite');
+      tx.objectStore(VOICE_STORE).put(dataUrl, id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    // Fallback: tiny stash in localStorage (may fail for large clips)
+    try {
+      const bag = JSON.parse(localStorage.getItem(STORAGE_KEY + '_voice') || '{}');
+      bag[id] = dataUrl;
+      localStorage.setItem(STORAGE_KEY + '_voice', JSON.stringify(bag));
+    } catch (e2) {
+      console.warn('voice store failed', e2);
+      throw e2;
+    }
+  }
+}
+
+async function idbGetAudio(id) {
+  try {
+    const db = await openVoiceDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readonly');
+      const req = tx.objectStore(VOICE_STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    try {
+      const bag = JSON.parse(localStorage.getItem(STORAGE_KEY + '_voice') || '{}');
+      return bag[id] || null;
+    } catch (e2) { return null; }
+  }
+}
+
+async function idbDelAudio(id) {
+  try {
+    const db = await openVoiceDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readwrite');
+      tx.objectStore(VOICE_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    try {
+      const bag = JSON.parse(localStorage.getItem(STORAGE_KEY + '_voice') || '{}');
+      delete bag[id];
+      localStorage.setItem(STORAGE_KEY + '_voice', JSON.stringify(bag));
+    } catch (e2) {}
+  }
+}
+
+async function clearAllVoiceAudio() {
+  try {
+    const db = await openVoiceDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(VOICE_STORE, 'readwrite');
+      tx.objectStore(VOICE_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {}
+  try { localStorage.removeItem(STORAGE_KEY + '_voice'); } catch (e) {}
+}
+
+function pickRecorderMime() {
+  const types = [
+    'audio/mp4',
+    'audio/aac',
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus'
+  ];
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  for (const type of types) {
+    try { if (MediaRecorder.isTypeSupported(type)) return type; } catch (e) {}
+  }
+  return '';
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result);
+    fr.onerror = () => reject(fr.error);
+    fr.readAsDataURL(blob);
+  });
+}
+
+function formatDuration(ms) {
+  const sec = Math.max(1, Math.round((ms || 0) / 1000));
+  return sec + t('voiceSec');
+}
+
+function messagesForElderId(elderId) {
+  return (state.messages || []).filter(m => m.elderId === elderId);
+}
+
+function messagesForActiveElder() {
+  const elder = getActiveElder();
+  if (!elder) return [];
+  return messagesForElderId(elder.id);
+}
+
+function countUnreadForElder() {
+  return messagesForActiveElder().filter(m => m.from === 'family' && !m.readByElder).length;
+}
+
+function countUnreadForFamilyElder(elderId) {
+  return messagesForElderId(elderId).filter(m => m.from === 'elder' && !m.readByFamily).length;
+}
+
+function countUnreadForFamily() {
+  // total across all seniors (Messages tab badge)
+  return (state.messages || []).filter(m => m.from === 'elder' && !m.readByFamily).length;
+}
+
+function lastMessageForElder(elderId) {
+  const msgs = messagesForElderId(elderId);
+  if (!msgs.length) return null;
+  return msgs.slice().sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+}
+
+function markMessagesRead(viewer) {
+  const elder = getActiveElder();
+  if (!elder) return;
+  let changed = false;
+  (state.messages || []).forEach(m => {
+    if (m.elderId !== elder.id) return;
+    if (viewer === 'elder' && m.from === 'family' && !m.readByElder) { m.readByElder = true; changed = true; }
+    if (viewer === 'family' && m.from === 'elder' && !m.readByFamily) { m.readByFamily = true; changed = true; }
+  });
+  if (changed) saveState();
+}
+
+function trimMessages() {
+  while ((state.messages || []).length > MAX_VOICE_MSGS) {
+    const old = state.messages.pop();
+    if (old) idbDelAudio(old.id);
+  }
+}
+
+function stopPlaying() {
+  if (playingAudio) {
+    try { playingAudio.pause(); } catch (e) {}
+    playingAudio = null;
+  }
+  playingId = null;
+  document.querySelectorAll('.voice-play.playing, .chat-bubble .play.playing').forEach(el => {
+    el.classList.remove('playing');
+    if (el.dataset.icon) el.textContent = el.dataset.icon;
+  });
+}
+
+async function playVoice(id, btn) {
+  if (playingId === id) { stopPlaying(); return; }
+  stopPlaying();
+  const msg = (state.messages || []).find(m => m.id === id);
+  if (msg) {
+    if (role === 'elder' && !msg.readByElder) { msg.readByElder = true; saveState(); }
+    if (role === 'family' && !msg.readByFamily) { msg.readByFamily = true; saveState(); }
+  }
+  const dataUrl = await idbGetAudio(id);
+  if (!dataUrl) { toast(t('toastVoiceFailed')); return; }
+  const audio = new Audio(dataUrl);
+  playingAudio = audio;
+  playingId = id;
+  if (btn) {
+    btn.classList.add('playing');
+    btn.dataset.icon = btn.dataset.icon || btn.textContent;
+    btn.textContent = t('voicePlaying');
+  }
+  audio.onended = () => { stopPlaying(); if (role === 'elder') renderElderVoice(); };
+  audio.onerror = () => { stopPlaying(); toast(t('toastVoiceFailed')); };
+  try { await audio.play(); } catch (e) { stopPlaying(); toast(t('toastVoiceFailed')); }
+  if (role === 'elder') renderElderVoice();
+}
+
+function renderElderVoice() {
+  const inbox = document.getElementById('elderVoiceInbox');
+  const badge = document.getElementById('elderUnreadBadge');
+  if (!inbox) return;
+  const msgs = messagesForActiveElder().filter(m => m.from === 'family').slice(0, 8);
+  const unread = countUnreadForElder();
+  if (badge) {
+    badge.textContent = String(unread);
+    badge.classList.toggle('hidden', unread === 0);
+  }
+  if (!msgs.length) {
+    inbox.innerHTML = `<div class="empty" style="padding:8px"><div class="emoji">🎙️</div>${escapeHtml(t('voiceEmptyElder'))}</div>`;
+  } else {
+    inbox.innerHTML = msgs.map(m => `
+      <div class="voice-row ${m.readByElder ? '' : 'unread'}">
+        <button type="button" class="voice-play" data-icon="▶" onclick="playVoice('${m.id}', this)">▶</button>
+        <div class="voice-meta">
+          <div class="who">${escapeHtml(t('voiceFromFamily'))}</div>
+          <div class="dur">${formatDuration(m.durationMs)} · ${relativeTime(m.at)}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function syncMessagesPane() {
+  const listV = document.getElementById('messagesListView');
+  const thrV = document.getElementById('messagesThreadView');
+  if (!listV || !thrV) return;
+  const showThread = familyMsgPane === 'thread';
+  listV.classList.toggle('hidden', showThread);
+  thrV.classList.toggle('hidden', !showThread);
+}
+
+function openFamilyThread(elderId) {
+  const elder = state.elders.find(e => e.id === elderId);
+  if (!elder) return;
+  state.activeElderId = elder.id;
+  familyMsgPane = 'thread';
+  familyTab = 'messages';
+  role = 'family';
+  saveState();
+  render();
+  markMessagesRead('family');
+  renderFamilyMessages();
+  const thread = document.getElementById('chatThread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+}
+
+function closeFamilyThread() {
+  familyMsgPane = 'list';
+  renderFamilyMessages();
+}
+
+function renderConvList() {
+  const list = document.getElementById('convList');
+  if (!list) return;
+  if (!state.elders.length) {
+    list.innerHTML = `<div class="empty"><div class="emoji">💬</div>${escapeHtml(t('convEmpty'))}</div>`;
+    return;
+  }
+  list.innerHTML = state.elders.map(elder => {
+    const last = lastMessageForElder(elder.id);
+    const unread = countUnreadForFamilyElder(elder.id);
+    let preview = t('convNoMessages');
+    let when = '';
+    if (last) {
+      const who = last.from === 'family' ? t('voiceFromFamily') : t('voiceFromElder');
+      preview = '🎤 ' + t('convVoicePreview') + ' · ' + formatDuration(last.durationMs) + ' · ' + who;
+      when = relativeTime(last.at);
+    }
+    const nick = elderNick(elder);
+    return `<button type="button" class="conv-row" onclick="openFamilyThread('${elder.id}')">
+      <div class="conv-avatar">${escapeHtml(elderInitial(elder))}</div>
+      <div class="conv-body">
+        <div class="conv-top">
+          <div class="conv-name">${escapeHtml(elder.name)}${nick ? ' <span class="elder-nick">· ' + escapeHtml(nick) + '</span>' : ''}</div>
+          <div class="conv-time">${escapeHtml(when)}</div>
+        </div>
+        <div class="conv-preview">${escapeHtml(preview)}</div>
+      </div>
+      ${unread ? `<span class="conv-unread">${unread}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+
+function renderFamilyThread() {
+  const elder = getActiveElder();
+  const nameEl = document.getElementById('threadElderName');
+  const nickEl = document.getElementById('threadElderNick');
+  if (nameEl) nameEl.textContent = elder ? elder.name : '';
+  if (nickEl) nickEl.textContent = elder && elder.nick ? elder.nick : '';
+  const back = document.getElementById('threadBackBtn');
+  if (back) back.textContent = '← ' + t('threadBack');
+  const mvb = document.getElementById('messagesVideoBtn');
+  if (mvb) mvb.textContent = '📹 ' + t('btnVideoCall') + (elder ? ' · ' + elder.name : '');
+  const thread = document.getElementById('chatThread');
+  if (!thread) return;
+  const msgs = messagesForActiveElder().slice().reverse();
+  if (!msgs.length) {
+    thread.innerHTML = `<div class="chat-empty"><div class="emoji" style="font-size:2.5rem">💬</div>${escapeHtml(t('voiceEmptyFamily'))}</div>`;
+  } else {
+    thread.innerHTML = msgs.map(m => `
+      <div class="chat-bubble from-${m.from}">
+        <button type="button" class="play" data-icon="▶" onclick="playVoice('${m.id}', this)">▶</button>
+        <div class="info">
+          <div class="dur">${formatDuration(m.durationMs)}</div>
+          <div class="when">${escapeHtml(m.from === 'family' ? t('voiceFromFamily') : t('voiceFromElder'))} · ${formatTime(m.at)}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function renderFamilyMessages() {
+  syncMessagesPane();
+  if (familyMsgPane === 'thread') renderFamilyThread();
+  else renderConvList();
+}
+
+function setHoldUi(from, recording) {
+  const btn = document.getElementById(from === 'elder' ? 'elderHoldTalk' : 'familyHoldTalk');
+  const label = document.getElementById(from === 'elder' ? 'elderHoldLabel' : 'familyHoldLabel');
+  if (!btn || !label) return;
+  btn.classList.toggle('recording', !!recording);
+  label.textContent = recording ? t('holdRecording') : t('holdToTalk');
+}
+
+async function startHoldRecord(from, ev) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  if (recArming) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast(t('toastMicUnavailable'));
+    return;
+  }
+  stopPlaying();
+  recCancelled = false;
+  recFrom = from;
+  recChunks = [];
+  setHoldUi(from, true);
+  recArming = (async () => {
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (recCancelled) { stopMediaTracks(); return; }
+      const mime = pickRecorderMime();
+      try {
+        mediaRecorder = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
+      } catch (err) {
+        stopMediaTracks();
+        setHoldUi(from, false);
+        toast(t('toastVoiceFailed'));
+        return;
+      }
+      mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
+      mediaRecorder.onerror = () => { toast(t('toastVoiceFailed')); };
+      recStartedAt = Date.now();
+      mediaRecorder.start(100);
+      clearTimeout(recMaxTimer);
+      recMaxTimer = setTimeout(() => stopHoldRecord(from, true), MAX_REC_MS);
+      if (recCancelled) { await stopHoldRecord(from, false); }
+    } catch (err) {
+      setHoldUi(from, false);
+      const name = (err && err.name) || '';
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') toast(t('toastMicDenied'));
+      else toast(t('toastMicUnavailable'));
+    } finally {
+      recArming = null;
+    }
+  })();
+  await recArming;
+}
+
+function stopMediaTracks() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(tr => { try { tr.stop(); } catch (e) {} });
+    mediaStream = null;
+  }
+}
+
+async function stopHoldRecord(from, auto) {
+  clearTimeout(recMaxTimer);
+  const btnFrom = from || recFrom;
+  // If still arming mic, mark cancel/finish after start resolves
+  if (recArming && !(mediaRecorder && mediaRecorder.state === 'recording')) {
+    recCancelled = true;
+    try { await recArming; } catch (e) {}
+  }
+  setHoldUi(btnFrom || 'elder', false);
+  const mr = mediaRecorder;
+  if (!mr || mr.state === 'inactive') {
+    stopMediaTracks();
+    mediaRecorder = null;
+    return;
+  }
+  const started = recStartedAt;
+  const who = recFrom;
+  const mime = mr.mimeType || pickRecorderMime() || 'audio/webm';
+  const blob = await new Promise(resolve => {
+    mr.onstop = () => {
+      resolve(new Blob(recChunks, { type: mime }));
+    };
+    try { mr.stop(); } catch (e) { resolve(new Blob()); }
+  });
+  stopMediaTracks();
+  mediaRecorder = null;
+  recChunks = [];
+  const dur = Date.now() - started;
+  if (dur < MIN_REC_MS || !blob || blob.size < 20) {
+    toast(t('toastVoiceTooShort'));
+    return;
+  }
+  try {
+    const dataUrl = await blobToDataUrl(blob);
+    await saveVoiceMessage(who, dataUrl, dur);
+  } catch (e) {
+    console.warn(e);
+    toast(t('toastVoiceFailed'));
+  }
+}
+
+function cancelHoldRecord(from) {
+  clearTimeout(recMaxTimer);
+  recCancelled = true;
+  setHoldUi(from || recFrom || 'elder', false);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.onstop = null; mediaRecorder.stop(); } catch (e) {}
+  }
+  mediaRecorder = null;
+  recChunks = [];
+  stopMediaTracks();
+}
+
+async function saveVoiceMessage(from, dataUrl, durationMs) {
+  const elder = getActiveElder();
+  if (!elder) return;
+  const id = 'v' + Date.now() + Math.random().toString(36).slice(2, 7);
+  await idbPutAudio(id, dataUrl);
+  const msg = {
+    id,
+    from,
+    elderId: elder.id,
+    durationMs,
+    at: now(),
+    readByElder: from === 'elder',
+    readByFamily: from === 'family'
+  };
+  if (!state.messages) state.messages = [];
+  state.messages.unshift(msg);
+  trimMessages();
+  if (from === 'elder') {
+    applyCheckIn(true);
+    toast(t('toastVoiceCheckin'));
+  } else {
+    toast(t('toastVoiceSent'));
+  }
+  saveState();
+  if (role === 'family' && familyTab === 'messages' && from === 'family') familyMsgPane = 'thread';
+  render();
+  if (role === 'family' && familyTab === 'messages' && familyMsgPane === 'thread') {
+    const thread = document.getElementById('chatThread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  }
+}
+
+function bindHoldButton(el, from) {
+  if (!el || el.dataset.bound === '1') return;
+  el.dataset.bound = '1';
+  let lastTouchAt = 0;
+  const onStart = e => startHoldRecord(from, e);
+  const onEnd = e => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    stopHoldRecord(from, false);
+  };
+  // Pointer Events (iOS 13+) — avoids touch+mouse double-fire on iOS Safari
+  if (window.PointerEvent) {
+    el.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && (Date.now() - lastTouchAt) < 700) return;
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') lastTouchAt = Date.now();
+      try { el.setPointerCapture && e.pointerId != null && el.setPointerCapture(e.pointerId); } catch (err) {}
+      onStart(e);
+    });
+    el.addEventListener('pointerup', onEnd);
+    el.addEventListener('pointercancel', e => { e.preventDefault(); cancelHoldRecord(from); });
+    el.addEventListener('lostpointercapture', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from) stopHoldRecord(from, false);
+    });
+  } else {
+    el.addEventListener('touchstart', e => { lastTouchAt = Date.now(); onStart(e); }, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: false });
+    el.addEventListener('touchcancel', e => { e.preventDefault(); cancelHoldRecord(from); }, { passive: false });
+    el.addEventListener('mousedown', e => {
+      if (Date.now() - lastTouchAt < 700) return;
+      onStart(e);
+    });
+    el.addEventListener('mouseup', e => {
+      if (Date.now() - lastTouchAt < 700) return;
+      onEnd(e);
+    });
+    el.addEventListener('mouseleave', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording' && recFrom === from) stopHoldRecord(from, false);
+    });
+  }
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function bindVoiceControls() {
+  bindHoldButton(document.getElementById('elderHoldTalk'), 'elder');
+  bindHoldButton(document.getElementById('familyHoldTalk'), 'family');
+}
+
+
+/* ===== Video call demo (local camera only) ===== */
+let callStream = null;
+let callAudioTrack = null;
+let callVideoTrack = null;
+let autoAnswerTimer = null;
+let autoAnswerTick = null;
+let callUiMode = null; // outgoing | incoming | incall
+
+function getCallOverlay() { return document.getElementById('callOverlay'); }
+
+function clearAutoAnswerTimers() {
+  clearTimeout(autoAnswerTimer);
+  clearInterval(autoAnswerTick);
+  autoAnswerTimer = null;
+  autoAnswerTick = null;
+}
+
+function stopCallMedia() {
+  if (callStream) {
+    callStream.getTracks().forEach(tr => { try { tr.stop(); } catch (e) {} });
+  }
+  callStream = null;
+  callAudioTrack = null;
+  callVideoTrack = null;
+  const vid = document.getElementById('selfPreview');
+  if (vid) vid.srcObject = null;
+}
+
+function hangUpCall(silent) {
+  clearAutoAnswerTimers();
+  if (typeof clearElderCallTimers === 'function') clearElderCallTimers();
+  stopCallMedia();
+  state.activeCall = null;
+  callUiMode = null;
+  saveState();
+  const ov = getCallOverlay();
+  if (ov) { ov.classList.add('hidden'); ov.innerHTML = ''; }
+  if (!silent) toast(t('callEnded'));
+  render();
+}
+
+function startVideoCall(elderId) {
+  const elder = (elderId && state.elders.find(e => e.id === elderId)) || getActiveElder();
+  if (!elder) return;
+  state.activeElderId = elder.id;
+  state.activeCall = {
+    elderId: elder.id,
+    status: 'ringing',
+    from: 'family',
+    at: now()
+  };
+  saveState();
+  showOutgoingCall(elder);
+  toast(t('toastCallStarted'));
+  // Demo: after a moment, flip to senior incoming if still ringing
+  setTimeout(() => {
+    if (!state.activeCall || state.activeCall.status !== 'ringing') return;
+    state.activeElderId = state.activeCall.elderId;
+    saveState();
+    if (role !== 'elder') setRole('elder');
+    else showIncomingCall(elder);
+  }, 1400);
+}
+
+function showOutgoingCall(elder) {
+  callUiMode = 'outgoing';
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay';
+  ov.innerHTML = `
+    <div>
+      <div class="call-avatar">👵</div>
+      <div class="call-name">${escapeHtml(elderTitle(elder))}</div>
+      <div class="call-status">${escapeHtml(t('callCalling'))}</div>
+      <p class="muted" style="color:#94a3b8;text-align:center;margin-top:16px;font-size:0.85rem">${escapeHtml(t('callRemoteDemo'))}</p>
+    </div>
+    <div class="call-actions">
+      <button type="button" class="call-btn hangup" onclick="hangUpCall()"><span class="ico">📞</span>${escapeHtml(t('callDecline'))}</button>
+    </div>`;
+}
+
+function showIncomingCall(elder) {
+  if (!state.activeCall || state.activeCall.status !== 'ringing') return;
+  // Route to the senior being called
+  const target = state.elders.find(e => e.id === state.activeCall.elderId) || elder || getActiveElder();
+  if (!target) return;
+  elder = target;
+  state.activeElderId = target.id;
+  callUiMode = 'incoming';
+  role = 'elder';
+  saveState();
+  syncRoleTabs();
+  document.getElementById('elderView').classList.remove('hidden');
+  document.getElementById('familyView').classList.add('hidden');
+  document.getElementById('familyTabs').classList.add('hidden');
+  fillWhoAmISelect();
+
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay';
+  const auto = !!state.autoAnswerCalls;
+  ov.innerHTML = `
+    <div>
+      <div class="call-avatar">👨‍👩‍👧</div>
+      <div class="call-name">${escapeHtml(t('callIncoming'))}</div>
+      <div class="call-status">${escapeHtml(t('callFromFamily'))} → ${escapeHtml(elderTitle(elder))}</div>
+      <div class="call-countdown" id="autoAnswerCountdown"></div>
+    </div>
+    <div class="call-actions">
+      <button type="button" class="call-btn decline" onclick="declineCall()"><span class="ico">📵</span>${escapeHtml(t('callDecline'))}</button>
+      <button type="button" class="call-btn answer" onclick="answerCall()"><span class="ico">📹</span>${escapeHtml(t('callAnswer'))}</button>
+    </div>`;
+
+  clearAutoAnswerTimers();
+  if (auto) {
+    let left = 3;
+    const cd = document.getElementById('autoAnswerCountdown');
+    if (cd) cd.textContent = t('callAutoIn') + left + '…';
+    autoAnswerTick = setInterval(() => {
+      left -= 1;
+      const el = document.getElementById('autoAnswerCountdown');
+      if (el) el.textContent = left > 0 ? (t('callAutoIn') + left + '…') : t('callConnecting');
+      if (left <= 0) clearInterval(autoAnswerTick);
+    }, 1000);
+    autoAnswerTimer = setTimeout(() => answerCall(), 3000);
+  }
+}
+
+function declineCall() {
+  clearAutoAnswerTimers();
+  state.activeCall = null;
+  saveState();
+  const ov = getCallOverlay();
+  ov.classList.add('hidden');
+  ov.innerHTML = '';
+  callUiMode = null;
+  toast(t('toastCallDeclined'));
+  render();
+}
+
+async function answerCall() {
+  clearAutoAnswerTimers();
+  if (!state.activeCall) return;
+  state.activeCall.status = 'connected';
+  saveState();
+  applyCheckIn(true);
+  toast(t('toastCallAnswered'));
+  await showInCall();
+}
+
+async function showInCall() {
+  callUiMode = 'incall';
+  const elder = getActiveElder();
+  const outContact = (state.activeCall && state.activeCall.from === 'elder') ? currentCallContact() : null;
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay in-call';
+  ov.innerHTML = `
+    <div style="width:100%;text-align:center;font-weight:800;font-size:1.1rem">${escapeHtml(outContact ? outContact.name : (elder ? elder.name : ''))}</div>
+    <div class="in-call-stage">
+      <div class="remote">
+        <div class="big">👤</div>
+        <div class="label">${escapeHtml(t('callRemoteDemo'))}</div>
+      </div>
+      <video id="selfPreview" class="self" playsinline webkit-playsinline autoplay muted></video>
+    </div>
+    <div class="in-call-bar">
+      <button type="button" class="call-btn mute" id="btnCallMute" onclick="toggleCallMute()"><span class="ico">🔇</span><span id="lblCallMute">${escapeHtml(t('callMute'))}</span></button>
+      <button type="button" class="call-btn hangup" onclick="hangUpCall()"><span class="ico">📞</span>${escapeHtml(t('callHangup'))}</button>
+      <button type="button" class="call-btn cam" id="btnCallCam" onclick="toggleCallCam()"><span class="ico">📷</span><span id="lblCallCam">${escapeHtml(t('callCamOff'))}</span></button>
+    </div>`;
+
+  stopCallMedia();
+  try {
+    callStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    callAudioTrack = callStream.getAudioTracks()[0] || null;
+    callVideoTrack = callStream.getVideoTracks()[0] || null;
+    const vid = document.getElementById('selfPreview');
+    if (vid) {
+      vid.srcObject = callStream;
+      try { await vid.play(); } catch (e) {}
+    }
+  } catch (err) {
+    const name = (err && err.name) || '';
+    toast(t('toastCamDenied'));
+    const vid = document.getElementById('selfPreview');
+    if (vid) {
+      vid.style.background = '#334155';
+      vid.insertAdjacentHTML('afterend', '');
+    }
+  }
+}
+
+function toggleCallMute() {
+  if (!callAudioTrack) return;
+  callAudioTrack.enabled = !callAudioTrack.enabled;
+  const btn = document.getElementById('btnCallMute');
+  const lbl = document.getElementById('lblCallMute');
+  const muted = !callAudioTrack.enabled;
+  if (lbl) lbl.textContent = muted ? t('callUnmute') : t('callMute');
+  if (btn) btn.classList.toggle('active-off', muted);
+}
+
+function toggleCallCam() {
+  if (!callVideoTrack) return;
+  callVideoTrack.enabled = !callVideoTrack.enabled;
+  const btn = document.getElementById('btnCallCam');
+  const lbl = document.getElementById('lblCallCam');
+  const off = !callVideoTrack.enabled;
+  if (lbl) lbl.textContent = off ? t('callCamOn') : t('callCamOff');
+  if (btn) btn.classList.toggle('active-off', off);
+}
+
+function restoreCallUiIfNeeded() {
+  const call = state.activeCall;
+  if (!call) return;
+  const elder = state.elders.find(e => e.id === call.elderId) || getActiveElder();
+  if (!elder) return;
+  if (call.from === 'elder' && call.status === 'dialing') {
+    showElderOutgoing();
+    return;
+  }
+  if (call.status === 'ringing') {
+    if (role === 'family') showOutgoingCall(elder);
+    else showIncomingCall(elder);
+  } else if (call.status === 'connected') {
+    showInCall();
+  }
+}
+
+
+/* ===== SOS press-and-hold (2s) ===== */
+const SOS_HOLD_MS = 2000;
+const SOS_RING_LEN = 2 * Math.PI * 44;
+let sosHoldStart = 0;
+let sosHoldRaf = null;
+let sosHoldFired = false;
+
+function setSosProgress(p) {
+  const fg = document.getElementById('sosRingFg');
+  if (fg) fg.style.strokeDashoffset = String(SOS_RING_LEN * (1 - Math.max(0, Math.min(1, p))));
+}
+
+function cancelSosHold() {
+  if (sosHoldRaf) cancelAnimationFrame(sosHoldRaf);
+  sosHoldRaf = null;
+  sosHoldStart = 0;
+  const btn = document.getElementById('sosBtn');
+  if (btn) btn.classList.remove('holding');
+  setSosProgress(0);
+}
+
+function sosTick() {
+  if (!sosHoldStart) return;
+  const p = (performance.now() - sosHoldStart) / SOS_HOLD_MS;
+  setSosProgress(p);
+  if (p >= 1) {
+    sosHoldFired = true;
+    cancelSosHold();
+    if (navigator.vibrate) { try { navigator.vibrate(200); } catch (e) {} }
+    doSOS();
+    return;
+  }
+  sosHoldRaf = requestAnimationFrame(sosTick);
+}
+
+function bindSosHold() {
+  const btn = document.getElementById('sosBtn');
+  if (!btn || btn.dataset.bound === '1') return;
+  btn.dataset.bound = '1';
+  const fg = document.getElementById('sosRingFg');
+  if (fg) { fg.style.strokeDasharray = String(SOS_RING_LEN); fg.style.strokeDashoffset = String(SOS_RING_LEN); }
+  const start = (e) => {
+    e.preventDefault();
+    sosHoldFired = false;
+    cancelSosHold();
+    btn.classList.add('holding');
+    sosHoldStart = performance.now();
+    try { btn.setPointerCapture && e.pointerId != null && btn.setPointerCapture(e.pointerId); } catch (err) {}
+    sosHoldRaf = requestAnimationFrame(sosTick);
+  };
+  const end = () => { if (!sosHoldFired) cancelSosHold(); };
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup', end);
+  btn.addEventListener('pointercancel', end);
+  btn.addEventListener('lostpointercapture', end);
+  // Do not cancel on pointerleave — finger drift would abort SOS for seniors
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+  // Keyboard: hold Space/Enter
+  btn.addEventListener('keydown', e => {
+    if ((e.key === ' ' || e.key === 'Enter') && !sosHoldStart) start(e);
+  });
+  btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') end(); });
+}
+
+/* ===== Senior → family video call (priority cascade, demo) ===== */
+const ELDER_CALL_NOANSWER_MS = 10000;
+let elderCallTimer = null;
+let elderCallTick = null;
+
+function clearElderCallTimers() {
+  clearTimeout(elderCallTimer);
+  clearInterval(elderCallTick);
+  elderCallTimer = null;
+  elderCallTick = null;
+}
+
+function startElderVideoCall() {
+  if (!state.contacts.length) { toast(t('toastNoContacts')); return; }
+  const elder = getActiveElder();
+  if (!elder) return;
+  // Pressing call is a sign of life → counts as check-in
+  applyCheckIn(true);
+  state.activeCall = { elderId: elder.id, from: 'elder', status: 'dialing', contactIdx: 0, at: now() };
+  saveState();
+  showElderOutgoing();
+}
+
+function currentCallContact() {
+  const c = state.activeCall;
+  if (!c || c.from !== 'elder') return null;
+  return state.contacts[c.contactIdx] || null;
+}
+
+function showElderOutgoing() {
+  const call = state.activeCall;
+  const contact = currentCallContact();
+  if (!call || !contact) return;
+  clearElderCallTimers();
+  callUiMode = 'outgoing';
+  const total = state.contacts.length;
+  const ov = getCallOverlay();
+  ov.classList.remove('hidden');
+  ov.className = 'call-overlay';
+  ov.innerHTML = `
+    <div style="width:100%">
+      <div class="call-avatar">👨‍👩‍👧</div>
+      <div class="call-name" id="elderCallName">${escapeHtml(contact.name)}</div>
+      <div class="call-status">${escapeHtml(t('callCalling'))} · ${escapeHtml(t('callPriority'))} ${call.contactIdx + 1} ${escapeHtml(t('callOf'))} ${total}</div>
+      <div class="call-countdown" id="elderCallCountdown" style="text-align:center;margin-top:10px;opacity:.8"></div>
+      <p style="color:#94a3b8;text-align:center;margin-top:12px;font-size:0.85rem">${escapeHtml(t('callRemoteDemo'))}</p>
+    </div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:18px;align-items:center">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button type="button" class="btn btn-secondary" id="btnDemoNoAnswer" onclick="elderCallNoAnswer()">${escapeHtml(t('callNoAnswerDemo'))}</button>
+        <button type="button" class="btn btn-primary" id="btnDemoAnswer" onclick="elderCallAnswered()">${escapeHtml(t('callSimulateAnswer'))}</button>
+      </div>
+      <div class="call-actions">
+        <button type="button" class="call-btn hangup" onclick="hangUpCall()"><span class="ico">📞</span>${escapeHtml(t('callHangup'))}</button>
+      </div>
+    </div>`;
+  let left = Math.round(ELDER_CALL_NOANSWER_MS / 1000);
+  const cd = () => {
+    const el = document.getElementById('elderCallCountdown');
+    if (el) el.textContent = left + 's';
+  };
+  cd();
+  elderCallTick = setInterval(() => { left -= 1; if (left >= 0) cd(); }, 1000);
+  elderCallTimer = setTimeout(() => elderCallNoAnswer(), ELDER_CALL_NOANSWER_MS);
+}
+
+function elderCallNoAnswer() {
+  const call = state.activeCall;
+  if (!call || call.from !== 'elder' || call.status !== 'dialing') return;
+  clearElderCallTimers();
+  if (call.contactIdx + 1 < state.contacts.length) {
+    call.contactIdx += 1;
+    saveState();
+    toast(t('toastTryingNext'));
+    showElderOutgoing();
+  } else {
+    toast(t('toastNoAnswerAll'));
+    hangUpCall(true);
+  }
+}
+
+async function elderCallAnswered() {
+  const call = state.activeCall;
+  if (!call || call.from !== 'elder') return;
+  clearElderCallTimers();
+  call.status = 'connected';
+  saveState();
+  toast(t('toastCallAnswered'));
+  await showInCall();
+}
+
+
+/* ===== Cloud bridge (two-phone sync) ===== */
+let cloud = null;
+let cloudReady = false;
+let cloudUnsub = null;
+let _pulling = false;
+let _bootDone = false;
+
+function setCloudBadge(text, isErr) {
+  const el = document.getElementById('cloudBadge');
+  if (!el) return;
+  if (!text) { el.classList.add('hidden'); return; }
+  el.textContent = text;
+  el.classList.toggle('err', !!isErr);
+  el.classList.remove('hidden');
+}
+
+function showPairGate(mode) {
+  const gate = document.getElementById('pairGate');
+  if (!gate) return;
+  gate.classList.remove('hidden');
+  document.getElementById('pairGateTitle').textContent = t('pairGateTitle');
+  document.getElementById('pairGateSub').textContent = t('pairGateSub');
+  document.getElementById('btnPairFamily').textContent = t('pairIAmFamily');
+  document.getElementById('btnPairSenior').textContent = t('pairIAmSenior');
+  document.getElementById('pairEnterCode').textContent = t('pairEnterCode');
+  document.getElementById('pairCodeHelp').textContent = t('pairCodeHelp');
+  document.getElementById('btnPairCode').textContent = t('pairCodeBtn');
+  const choose = document.getElementById('pairGateChoose');
+  const code = document.getElementById('pairGateCode');
+  if (mode === 'code') {
+    choose.classList.add('hidden');
+    code.classList.remove('hidden');
+  } else {
+    choose.classList.remove('hidden');
+    code.classList.add('hidden');
+  }
+}
+
+function hidePairGate() {
+  const gate = document.getElementById('pairGate');
+  if (gate) gate.classList.add('hidden');
+}
+
+function mapStateFromCloud(remote) {
+  state = PresokCloud.mapRemoteToState(remote, state);
+  lang = state.lang || lang || 'en';
+  role = state.role || role;
+  if (state.membershipRole === 'elder') {
+    role = 'elder';
+    state.activeElderId = state.membershipElderId || state.activeElderId;
+  }
+}
+
+async function pullCloudState(opts) {
+  if (!cloud || _pulling) return;
+  _pulling = true;
+  try {
+    if (!(opts && opts.silent)) setCloudBadge(t('cloudSyncing'));
+    const remote = await cloud.getState();
+    if (!remote.household) {
+      _pulling = false;
+      return remote;
+    }
+    mapStateFromCloud(remote);
+    // local cache for offline paint
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    if (cloudReady) {
+      applyI18n();
+      render();
+    }
+    setCloudBadge(t('cloudLive'));
+    return remote;
+  } catch (err) {
+    console.warn(err);
+    setCloudBadge(t('cloudError'), true);
+    throw err;
+  } finally {
+    _pulling = false;
+  }
+}
+
+
+// Expose for Playwright / debugging
+window.PresokApp = {
+  get cloudReady() { return cloudReady; },
+  get cloud() { return cloud; },
+  get state() { return state; },
+  get role() { return role; },
+  pullCloudState,
+  refreshPairCode,
+};
+async function bootCloud() {
+  cloud = PresokCloud.createCloud(PRESK_CONFIG);
+  if (!cloud) {
+    setCloudBadge(t('pairOffline'), true);
+    showPairGate('choose'); // still allow offline continue
+    // auto-hide if already have local data? keep gate so user picks
+    return;
+  }
+  try {
+    const init = await cloud.init();
+    if (init.restored && init.device && (init.device.householdId || init.device.role)) {
+      const remote = await pullCloudState({ silent: true });
+      if (remote && remote.household) {
+        cloudReady = true;
+        hidePairGate();
+        if (cloudUnsub) cloudUnsub();
+        cloudUnsub = cloud.subscribe(() => { pullCloudState({ silent: true }); });
+        maybeBrowserNotifySetup();
+        finishBootUi();
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('cloud init', e);
+  }
+  showPairGate('choose');
+}
+
+async function startAsFamily() {
+  const status = document.getElementById('pairGateStatus');
+  try {
+    if (!cloud) throw new Error('no cloud');
+    status.textContent = t('pairFamilyCreating');
+    await cloud.signInAnonymous();
+    const h = await cloud.createHousehold('My family');
+    cloud.persistDevice({ role: 'family', householdId: h.id });
+    await pullCloudState();
+    cloudReady = true;
+    if (cloudUnsub) cloudUnsub();
+    cloudUnsub = cloud.subscribe(() => { pullCloudState({ silent: true }); });
+    hidePairGate();
+    maybeBrowserNotifySetup();
+    toast(t('pairConnected'));
+    finishBootUi();
+  } catch (e) {
+    console.error(e);
+    status.textContent = t('cloudError') + ' ' + (e.message || '');
+  }
+}
+
+async function startAsSeniorWithCode() {
+  const input = document.getElementById('pairCodeInput');
+  const status = document.getElementById('pairGateStatus');
+  const code = (input.value || '').replace(/\D/g, '');
+  if (code.length !== 6) { status.textContent = t('pairInvalid'); return; }
+  try {
+    if (!cloud) throw new Error('no cloud');
+    status.textContent = t('cloudSyncing');
+    await cloud.signInAnonymous();
+    const paired = await cloud.pairWithCode(code);
+    cloud.persistDevice({ role: 'elder', householdId: paired.household_id, elderId: paired.elder_id });
+    await pullCloudState();
+    cloudReady = true;
+    if (cloudUnsub) cloudUnsub();
+    cloudUnsub = cloud.subscribe(() => { pullCloudState({ silent: true }); });
+    hidePairGate();
+    maybeBrowserNotifySetup();
+    toast(t('pairConnected'));
+    finishBootUi();
+  } catch (e) {
+    console.error(e);
+    status.textContent = t('pairInvalid');
+  }
+}
+
+function continueOffline() {
+  PresokCloud.clearDevice();
+  cloud = null;
+  cloudReady = false;
+  hidePairGate();
+  setCloudBadge(t('pairOffline'), true);
+  // keep existing local demo state
+  finishBootUi();
+}
+
+function finishBootUi() {
+  if (state.membershipRole === 'elder') {
+    // Lock to senior view — hide family tab switch
+    const sw = document.querySelector('.role-switch');
+    if (sw) sw.classList.add('hidden');
+    const who = document.getElementById('whoAmIBar');
+    if (who) who.classList.add('hidden');
+    role = 'elder';
+  } else if (cloudReady && state.membershipRole === 'family') {
+    // Family phone defaults to family view
+    role = 'family';
+  }
+  applyI18n();
+  render();
+  restoreCallUiIfNeeded();
+  _bootDone = true;
+}
+
+function maybeBrowserNotifySetup() {
+  try {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  } catch (e) {}
+}
+
+function browserNotify(title, body) {
+  try {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    new Notification(title || 'Presok', { body: body || '', tag: 'presok-alert' });
+  } catch (e) {}
+}
+
+// Wire gate buttons once
+(function bindPairGate() {
+  const bf = document.getElementById('btnPairFamily');
+  const bs = document.getElementById('btnPairSenior');
+  const bl = document.getElementById('btnPairLocal');
+  const bc = document.getElementById('btnPairCode');
+  const bb = document.getElementById('btnPairBack');
+  if (bf) bf.onclick = () => startAsFamily();
+  if (bs) bs.onclick = () => showPairGate('code');
+  if (bl) bl.onclick = () => continueOffline();
+  if (bc) bc.onclick = () => startAsSeniorWithCode();
+  if (bb) bb.onclick = () => showPairGate('choose');
+  const input = document.getElementById('pairCodeInput');
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') startAsSeniorWithCode(); });
+})();
+
+// ---- Override mutations when cloud is active ----
+const _applyCheckInLocal = applyCheckIn;
+applyCheckIn = function(silent) {
+  if (!cloud || !cloudReady) return _applyCheckInLocal(silent);
+  const elder = getActiveElder();
+  if (!elder) return;
+  cloud.doCheckIn(elder.id).then(() => pullCloudState({ silent: true })).then(() => {
+    if (!silent) toast(t('toastCheckin'));
+  }).catch(e => { console.warn(e); toast(t('cloudError')); });
+};
+
+const _doCheckInLocal = doCheckIn;
+doCheckIn = function() {
+  if (!cloud || !cloudReady) return _doCheckInLocal();
+  applyCheckIn(false);
+};
+
+const _addElderLocal = addElder;
+addElder = async function() {
+  if (!cloud || !cloudReady) return _addElderLocal();
+  const input = document.getElementById('newElderName');
+  const name = (input.value || '').trim();
+  if (!name) return;
+  try {
+    const e = await cloud.addElder(state.householdId, name, null);
+    input.value = '';
+    await pullCloudState();
+    toast(t('toastAdded') + ' · ' + t('pairShowCode') + ' ' + (e.pairing_code || ''));
+  } catch (err) {
+    console.warn(err);
+    toast(t('cloudError'));
+  }
+};
+
+const _deleteElderLocal = deleteElder;
+deleteElder = async function(id) {
+  if (!cloud || !cloudReady) return _deleteElderLocal(id);
+  if (!confirm(t('confirmDelete'))) return;
+  try {
+    await cloud.deleteElder(id);
+    await pullCloudState();
+    toast(t('toastDeleted'));
+  } catch (e) { toast(t('cloudError')); }
+};
+
+async function refreshPairCode(elderId) {
+  if (!cloud || !cloudReady) return;
+  try {
+    const e = await cloud.refreshPairingCode(elderId);
+    await pullCloudState();
+    toast(t('pairCopied') + ': ' + e.pairing_code);
+  } catch (err) { toast(t('cloudError')); }
+}
+
+const _addContactLocal = addContact;
+addContact = async function() {
+  if (!cloud || !cloudReady) return _addContactLocal();
+  const name = (document.getElementById('newContactName').value || '').trim();
+  const phone = (document.getElementById('newContactPhone').value || '').trim();
+  const roleC = document.getElementById('newContactRole').value;
+  if (!name) return;
+  try {
+    await cloud.addContact(state.householdId, name, phone, roleC);
+    document.getElementById('newContactName').value = '';
+    document.getElementById('newContactPhone').value = '';
+    await pullCloudState();
+    toast(t('toastAdded'));
+  } catch (e) { toast(t('cloudError')); }
+};
+
+const _deleteContactLocal = deleteContact;
+deleteContact = async function(id) {
+  if (!cloud || !cloudReady) return _deleteContactLocal(id);
+  if (!confirm(t('confirmDelete'))) return;
+  try { await cloud.deleteContact(id); await pullCloudState(); toast(t('toastDeleted')); }
+  catch (e) { toast(t('cloudError')); }
+};
+
+const _moveContactLocal = moveContact;
+moveContact = async function(id, dir) {
+  if (!cloud || !cloudReady) return _moveContactLocal(id, dir);
+  try { await cloud.reorderContact(id, dir); await pullCloudState({ silent: true }); }
+  catch (e) { toast(t('cloudError')); }
+};
+
+const _clearNotifsLocal = clearNotifs;
+clearNotifs = async function() {
+  if (!cloud || !cloudReady) return _clearNotifsLocal();
+  try { await cloud.clearNotifications(state.householdId); await pullCloudState(); }
+  catch (e) { toast(t('cloudError')); }
+};
+
+const _saveThresholdLocal = saveThreshold;
+saveThreshold = async function() {
+  if (!cloud || !cloudReady) return _saveThresholdLocal();
+  const v = parseInt(document.getElementById('thresholdSelect').value, 10);
+  state.thresholdHours = v;
+  try {
+    await cloud.updateHousehold({ id: state.householdId, threshold_hours: v, care_reply_hours: state.careReplyHours, auto_answer_calls: state.autoAnswerCalls });
+    toast(t('toastSaved'));
+    await pullCloudState({ silent: true });
+  } catch (e) { toast(t('cloudError')); }
+};
+
+const _saveCareReplyLocal = saveCareReply;
+saveCareReply = async function() {
+  if (!cloud || !cloudReady) return _saveCareReplyLocal();
+  const v = parseFloat(document.getElementById('careReplySelect').value);
+  state.careReplyHours = v;
+  try {
+    await cloud.updateHousehold({ id: state.householdId, threshold_hours: state.thresholdHours, care_reply_hours: v, auto_answer_calls: state.autoAnswerCalls });
+    toast(t('toastSaved'));
+    await pullCloudState({ silent: true });
+  } catch (e) { toast(t('cloudError')); }
+};
+
+const _saveAutoAnswerLocal = saveAutoAnswer;
+saveAutoAnswer = async function() {
+  if (!cloud || !cloudReady) return _saveAutoAnswerLocal();
+  state.autoAnswerCalls = !!document.getElementById('autoAnswerCheck').checked;
+  try {
+    await cloud.updateHousehold({ id: state.householdId, threshold_hours: state.thresholdHours, care_reply_hours: state.careReplyHours, auto_answer_calls: state.autoAnswerCalls });
+    toast(t('toastSaved'));
+  } catch (e) { toast(t('cloudError')); }
+};
+
+const _confirmSOSLocal = confirmSOS;
+confirmSOS = async function() {
+  if (!cloud || !cloudReady) return _confirmSOSLocal();
+  const elder = getActiveElder();
+  closeModal();
+  if (!elder) return;
+  try {
+    await cloud.sos(elder.id);
+    await pullCloudState();
+    toast(t('sosSent'));
+    browserNotify('Presok SOS', elder.name + ' pressed SOS');
+  } catch (e) { toast(t('cloudError')); }
+};
+
+const _saveVoiceLocal = saveVoiceMessage;
+saveVoiceMessage = async function(from, dataUrl, durationMs) {
+  if (!cloud || !cloudReady) return _saveVoiceLocal(from, dataUrl, durationMs);
+  const elder = getActiveElder();
+  if (!elder) return;
+  try {
+    // dataUrl → blob
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    await cloud.sendVoice(elder.id, from, blob, durationMs);
+    // also cache locally for instant playback
+    // pull will refresh list
+    if (from === 'elder') toast(t('toastVoiceCheckin'));
+    else toast(t('toastVoiceSent'));
+    await pullCloudState();
+    if (role === 'family' && familyTab === 'messages') familyMsgPane = 'thread';
+    render();
+  } catch (e) {
+    console.warn(e);
+    toast(t('cloudError'));
+  }
+};
+
+const _markReadLocal = markMessagesRead;
+markMessagesRead = function(viewer) {
+  if (!cloud || !cloudReady) return _markReadLocal(viewer);
+  const elder = getActiveElder();
+  if (!elder) return;
+  cloud.markMessagesRead(elder.id, viewer).then(() => pullCloudState({ silent: true })).catch(() => {});
+};
+
+const _playVoiceLocal = playVoice;
+playVoice = async function(id, btn) {
+  if (!cloud || !cloudReady) return _playVoiceLocal(id, btn);
+  const msg = (state.messages || []).find(m => m.id === id);
+  if (!msg) return;
+  stopPlaying();
+  try {
+    let url = null;
+    if (msg.storagePath) url = await cloud.voiceUrl(msg.storagePath);
+    if (!url) return _playVoiceLocal(id, btn);
+    playingAudio = new Audio(url);
+    playingId = id;
+    if (btn) { btn.classList.add('playing'); btn.textContent = t('voicePlaying'); }
+    playingAudio.onended = () => stopPlaying();
+    await playingAudio.play();
+  } catch (e) {
+    console.warn(e);
+    stopPlaying();
+    toast(t('toastVoiceFailed'));
+  }
+};
+
+// Time simulation in cloud mode: rewind last_check_in on server, then sweep
+const _simulateHoursLocal = simulateHours;
+simulateHours = async function(h) {
+  if (!cloud || !cloudReady) return _simulateHoursLocal(h);
+  const elder = getActiveElder();
+  if (!elder) return;
+  const last = elder.lastCheckIn || Date.now();
+  const iso = new Date(last - h * 3600000).toISOString();
+  try {
+    await cloud.setLastCheckIn(elder.id, iso, 1);
+    if (typeof cloud.sweepMyHouseholdMissed === 'function') {
+      await cloud.sweepMyHouseholdMissed();
+    } else if (PRESK_CONFIG.mode === 'mock') {
+      await fetch((PRESK_CONFIG.mockUrl || 'http://127.0.0.1:8787') + '/rpc/sweep_missed_checkins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    }
+    await pullCloudState();
+    const newest = (state.notifications || [])[0];
+    if (newest && (newest.kind || '').startsWith('care')) browserNotify('Presok', newest.message);
+    toast(t('toastSim') + h + t('hours'));
+  } catch (e) {
+    console.warn(e);
+    toast(t('cloudError'));
+  }
+};
+
+const _resetDemoTimeLocal = resetDemoTime;
+resetDemoTime = async function() {
+  if (!cloud || !cloudReady) return _resetDemoTimeLocal();
+  const elder = getActiveElder();
+  if (!elder) return;
+  try {
+    await cloud.setLastCheckIn(elder.id, new Date().toISOString(), 1);
+    await pullCloudState();
+    toast(t('toastTimeReset'));
+  } catch (e) { toast(t('cloudError')); }
+};
+
+const _resetDemoDataLocal = resetDemoData;
+resetDemoData = async function() {
+  if (!cloud || !cloudReady) {
+    if (!confirm(t('confirmReset'))) return;
+    return _resetDemoDataLocal();
+  }
+  if (!confirm(t('pairSignOut') + '?')) return;
+  try {
+    cloud.signOut();
+  } catch (e) {}
+  cloudReady = false;
+  location.reload();
+};
+
+// Patch family elder cards to show pairing code
+const _renderFamilyLocal = renderFamily;
+renderFamily = function() {
+  _renderFamilyLocal();
+  if (!cloud || !cloudReady || role !== 'family') return;
+  // Inject pairing codes into elder cards if not present
+  const list = document.getElementById('elderList');
+  if (!list) return;
+  state.elders.forEach(e => {
+    if (!e.pairingCode) return;
+    const card = list.querySelector('[data-elder-id="' + e.id + '"]') || null;
+    // cards may not have data attr — find by name heading
+    const cards = list.querySelectorAll('.card, .elder-card, .person-card, div');
+    // Simpler: append a codes panel under elder list once
+  });
+  let panel = document.getElementById('pairingPanel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'pairingPanel';
+    panel.className = 'card';
+    panel.style.marginTop = '12px';
+    const host = document.getElementById('tabElders');
+    if (host) host.insertBefore(panel, host.querySelector('.card'));
+  }
+  if (familyTab === 'elders') {
+    panel.classList.remove('hidden');
+    panel.innerHTML = '<h2 style="margin-bottom:8px">' + escapeHtml(t('pairShowCode')) + '</h2>' +
+      '<p class="muted" style="margin-bottom:10px">' + escapeHtml(t('pairCodeHelp')) + '</p>' +
+      state.elders.map(e => (
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;flex-wrap:wrap">' +
+          '<div><strong>' + escapeHtml(elderTitle(e)) + '</strong>' +
+          '<div class="pair-code-chip">' + escapeHtml(e.pairingCode || '——') + '</div></div>' +
+          '<button type="button" class="btn btn-secondary" data-refresh-pair="' + e.id + '">' + escapeHtml(t('pairRefreshCode')) + '</button>' +
+        '</div>'
+      )).join('');
+    panel.querySelectorAll('[data-refresh-pair]').forEach(btn => {
+      btn.onclick = () => refreshPairCode(btn.getAttribute('data-refresh-pair'));
+    });
+  } else {
+    panel.classList.add('hidden');
+  }
+};
+
+// Update voice note text for cloud
+const _applyI18nLocal = applyI18n;
+applyI18n = function() {
+  _applyI18nLocal();
+  const evn = document.getElementById('elderVoiceNote');
+  if (evn) evn.textContent = (cloud && cloudReady) ? t('voiceDeviceNote') : t('voiceDeviceNoteLocal');
+};
+
+// Replace original boot: don't render until gate decided
+// Original calls render() at end — we intercept by re-running boot
+
+bindVoiceControls();
+bindSosHold();
+
+setInterval(() => {
+  if (!_bootDone) return;
+  if (role === 'elder') renderElder();
+  else if (familyTab === 'elders' || familyTab === 'alerts' || familyTab === 'messages') renderFamily();
+  updateSimClock();
+}, 30000);
+
+// Start: try cloud session, else show gate (local demo still available)
+bootCloud().catch(err => {
+  console.warn(err);
+  showPairGate('choose');
+});
+</script>
+</body>
+</html>
