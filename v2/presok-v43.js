@@ -1,7 +1,9 @@
 /**
- * Presok v43–v45: tiered escalation UI hooks, simple senior styles,
- * and real WebRTC video calls (presok-escalation / presok-simple-senior / presok-webrtc).
+ * Presok v43–v46: tiered escalation UI hooks, simple senior styles,
+ * real WebRTC video calls, and senior-exit gear (presok-escalation /
+ * presok-simple-senior / presok-webrtc / presok-senior-exit-v46).
  * Loaded after index.html inline script exposes window.PresokApp.
+ * Note: senior-exit chrome lives mainly in index.html; this file keeps the feature marker.
  */
 (function (global) {
   'use strict';
@@ -12,6 +14,7 @@
     escalation: 'presok-escalation',
     simpleSenior: 'presok-simple-senior',
     webrtc: 'presok-webrtc',
+    seniorExit: 'presok-senior-exit-v46',
   };
 
   let pc = null;
@@ -755,6 +758,10 @@
     A.PresokV43 = FEATURE;
     A.onRtcSignal = onRtcSignal;
     A.getCallSession = () => callSession;
+    try {
+      if (typeof global.updateSeniorExitChrome === 'function') global.updateSeniorExitChrome();
+      if (typeof global.bindSeniorExitGear === 'function') global.bindSeniorExitGear();
+    } catch (e) {}
   }
 
   global.PresokV43 = {

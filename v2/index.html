@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="description" content="Presok — a simple daily check-in so family and carers know you're alright.">
 <title>Presok</title>
-<!-- presok-v45 / presok-webrtc / presok-v44 / presok-simple-senior / presok-v43 / presok-escalation / presok-v42 / presok-med-preview-family-v42 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
+<!-- presok-v46 / presok-senior-exit-v46 / presok-v45 / presok-webrtc / presok-v44 / presok-simple-senior / presok-v43 / presok-escalation / presok-v42 / presok-med-preview-family-v42 / presok-med-alarm-v41 / presok-alerts-badge-v40 / presok-msg-read-badge-v40 / presok-meds-overlay-v39 / presok-meds-sync-v38 / presok-meds-v37 / presok-mojibake-v36 / presok-msg-chime-v35 -->
 <style>
 :root {
   --bg: #f0fdf4;
@@ -866,6 +866,68 @@ body.presok-simple-senior #whoAmIBar { display: none !important; }
 body.presok-simple-senior #elderView .status-pill { font-size: 1rem; padding: 8px 14px; }
 body.presok-simple-senior #elderView .last-check { font-size: 1.05rem; }
 body.presok-simple-senior .role-switch { opacity: 0.85; }
+/* presok-senior-exit-v46: keep Messages from family visible; allow scroll */
+body.presok-simple-senior #elderView {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+body.presok-simple-senior #elderView .voice-section#elderVoiceSection {
+  min-height: 148px;
+  flex: 1 1 auto;
+}
+body.presok-simple-senior #elderView .sos-zone {
+  position: relative; /* not sticky — leave room for messages */
+  margin-top: 10px;
+}
+.senior-exit-gear {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  z-index: 55;
+  width: 44px; height: 44px;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 118, 110, 0.35);
+  background: rgba(255,255,255,0.92);
+  color: #0f766e;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 10px rgba(15,23,42,0.12);
+  display: inline-flex; align-items: center; justify-content: center;
+  touch-action: none;
+  user-select: none; -webkit-user-select: none;
+}
+.senior-exit-gear.hidden { display: none !important; }
+.senior-exit-gear.holding {
+  background: #0f766e; color: #fff;
+  transform: scale(1.06);
+}
+.senior-exit-gear .gear-ring {
+  position: absolute; inset: -3px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #0f766e;
+  opacity: 0;
+  pointer-events: none;
+}
+.senior-exit-gear.holding .gear-ring { opacity: 1; animation: senior-exit-spin 0.9s linear infinite; }
+@keyframes senior-exit-spin { to { transform: rotate(360deg); } }
+.senior-exit-sheet {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+.senior-exit-sheet.hidden { display: none !important; }
+.senior-exit-card {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 18px 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+}
+.senior-exit-card h2 { margin: 0 0 14px; font-size: 1.25rem; color: #0f766e; }
+.senior-exit-card .form-group { margin-bottom: 14px; }
+.senior-exit-card .btn { margin-top: 8px; }
+.senior-exit-hint { font-size: 0.85rem; color: #64748b; margin: -6px 0 12px; }
 .handling-banner {
   margin-top: 8px; padding: 8px 10px; border-radius: 10px;
   background: #ecfdf5; color: #065f46; font-weight: 700; font-size: 0.95rem;
@@ -1200,6 +1262,26 @@ body.presok-simple-senior .role-switch { opacity: 0.85; }
   </div>
 </div>
 
+<button type="button" id="seniorExitGear" class="senior-exit-gear hidden" aria-label="Settings" title="Settings">
+  <span class="gear-ring" aria-hidden="true"></span>
+  <span aria-hidden="true">⚙️</span>
+</button>
+<div id="seniorExitSheet" class="senior-exit-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="seniorExitTitle">
+  <div class="senior-exit-card">
+    <h2 id="seniorExitTitle">Settings</h2>
+    <p class="senior-exit-hint" id="seniorExitHoldHint">Hold the gear 2 seconds to open. Language, unlink, or switch view.</p>
+    <div class="form-group">
+      <label id="seniorExitLangLabel" for="seniorExitLangSelect">Language</label>
+      <select id="seniorExitLangSelect">
+        <option value="en">English (Australia)</option>
+        <option value="zh">中文（简体）</option>
+      </select>
+    </div>
+    <button type="button" class="btn btn-secondary btn-block" id="seniorExitSwitchFamily">Switch to family view</button>
+    <button type="button" class="btn btn-danger btn-block" id="seniorExitUnlink">Unlink this phone</button>
+    <button type="button" class="btn btn-secondary btn-block" id="seniorExitClose">Close</button>
+  </div>
+</div>
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
 
@@ -1447,6 +1529,13 @@ toastCheckin: "Checked in — family can see you're OK.",
     pairInvalid: 'Invalid or expired code. Ask family for a new one.',
     pairOffline: 'Cloud not configured — running local demo on this phone only.',
     pairSignOut: 'Unlink this phone',
+    seniorExitGearLabel: 'Settings',
+    seniorExitHoldHint: 'Hold 2 seconds for settings',
+    seniorExitTitle: 'Settings',
+    seniorExitSwitchFamily: 'Switch to family view',
+    seniorExitClose: 'Close',
+    seniorExitUnlinkConfirm: 'Unlink this phone? You will need the pairing code again.',
+    seniorExitSheetHint: 'Change language, unlink, or open the family view on this phone.',
     voiceDeviceNote: 'Voice messages sync to family phones over the internet.',
     voiceDeviceNoteLocal: 'Demo: voice messages stay on this device only (not sent over the internet).',
 
@@ -1700,6 +1789,13 @@ toastCheckin: '签到成功！家人会看到您一切正常。',
     pairInvalid: '配对码无效或已过期，请让家属换一个。',
     pairOffline: '未配置云端 — 仅本机演示。',
     pairSignOut: '解除这部手机的配对',
+    seniorExitGearLabel: '设置',
+    seniorExitHoldHint: '长按 2 秒打开设置',
+    seniorExitTitle: '设置',
+    seniorExitSwitchFamily: '切换到家属界面',
+    seniorExitClose: '关闭',
+    seniorExitUnlinkConfirm: '解除这部手机的配对？之后需要重新输入配对码。',
+    seniorExitSheetHint: '可改语言、解除配对，或在本机打开家属界面。',
     voiceDeviceNote: '语音会通过网络同步到家属手机。',
     voiceDeviceNoteLocal: '演示：语音只保存在本机，不会联网发送。',
     btnOnIt: '我来处理',
@@ -3045,6 +3141,7 @@ function syncViewUrl() {
   try {
     const url = new URL(location.href);
     url.searchParams.set('view', role);
+    url.searchParams.set('role', role === 'elder' ? 'senior' : 'family');
     history.replaceState(null, '', url.pathname + url.search + url.hash);
   } catch (e) {}
 }
@@ -3063,9 +3160,11 @@ function render() {
 
 function setRole(next) {
   if (next !== 'elder' && next !== 'family') return;
+  if (next === 'family' && isPairedAsElder()) state._unlockRoleSwitch = true;
   if (role === next) {
     // Still re-render so a missed first paint cannot leave the wrong pane
     render();
+    try { updateSeniorExitChrome(); } catch (e) {}
     syncViewUrl();
     if (next === 'elder') try { warmMicForSenior(); } catch (e) {}
     return;
@@ -3073,6 +3172,7 @@ function setRole(next) {
   role = next;
   saveState();
   render();
+  try { updateSeniorExitChrome(); } catch (e) {}
   syncViewUrl();
   if (next === 'elder') try { warmMicForSenior(); } catch (e) {}
 }
@@ -3291,7 +3391,17 @@ function resetAllData() { resetDemoData(); }
     const q = new URLSearchParams(location.search);
     if (q.get('lang') === 'en' || q.get('lang') === 'zh') { lang = q.get('lang'); state.lang = lang; }
     const viewParam = (q.get('view') || '').toLowerCase();
-    if (viewParam === 'family' || viewParam === 'elder') { role = viewParam; state.role = role; }
+    const roleParam = (q.get('role') || '').toLowerCase();
+    let want = viewParam || roleParam;
+    if (want === 'senior') want = 'elder';
+    if (want === 'family' || want === 'elder') {
+      role = want;
+      state.role = role;
+      if (roleParam === 'family' || viewParam === 'family') state._unlockRoleSwitch = true;
+      if (roleParam === 'senior' || roleParam === 'elder' || viewParam === 'elder') {
+        /* explicit senior request keeps unlock false unless already unlocked */
+      }
+    }
     if (q.get('tab')) { familyTab = q.get('tab'); }
     if (q.get('fresh') === '1') {
       const e = state.elders[0];
@@ -4559,12 +4669,16 @@ function hidePairGate() {
 }
 
 function mapStateFromCloud(remote) {
+  const keepUnlock = !!(state && state._unlockRoleSwitch);
   state = PresokCloud.mapRemoteToState(remote, state);
+  if (keepUnlock) state._unlockRoleSwitch = true;
   lang = state.lang || lang || 'en';
   role = state.role || role;
   if (state.membershipRole === 'elder') {
-    role = 'elder';
     state.activeElderId = state.membershipElderId || state.activeElderId;
+    // presok-senior-exit-v46: allow family view / ?role=family without unlinking
+    const wantFamily = keepUnlock || state._unlockRoleSwitch || (typeof readRoleQuery === 'function' && readRoleQuery() === 'family');
+    if (!wantFamily) role = 'elder';
   }
 }
 
@@ -4644,6 +4758,12 @@ window.PresokApp = {
   applyI18n,
   setRole,
   switchTab,
+  /* presok-senior-exit-v46 */
+  updateSeniorExitChrome,
+  openSeniorExitSheet,
+  closeSeniorExitSheet,
+  isPairedAsElder,
+  bindSeniorExitGear,
 };
 async function bootCloud() {
   cloud = PresokCloud.createCloud(PRESK_CONFIG);
@@ -4768,20 +4888,181 @@ async function maybeSweepMissedForFamily() {
   }
 }
 
-function finishBootUi() {
-  if (state.membershipRole === 'elder') {
-    // Lock to senior view — hide family tab switch
-    const sw = document.querySelector('.role-switch');
+/* ===== presok-senior-exit-v46 ===== */
+function isPairedAsElder() {
+  return !!(cloudReady && state.membershipRole === 'elder');
+}
+function readRoleQuery() {
+  try {
+    const q = new URLSearchParams(location.search);
+    let want = (q.get('role') || q.get('view') || '').toLowerCase();
+    if (want === 'senior') want = 'elder';
+    if (want === 'family' || want === 'elder') return want;
+  } catch (e) {}
+  return '';
+}
+function updateSeniorExitChrome() {
+  const pairedElder = isPairedAsElder();
+  const want = readRoleQuery();
+  const unlock = !!(state._unlockRoleSwitch || want === 'family');
+  const sw = document.querySelector('.role-switch');
+  const gear = document.getElementById('seniorExitGear');
+  const who = document.getElementById('whoAmIBar');
+  if (who) who.classList.add('hidden');
+
+  if (pairedElder && !unlock) {
     if (sw) sw.classList.add('hidden');
-    const who = document.getElementById('whoAmIBar');
-    if (who) who.classList.add('hidden');
-    role = 'elder';
-  } else if (cloudReady && state.membershipRole === 'family') {
-    // Family phone defaults to family view
-    role = 'family';
+    if (gear) gear.classList.remove('hidden');
+  } else {
+    if (sw) sw.classList.remove('hidden');
+    // Gear stays available while still paired as elder (unlink / language)
+    if (gear) gear.classList.toggle('hidden', !pairedElder);
   }
+}
+
+function openSeniorExitSheet() {
+  const sheet = document.getElementById('seniorExitSheet');
+  if (!sheet) return;
+  const sel = document.getElementById('seniorExitLangSelect');
+  if (sel) sel.value = (lang === 'zh') ? 'zh' : 'en';
+  applySeniorExitI18n();
+  sheet.classList.remove('hidden');
+}
+function closeSeniorExitSheet() {
+  const sheet = document.getElementById('seniorExitSheet');
+  if (sheet) sheet.classList.add('hidden');
+}
+function applySeniorExitI18n() {
+  const setTxt = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
+  setTxt('seniorExitTitle', 'seniorExitTitle');
+  setTxt('seniorExitHoldHint', 'seniorExitSheetHint');
+  setTxt('seniorExitLangLabel', 'lblLanguage');
+  setTxt('seniorExitSwitchFamily', 'seniorExitSwitchFamily');
+  setTxt('seniorExitUnlink', 'pairSignOut');
+  setTxt('seniorExitClose', 'seniorExitClose');
+  const gear = document.getElementById('seniorExitGear');
+  if (gear) {
+    const lab = t('seniorExitGearLabel');
+    gear.setAttribute('aria-label', lab);
+    gear.title = t('seniorExitHoldHint');
+  }
+}
+function switchToFamilyViewFromSenior() {
+  state._unlockRoleSwitch = true;
+  closeSeniorExitSheet();
+  updateSeniorExitChrome();
+  setRole('family');
+}
+function unlinkThisPhoneFromSenior() {
+  const msg = t('seniorExitUnlinkConfirm') || (t('pairSignOut') + '?');
+  if (!confirm(msg)) return;
+  closeSeniorExitSheet();
+  try {
+    if (cloud && cloudReady) {
+      try { cloud.signOut(); } catch (e) {}
+      cloudReady = false;
+      try { resetMsgChimeKnown(); } catch (e) {}
+      location.reload();
+      return;
+    }
+  } catch (e) {}
+  try {
+    if (!confirm(t('confirmReset'))) return;
+    resetDemoData();
+  } catch (e2) {
+    location.reload();
+  }
+}
+const SENIOR_EXIT_HOLD_MS = 2000;
+let _seniorExitHoldStart = 0;
+let _seniorExitHoldRaf = null;
+let _seniorExitHoldFired = false;
+function cancelSeniorExitHold() {
+  if (_seniorExitHoldRaf) cancelAnimationFrame(_seniorExitHoldRaf);
+  _seniorExitHoldRaf = null;
+  _seniorExitHoldStart = 0;
+  const btn = document.getElementById('seniorExitGear');
+  if (btn) btn.classList.remove('holding');
+}
+function seniorExitTick() {
+  if (!_seniorExitHoldStart) return;
+  const p = (performance.now() - _seniorExitHoldStart) / SENIOR_EXIT_HOLD_MS;
+  if (p >= 1) {
+    _seniorExitHoldFired = true;
+    cancelSeniorExitHold();
+    if (navigator.vibrate) { try { navigator.vibrate(40); } catch (e) {} }
+    openSeniorExitSheet();
+    return;
+  }
+  _seniorExitHoldRaf = requestAnimationFrame(seniorExitTick);
+}
+function bindSeniorExitGear() {
+  const btn = document.getElementById('seniorExitGear');
+  if (!btn || btn.dataset.bound === '1') return;
+  btn.dataset.bound = '1';
+  const start = (e) => {
+    e.preventDefault();
+    _seniorExitHoldFired = false;
+    cancelSeniorExitHold();
+    btn.classList.add('holding');
+    _seniorExitHoldStart = performance.now();
+    try { btn.setPointerCapture && e.pointerId != null && btn.setPointerCapture(e.pointerId); } catch (err) {}
+    _seniorExitHoldRaf = requestAnimationFrame(seniorExitTick);
+  };
+  const end = () => { if (!_seniorExitHoldFired) cancelSeniorExitHold(); };
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup', end);
+  btn.addEventListener('pointercancel', end);
+  btn.addEventListener('lostpointercapture', end);
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+
+  const sheet = document.getElementById('seniorExitSheet');
+  if (sheet && sheet.dataset.bound !== '1') {
+    sheet.dataset.bound = '1';
+    sheet.addEventListener('click', (e) => { if (e.target === sheet) closeSeniorExitSheet(); });
+  }
+  const closeBtn = document.getElementById('seniorExitClose');
+  if (closeBtn) closeBtn.onclick = () => closeSeniorExitSheet();
+  const swFam = document.getElementById('seniorExitSwitchFamily');
+  if (swFam) swFam.onclick = () => switchToFamilyViewFromSenior();
+  const unlink = document.getElementById('seniorExitUnlink');
+  if (unlink) unlink.onclick = () => unlinkThisPhoneFromSenior();
+  const langSel = document.getElementById('seniorExitLangSelect');
+  if (langSel) langSel.onchange = () => {
+    const main = document.getElementById('languageSelect');
+    if (main) main.value = langSel.value;
+    lang = langSel.value === 'zh' ? 'zh' : 'en';
+    state.lang = lang;
+    saveState();
+    applyI18n();
+    applySeniorExitI18n();
+    render();
+  };
+}
+
+function finishBootUi() {
+  const want = readRoleQuery();
+  if (isPairedAsElder()) {
+    if (want === 'family' || state._unlockRoleSwitch) {
+      state._unlockRoleSwitch = true;
+      role = 'family';
+    } else if (want === 'elder') {
+      role = 'elder';
+    } else {
+      role = 'elder';
+    }
+  } else if (cloudReady && state.membershipRole === 'family') {
+    role = (want === 'elder') ? 'elder' : 'family';
+  } else if (want === 'family' || want === 'elder') {
+    role = want;
+  }
+  // Unpaired: always show role switch (updateSeniorExitChrome)
+  updateSeniorExitChrome();
+  bindSeniorExitGear();
   applyI18n();
+  applySeniorExitI18n();
   render();
+  updateSeniorExitChrome();
   restoreCallUiIfNeeded();
   _bootDone = true;
   try { if (role === 'elder') warmMicForSenior(); } catch (e) {}
@@ -5210,6 +5491,8 @@ applyI18n = function() {
     const bra = document.getElementById('btnResetAll');
     if (bra) bra.textContent = unlink;
   }
+  try { applySeniorExitI18n(); } catch (e) {}
+  try { updateSeniorExitChrome(); } catch (e) {}
 };
 
 // Replace original boot: don't render until gate decided
@@ -5217,6 +5500,7 @@ applyI18n = function() {
 
 bindVoiceControls();
 bindSosHold();
+try { bindSeniorExitGear(); } catch (e) {}
 
 setInterval(() => {
   if (!_bootDone) return;
